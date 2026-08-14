@@ -46,6 +46,41 @@ class ShortcutSignals(QObject):
     exit_app = pyqtSignal()
     change_pen_size = pyqtSignal(int)
     change_highlighter_size = pyqtSignal(int)
+    change_eraser_size = pyqtSignal(int)
+    increment_size = pyqtSignal()
+    decrement_size = pyqtSignal()
+    toggle_color_palette = pyqtSignal()
+
+class HoldButton(QPushButton):
+    hold_triggered = pyqtSignal()
+    
+    def __init__(self, icon, tooltip, parent=None):
+        super().__init__(icon, parent)
+        self.setToolTip(tooltip)
+        self.hold_timer = QTimer(self)
+        self.hold_timer.setSingleShot(True)
+        self.hold_timer.timeout.connect(self._on_hold)
+        self._held = False
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._held = False
+            self.hold_timer.start(400) # 400ms hold time
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.hold_timer.stop()
+            if self._held:
+                # If it was held, we don't want to trigger the standard clicked() behavior
+                # PyQt's QPushButton will emit clicked() automatically, but we can consume it if needed.
+                # However, for simplicity, if they release over the button, clicked() still fires.
+                pass
+        super().mouseReleaseEvent(event)
+
+    def _on_hold(self):
+        self._held = True
+        self.hold_triggered.emit()
 
 class OverlayWindow(QMainWindow):
     def __init__(self, signals):
@@ -78,6 +113,7 @@ class OverlayWindow(QMainWindow):
         
         self.pen_size = 5
         self.highlighter_size = 25
+        self.eraser_size = 40
         
         self.MAX_UNDO_STEPS = 50
         self.paths = []
@@ -101,9 +137,30 @@ class OverlayWindow(QMainWindow):
         self.signals.toggle_visibility.connect(self.toggle_visibility)
         self.signals.change_pen_size.connect(self.set_pen_size)
         self.signals.change_highlighter_size.connect(self.set_highlighter_size)
+        self.signals.change_eraser_size.connect(self.set_eraser_size)
+        
+        self.signals.increment_size.connect(self.increment_active_tool_size)
+        self.signals.decrement_size.connect(self.decrement_active_tool_size)
+        
         self.signals.exit_app.connect(QApplication.instance().quit)
 
         self.set_mode(ToolMode.PEN)
+
+    def increment_active_tool_size(self):
+        if self.mode == ToolMode.PEN:
+            self.set_pen_size(min(50, self.pen_size + 2))
+        elif self.mode == ToolMode.HIGHLIGHTER:
+            self.set_highlighter_size(min(100, self.highlighter_size + 5))
+        elif self.mode == ToolMode.ERASER:
+            self.set_eraser_size(min(200, self.eraser_size + 10))
+
+    def decrement_active_tool_size(self):
+        if self.mode == ToolMode.PEN:
+            self.set_pen_size(max(2, self.pen_size - 2))
+        elif self.mode == ToolMode.HIGHLIGHTER:
+            self.set_highlighter_size(max(5, self.highlighter_size - 5))
+        elif self.mode == ToolMode.ERASER:
+            self.set_eraser_size(max(10, self.eraser_size - 10))
 
     def set_pen_size(self, size):
         self.pen_size = size
@@ -112,6 +169,10 @@ class OverlayWindow(QMainWindow):
     def set_highlighter_size(self, size):
         self.highlighter_size = size
         self.set_mode(ToolMode.HIGHLIGHTER)
+        
+    def set_eraser_size(self, size):
+        self.eraser_size = size
+        self.set_mode(ToolMode.ERASER)
 
     def update_cursor(self):
         if self.is_click_through or self.mode == ToolMode.CURSOR:
@@ -149,11 +210,12 @@ class OverlayWindow(QMainWindow):
             painter.drawText(int(center + width/2 + 2), int(center - width/2 - 2), "🖍️")
             
         elif self.mode == ToolMode.ERASER:
-            radius = 40.0 / 2.0
+            radius = max(5.0, self.eraser_size / 2.0)
+            # Semi transparent outline
             painter.setBrush(Qt.BrushStyle.NoBrush)
-            painter.setPen(QPen(QColor("black"), 2))
+            painter.setPen(QPen(QColor(0, 0, 0, 150), 2))
             painter.drawEllipse(QPointF(center, center), radius, radius)
-            painter.setPen(QPen(QColor("white"), 1))
+            painter.setPen(QPen(QColor(255, 255, 255, 150), 1))
             painter.drawEllipse(QPointF(center, center), radius - 1, radius - 1)
 
         painter.end()
@@ -206,7 +268,7 @@ class OverlayWindow(QMainWindow):
             color.setAlpha(60)
             return QPen(color, self.highlighter_size, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
         elif self.mode == ToolMode.ERASER:
-            return QPen(QColor(255, 255, 255, 255), 30, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
+            return QPen(QColor(255, 255, 255, 255), self.eraser_size, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
         else:
             return QPen(self.pen_color, self.pen_size, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
 
@@ -224,7 +286,10 @@ class OverlayWindow(QMainWindow):
     def mousePressEvent(self, event):
         if not self.ink_visible: return
         if event.button() == Qt.MouseButton.LeftButton and not self.is_click_through:
-            self.setCursor(Qt.CursorShape.BlankCursor)
+            # Hide cursor only when drawing (not erasing)
+            if self.mode != ToolMode.ERASER:
+                self.setCursor(Qt.CursorShape.BlankCursor)
+                
             self.shape_detected = False
             if self.mode == ToolMode.ERASER:
                 self.erase_at(event.position())
@@ -247,11 +312,15 @@ class OverlayWindow(QMainWindow):
                 
                 mid_point = (self.last_point + event.position()) / 2.0
                 self.current_path.quadTo(self.last_point, mid_point)
+                
+                # Include previous point to ensure no corners are clipped
+                prev_point = self.raw_points[-2] if len(self.raw_points) > 1 else self.last_point
+                
                 self.last_point = event.position()
                 
                 # Large padding to ensure curves and thick strokes are never clipped during drawing
                 padding = max(100.0, float(self.get_current_pen().width() * 4))
-                update_rect = QRectF(self.last_point, event.position()).normalized()
+                update_rect = QRectF(prev_point, event.position()).normalized()
                 update_rect.adjust(-padding, -padding, padding, padding)
                 self.update(update_rect.toRect())
                 
@@ -278,11 +347,14 @@ class OverlayWindow(QMainWindow):
                 painter.end()
                 
                 self.current_path = None
+                
+                # Update entire screen after finish drawing just in case to eliminate any artifacts
                 self.update()
             self.drawing = False
 
     def erase_at(self, pos):
-        rect = QRectF(pos.x() - 20, pos.y() - 20, 40, 40)
+        radius = float(self.eraser_size) / 2.0
+        rect = QRectF(pos.x() - radius, pos.y() - radius, radius*2, radius*2)
         removed = False
         for i in range(len(self.paths) - 1, -1, -1):
             p = self.paths[i]['path']
@@ -337,7 +409,7 @@ class OverlayWindow(QMainWindow):
             
         if not self.ink_visible: return
             
-        painter.drawPixmap(0, 0, self.canvas_cache)
+        painter.drawPixmap(event.rect(), self.canvas_cache, event.rect())
         if self.drawing and self.current_path:
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
             painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
@@ -354,6 +426,76 @@ class OverlayWindow(QMainWindow):
             self.paths.pop()
             self.rebuild_cache()
             self.update()
+
+class FloatingColorPalette(QWidget):
+    def __init__(self, signals, parent=None):
+        super().__init__(parent)
+        self.signals = signals
+        
+        self.setWindowFlags(
+            Qt.WindowType.Tool |
+            Qt.WindowType.FramelessWindowHint |
+            Qt.WindowType.WindowStaysOnTopHint
+        )
+        
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #F5E8D5;
+                border-radius: 20px;
+                border: 1px solid #D6C3A1;
+            }
+        """)
+        
+        layout = QVBoxLayout()
+        layout.setContentsMargins(15, 15, 15, 15)
+        
+        title = QLabel("Colors")
+        title.setStyleSheet("color: #333333; font-weight: bold; border: none; font-size: 14px;")
+        layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignCenter)
+        
+        self.color_buttons = {}
+        palette_grid = QGridLayout()
+        palette_grid.setSpacing(8)
+        for i, color_hex in enumerate(COLORS):
+            btn = QPushButton()
+            btn.setFixedSize(28, 28)
+            btn.setToolTip("Select Color")
+            btn.clicked.connect(lambda checked, c=color_hex: self.select_color(c))
+            palette_grid.addWidget(btn, i // 4, i % 4)
+            self.color_buttons[color_hex] = btn
+        
+        layout.addLayout(palette_grid)
+        self.setLayout(layout)
+        
+        self.signals.change_color.connect(self._sync_color_selection)
+        self.select_color(COLORS[0], emit=False)
+        self._drag_pos = None
+
+    def select_color(self, hex_color, emit=True):
+        if emit:
+            self.signals.change_color.emit(hex_color)
+        self._sync_color_selection(hex_color)
+
+    def _sync_color_selection(self, hex_color):
+        for c, btn in self.color_buttons.items():
+            if c == hex_color:
+                btn.setStyleSheet(f"background-color: {c}; border-radius: 14px; border: 3px solid #333333;")
+            else:
+                btn.setStyleSheet(f"background-color: {c}; border-radius: 14px; border: 1px solid #D6C3A1;")
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._drag_pos = event.globalPosition().toPoint()
+
+    def mouseMoveEvent(self, event):
+        if self._drag_pos is not None:
+            delta = event.globalPosition().toPoint() - self._drag_pos
+            self.move(self.pos() + delta)
+            self._drag_pos = event.globalPosition().toPoint()
+
+    def mouseReleaseEvent(self, event):
+        self._drag_pos = None
+
 
 class ToolbarWindow(QWidget):
     def __init__(self, signals, parent=None):
@@ -423,57 +565,31 @@ class ToolbarWindow(QWidget):
         layout.setSpacing(10)
         
         # --- SECTION 1: TOOLS ---
-        self.btn_pen = self.create_tool_button("🖊️", "Pen (Ctrl+1) - Right-click for Size", lambda: self.set_active_tool(self.btn_pen, self.signals.switch_pen.emit))
-        pen_menu = QMenu(self)
-        pen_menu.addAction("Mini", lambda: self.signals.change_pen_size.emit(2))
-        pen_menu.addAction("Small", lambda: self.signals.change_pen_size.emit(5))
-        pen_menu.addAction("Medium", lambda: self.signals.change_pen_size.emit(10))
-        pen_menu.addAction("Big", lambda: self.signals.change_pen_size.emit(15))
-        pen_menu.addAction("Large", lambda: self.signals.change_pen_size.emit(20))
-        self.btn_pen.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.btn_pen.customContextMenuRequested.connect(lambda pos: pen_menu.exec(self.btn_pen.mapToGlobal(pos)))
+        self.btn_pen = self.create_hold_button("🖊️", "Pen (Ctrl+1) - Hold for Size", lambda: self.set_active_tool(self.btn_pen, self.signals.switch_pen.emit))
+        self.setup_size_menu(self.btn_pen, [2, 5, 10, 15, 20], self.signals.change_pen_size.emit)
         layout.addWidget(self.btn_pen, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self.btn_hl = self.create_tool_button("🖍️", "Highlighter (Ctrl+2) - Right-click for Size", lambda: self.set_active_tool(self.btn_hl, self.signals.switch_highlighter.emit))
-        hl_menu = QMenu(self)
-        hl_menu.addAction("Mini", lambda: self.signals.change_highlighter_size.emit(10))
-        hl_menu.addAction("Small", lambda: self.signals.change_highlighter_size.emit(15))
-        hl_menu.addAction("Medium", lambda: self.signals.change_highlighter_size.emit(25))
-        hl_menu.addAction("Big", lambda: self.signals.change_highlighter_size.emit(35))
-        hl_menu.addAction("Large", lambda: self.signals.change_highlighter_size.emit(45))
-        self.btn_hl.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.btn_hl.customContextMenuRequested.connect(lambda pos: hl_menu.exec(self.btn_hl.mapToGlobal(pos)))
+        self.btn_hl = self.create_hold_button("🖍️", "Highlighter (Ctrl+2) - Hold for Size", lambda: self.set_active_tool(self.btn_hl, self.signals.switch_highlighter.emit))
+        self.setup_size_menu(self.btn_hl, [10, 15, 25, 35, 45], self.signals.change_highlighter_size.emit)
         layout.addWidget(self.btn_hl, alignment=Qt.AlignmentFlag.AlignCenter)
         
-        self.btn_eraser = self.create_tool_button("🧽", "Eraser (Ctrl+3)", lambda: self.set_active_tool(self.btn_eraser, self.signals.switch_eraser.emit))
+        self.btn_eraser = self.create_hold_button("🧽", "Eraser (Ctrl+3) - Hold for Size", lambda: self.set_active_tool(self.btn_eraser, self.signals.switch_eraser.emit))
+        self.setup_size_menu(self.btn_eraser, [10, 20, 40, 60, 80], self.signals.change_eraser_size.emit)
         layout.addWidget(self.btn_eraser, alignment=Qt.AlignmentFlag.AlignCenter)
         
         self.btn_cursor = self.create_tool_button("🖱️", "Cursor Mode (Ctrl+4)", lambda: self.set_active_tool(self.btn_cursor, self.signals.switch_cursor.emit))
         layout.addWidget(self.btn_cursor, alignment=Qt.AlignmentFlag.AlignCenter)
         
-        # Set Pen as default active
         self.set_active_tool(self.btn_pen, None)
         
-        # Separator
         sep1 = QFrame()
         sep1.setObjectName("separator")
         layout.addWidget(sep1)
 
-        # --- SECTION 2: COLORS ---
-        self.color_buttons = {}
-        palette_grid = QGridLayout()
-        palette_grid.setSpacing(4)
-        for i, color_hex in enumerate(COLORS):
-            btn = QPushButton()
-            btn.setFixedSize(24, 24)
-            btn.setToolTip("Select Color")
-            btn.clicked.connect(lambda checked, c=color_hex: self.select_color(c))
-            palette_grid.addWidget(btn, i // 4, i % 4)
-            self.color_buttons[color_hex] = btn
-        layout.addLayout(palette_grid)
-        self.select_color(COLORS[0], emit=False)
+        # --- SECTION 2: PALETTE ---
+        self.btn_palette = self.create_tool_button("🎨", "Toggle Colors", self.signals.toggle_color_palette.emit)
+        layout.addWidget(self.btn_palette, alignment=Qt.AlignmentFlag.AlignCenter)
         
-        # Separator
         sep2 = QFrame()
         sep2.setObjectName("separator")
         layout.addWidget(sep2)
@@ -494,13 +610,14 @@ class ToolbarWindow(QWidget):
         self.setLayout(layout)
         self._drag_pos = None
         
-        # Connect signals for shortcut sync
         self.signals.switch_pen.connect(lambda: self.set_active_tool(self.btn_pen, None))
         self.signals.switch_highlighter.connect(lambda: self.set_active_tool(self.btn_hl, None))
         self.signals.switch_eraser.connect(lambda: self.set_active_tool(self.btn_eraser, None))
         self.signals.switch_cursor.connect(lambda: self.set_active_tool(self.btn_cursor, None))
+        
         self.signals.change_pen_size.connect(lambda size: self.set_active_tool(self.btn_pen, None))
         self.signals.change_highlighter_size.connect(lambda size: self.set_active_tool(self.btn_hl, None))
+        self.signals.change_eraser_size.connect(lambda size: self.set_active_tool(self.btn_eraser, None))
 
     def create_tool_button(self, icon, tooltip, callback):
         btn = QPushButton(icon)
@@ -508,6 +625,21 @@ class ToolbarWindow(QWidget):
         btn.setToolTip(tooltip)
         btn.clicked.connect(callback)
         return btn
+
+    def create_hold_button(self, icon, tooltip, callback):
+        btn = HoldButton(icon, tooltip)
+        btn.setFixedSize(36, 36)
+        btn.clicked.connect(callback)
+        return btn
+
+    def setup_size_menu(self, btn, sizes, signal_emitter):
+        menu = QMenu(self)
+        labels = ["Mini", "Small", "Medium", "Big", "Large"]
+        for label, size in zip(labels, sizes):
+            menu.addAction(label, lambda checked=False, s=size: signal_emitter(s))
+        
+        # When hold is triggered, pop open the menu next to the button
+        btn.hold_triggered.connect(lambda: menu.exec(btn.mapToGlobal(QPoint(btn.width() + 5, 0))))
 
     def set_active_tool(self, btn, callback):
         if self.active_tool_btn:
@@ -522,15 +654,6 @@ class ToolbarWindow(QWidget):
         
         if callback:
             callback()
-
-    def select_color(self, hex_color, emit=True):
-        if emit:
-            self.signals.change_color.emit(hex_color)
-        for c, btn in self.color_buttons.items():
-            if c == hex_color:
-                btn.setStyleSheet(f"background-color: {c}; border-radius: 12px; border: 2px solid #333333;")
-            else:
-                btn.setStyleSheet(f"background-color: {c}; border-radius: 12px; border: 1px solid #D6C3A1;")
 
     def add_button(self, layout, icon, tooltip, callback):
         btn = QPushButton(icon)
@@ -551,6 +674,7 @@ class ToolbarWindow(QWidget):
 
     def mouseReleaseEvent(self, event):
         self._drag_pos = None
+
 
 class AppSystemTray(QSystemTrayIcon):
     def __init__(self, signals, parent=None):
@@ -585,25 +709,51 @@ def setup_global_shortcuts(signals):
     keyboard.add_hotkey('ctrl+z', lambda: signals.undo.emit(), suppress=True)
     keyboard.add_hotkey('ctrl+shift+c', lambda: signals.clear_screen.emit(), suppress=True)
     keyboard.add_hotkey('ctrl+q', lambda: signals.exit_app.emit(), suppress=True)
+    # Increment / Decrement Size
+    keyboard.add_hotkey('ctrl+]', lambda: signals.increment_size.emit(), suppress=True)
+    keyboard.add_hotkey('ctrl+[', lambda: signals.decrement_size.emit(), suppress=True)
+
+
+class MainAppCoordinator(QObject):
+    def __init__(self):
+        super().__init__()
+        self.signals = ShortcutSignals()
+        
+        self.tray = AppSystemTray(self.signals)
+        self.tray.show()
+        
+        self.overlay = OverlayWindow(self.signals)
+        self.overlay.show()
+        
+        self.toolbar = ToolbarWindow(self.signals, parent=self.overlay)
+        self.toolbar.resize(80, 400)
+        
+        screen_rect = QApplication.primaryScreen().geometry()
+        self.toolbar.move(screen_rect.width() - 100, (screen_rect.height() - 400) // 2)
+        self.toolbar.show()
+        
+        self.color_palette = FloatingColorPalette(self.signals, parent=self.overlay)
+        self.color_palette.resize(150, 150)
+        
+        # Position palette left of toolbar initially
+        self.color_palette.move(self.toolbar.x() - 180, self.toolbar.y())
+        self.color_palette.hide() # Hidden by default
+        
+        self.signals.toggle_color_palette.connect(self.toggle_palette)
+        
+        setup_global_shortcuts(self.signals)
+        
+    def toggle_palette(self):
+        if self.color_palette.isVisible():
+            self.color_palette.hide()
+        else:
+            self.color_palette.show()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
     
-    signals = ShortcutSignals()
-    
-    tray = AppSystemTray(signals)
-    tray.show()
-    
-    overlay = OverlayWindow(signals)
-    overlay.show()
-    
-    toolbar = ToolbarWindow(signals, parent=overlay)
-    toolbar.resize(80, 500)
-    screen_rect = QApplication.primaryScreen().geometry()
-    toolbar.move(screen_rect.width() - 100, (screen_rect.height() - 500) // 2)
-    toolbar.show()
-    
-    setup_global_shortcuts(signals)
+    coordinator = MainAppCoordinator()
     
     sys.exit(app.exec())
