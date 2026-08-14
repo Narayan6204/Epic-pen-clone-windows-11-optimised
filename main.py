@@ -63,12 +63,13 @@ class OverlayWindow(QMainWindow):
         self.setGeometry(virtual_rect)
         
         self.canvas_cache = QPixmap(virtual_rect.size())
-        self.canvas_cache.fill(QColor(0, 0, 0, 1))
+        self.canvas_cache.fill(Qt.GlobalColor.transparent)
         
         self.mode = ToolMode.PEN
         self.bg_mode = BackgroundMode.TRANSPARENT
         self.is_click_through = False
         self.ink_visible = True
+        self.shape_detected = False
         
         self.pen_color = QColor(COLORS[0])
         self.highlighter_color = QColor(COLORS[5])
@@ -137,7 +138,7 @@ class OverlayWindow(QMainWindow):
 
     def set_mode(self, new_mode):
         self.mode = new_mode
-        if new_mode == ToolMode.CURSOR:
+        if new_mode == ToolMode.CURSOR or not self.ink_visible:
             self.set_click_through(True)
         else:
             self.set_click_through(False)
@@ -149,7 +150,8 @@ class OverlayWindow(QMainWindow):
         else:
             self.pen_color = QColor(hex_color)
             self.mode = ToolMode.PEN
-            self.set_click_through(False)
+            if self.ink_visible:
+                self.set_click_through(False)
         self.update_cursor()
 
     def toggle_background(self):
@@ -158,6 +160,10 @@ class OverlayWindow(QMainWindow):
 
     def toggle_visibility(self):
         self.ink_visible = not self.ink_visible
+        if self.ink_visible:
+            self.set_click_through(self.mode == ToolMode.CURSOR)
+        else:
+            self.set_click_through(True)
         self.update()
 
     def set_click_through(self, enabled):
@@ -182,7 +188,7 @@ class OverlayWindow(QMainWindow):
             return QPen(self.pen_color, 5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
 
     def rebuild_cache(self):
-        self.canvas_cache.fill(QColor(0, 0, 0, 1))
+        self.canvas_cache.fill(Qt.GlobalColor.transparent)
         painter = QPainter(self.canvas_cache)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         for p in self.paths:
@@ -195,6 +201,7 @@ class OverlayWindow(QMainWindow):
         if not self.ink_visible: return
         if event.button() == Qt.MouseButton.LeftButton and not self.is_click_through:
             self.setCursor(Qt.CursorShape.BlankCursor)
+            self.shape_detected = False
             if self.mode == ToolMode.ERASER:
                 self.erase_at(event.position())
             else:
@@ -210,11 +217,20 @@ class OverlayWindow(QMainWindow):
             if self.mode == ToolMode.ERASER:
                 self.erase_at(event.position())
             elif self.drawing and self.current_path:
+                if self.shape_detected:
+                    return
                 self.raw_points.append(event.position())
+                
+                update_rect = QRectF(self.last_point, event.position()).normalized()
+                padding = self.get_current_pen().width() * 2
+                update_rect.adjust(-padding, -padding, padding, padding)
+                
                 mid_point = (self.last_point + event.position()) / 2.0
                 self.current_path.quadTo(self.last_point, mid_point)
                 self.last_point = event.position()
-                self.update()
+                
+                self.update(update_rect.toRect())
+                
                 if self.mode == ToolMode.PEN:
                     self.shape_timer.start(400)
 
@@ -223,7 +239,9 @@ class OverlayWindow(QMainWindow):
             self.shape_timer.stop()
             self.update_cursor()
             if self.drawing and self.current_path:
-                self.current_path.lineTo(event.position())
+                if not self.shape_detected:
+                    self.current_path.lineTo(event.position())
+                
                 if len(self.paths) >= self.MAX_UNDO_STEPS:
                     self.paths.pop(0)
                 self.paths.append({'path': self.current_path, 'pen': self.get_current_pen(), 'mode': self.mode})
@@ -276,6 +294,7 @@ class OverlayWindow(QMainWindow):
             return
 
     def replace_current_path(self, new_path):
+        self.shape_detected = True
         self.current_path = new_path
         self.update()
 
@@ -285,9 +304,11 @@ class OverlayWindow(QMainWindow):
     def paintEvent(self, event):
         painter = QPainter(self)
         if self.bg_mode == BackgroundMode.WHITEBOARD:
-            painter.fillRect(self.rect(), QColor("white"))
+            painter.fillRect(event.rect(), QColor("white"))
         elif self.bg_mode == BackgroundMode.BLACKBOARD:
-            painter.fillRect(self.rect(), QColor("#222222"))
+            painter.fillRect(event.rect(), QColor("#222222"))
+        else:
+            painter.fillRect(event.rect(), QColor(0, 0, 0, 2))
             
         if not self.ink_visible: return
             
@@ -351,16 +372,18 @@ class ToolbarWindow(QWidget):
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(8)
         
+        self.color_buttons = {}
         palette_grid = QGridLayout()
         palette_grid.setSpacing(4)
         for i, color_hex in enumerate(COLORS):
             btn = QPushButton()
             btn.setFixedSize(24, 24)
-            btn.setStyleSheet(f"background-color: {color_hex}; border-radius: 12px;")
             btn.setToolTip("Select Color")
-            btn.clicked.connect(lambda checked, c=color_hex: self.signals.change_color.emit(c))
+            btn.clicked.connect(lambda checked, c=color_hex: self.select_color(c))
             palette_grid.addWidget(btn, i // 4, i % 4)
+            self.color_buttons[color_hex] = btn
         layout.addLayout(palette_grid)
+        self.select_color(COLORS[0], emit=False)
         
         self.add_button(layout, "🖊️", "Pen (Ctrl+1)", self.signals.switch_pen.emit)
         self.add_button(layout, "🖍️", "Highlighter (Ctrl+2)", self.signals.switch_highlighter.emit)
@@ -380,6 +403,15 @@ class ToolbarWindow(QWidget):
         
         self.setLayout(layout)
         self._drag_pos = None
+
+    def select_color(self, hex_color, emit=True):
+        if emit:
+            self.signals.change_color.emit(hex_color)
+        for c, btn in self.color_buttons.items():
+            if c == hex_color:
+                btn.setStyleSheet(f"background-color: {c}; border-radius: 12px; border: 2px solid white;")
+            else:
+                btn.setStyleSheet(f"background-color: {c}; border-radius: 12px; border: none;")
 
     def add_button(self, layout, icon, tooltip, callback):
         btn = QPushButton(icon)
@@ -411,6 +443,15 @@ class AppSystemTray(QSystemTrayIcon):
         self.setToolTip("Epic Pen Clone")
         
         menu = QMenu()
+        
+        toggle_action = menu.addAction("Toggle Ink Visibility (Ctrl+5)")
+        toggle_action.triggered.connect(signals.toggle_visibility.emit)
+        
+        clear_action = menu.addAction("Clear Screen (Ctrl+Shift+C)")
+        clear_action.triggered.connect(signals.clear_screen.emit)
+        
+        menu.addSeparator()
+        
         exit_action = menu.addAction("Exit")
         exit_action.triggered.connect(signals.exit_app.emit)
         
