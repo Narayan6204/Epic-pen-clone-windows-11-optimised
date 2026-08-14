@@ -480,7 +480,26 @@ class FloatingColorPalette(QWidget):
         """)
         
         layout = QVBoxLayout()
-        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setContentsMargins(15, 8, 15, 15)
+        
+        # --- TOP: HANDLE ---
+        self.btn_handle = QPushButton(self)
+        self.btn_handle.setFixedSize(30, 6)
+        self.btn_handle.setToolTip("Close Palette")
+        self.btn_handle.setStyleSheet("""
+            QPushButton {
+                background-color: #D6C3A1;
+                border-radius: 3px;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: #ff4d4d;
+            }
+        """)
+        self.btn_handle.clicked.connect(self.hide)
+        
+        layout.addWidget(self.btn_handle, alignment=Qt.AlignmentFlag.AlignHCenter)
+        layout.addSpacing(5)
         
         title = QLabel("Colors")
         title.setStyleSheet("color: #333333; font-weight: bold; border: none; font-size: 14px;")
@@ -595,8 +614,30 @@ class ToolbarWindow(QWidget):
         """)
         
         layout = QVBoxLayout()
-        layout.setContentsMargins(10, 15, 10, 15)
+        layout.setContentsMargins(10, 8, 10, 15)
         layout.setSpacing(10)
+        
+        # --- TOP: HANDLE ---
+        self.btn_handle = QPushButton(self)
+        self.btn_handle.setFixedSize(30, 6)
+        self.btn_handle.setToolTip("Options")
+        self.btn_handle.setStyleSheet("""
+            QPushButton {
+                background-color: #D6C3A1;
+                border-radius: 3px;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: #C6B18D;
+            }
+        """)
+        
+        self.handle_menu = QMenu(self)
+        self.handle_menu.addAction("❌ Close App (Ctrl+Q)", self.signals.exit_app.emit)
+        self.btn_handle.clicked.connect(lambda: self.handle_menu.exec(self.btn_handle.mapToGlobal(QPoint(35, 0))))
+        
+        layout.addWidget(self.btn_handle, alignment=Qt.AlignmentFlag.AlignHCenter)
+        layout.addSpacing(2)
         
         # --- TOP: VISIBILITY TOGGLE ---
         self.add_button(layout, "👁️", "Toggle Ink Visibility (Ctrl+5)", self.signals.toggle_visibility.emit)
@@ -639,13 +680,6 @@ class ToolbarWindow(QWidget):
         self.add_button(layout, "↩️", "Undo (Ctrl+Z)", self.signals.undo.emit)
         self.add_button(layout, "⬜", "Toggle Whiteboard/Blackboard", self.signals.toggle_background.emit)
         self.add_button(layout, "🗑️", "Clear Screen (Ctrl+Shift+C)", self.signals.clear_screen.emit)
-        
-        btn_close = QPushButton("❌")
-        btn_close.setFixedSize(36, 36)
-        btn_close.setToolTip("Exit App (Ctrl+Q)")
-        btn_close.setStyleSheet("background-color: #ff4d4d; color: white; border-radius: 18px; font-size: 14px;")
-        btn_close.clicked.connect(self.signals.exit_app.emit)
-        layout.addWidget(btn_close, alignment=Qt.AlignmentFlag.AlignCenter)
         
         self.setLayout(layout)
         self._drag_pos = None
