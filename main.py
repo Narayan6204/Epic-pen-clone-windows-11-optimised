@@ -118,7 +118,7 @@ class OverlayWindow(QMainWindow):
             self.setCursor(Qt.CursorShape.ArrowCursor)
             return
 
-        size = 64
+        size = 128
         pixmap = QPixmap(size, size)
         pixmap.fill(Qt.GlobalColor.transparent)
         painter = QPainter(pixmap)
@@ -251,7 +251,7 @@ class OverlayWindow(QMainWindow):
                 
                 # Large padding to ensure curves and thick strokes are never clipped during drawing
                 padding = max(100.0, float(self.get_current_pen().width() * 4))
-                update_rect = self.current_path.boundingRect()
+                update_rect = QRectF(self.last_point, event.position()).normalized()
                 update_rect.adjust(-padding, -padding, padding, padding)
                 self.update(update_rect.toRect())
                 
@@ -499,6 +499,8 @@ class ToolbarWindow(QWidget):
         self.signals.switch_highlighter.connect(lambda: self.set_active_tool(self.btn_hl, None))
         self.signals.switch_eraser.connect(lambda: self.set_active_tool(self.btn_eraser, None))
         self.signals.switch_cursor.connect(lambda: self.set_active_tool(self.btn_cursor, None))
+        self.signals.change_pen_size.connect(lambda size: self.set_active_tool(self.btn_pen, None))
+        self.signals.change_highlighter_size.connect(lambda size: self.set_active_tool(self.btn_hl, None))
 
     def create_tool_button(self, icon, tooltip, callback):
         btn = QPushButton(icon)
