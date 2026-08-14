@@ -469,8 +469,6 @@ class FloatingColorPalette(QWidget):
             Qt.WindowType.FramelessWindowHint |
             Qt.WindowType.WindowStaysOnTopHint
         )
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        
         self.setStyleSheet("""
             QWidget {
                 background-color: #F5E8D5;
@@ -560,12 +558,11 @@ class ToolbarWindow(QWidget):
             Qt.WindowType.FramelessWindowHint |
             Qt.WindowType.WindowStaysOnTopHint
         )
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        
         self.setStyleSheet("""
             QWidget {
                 background-color: #F5E8D5;
                 border-radius: 20px;
+                border: 1px solid #D6C3A1;
             }
             QPushButton {
                 background-color: #E6D5B8;
