@@ -7,9 +7,9 @@ if sys.platform != "win32":
 import ctypes
 import keyboard
 import math
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QGridLayout, QSystemTrayIcon, QMenu
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QGridLayout, QSystemTrayIcon, QMenu, QFrame
 from PyQt6.QtCore import Qt, QPoint, QRect, QRectF, pyqtSignal, QObject, QTimer, QPointF
-from PyQt6.QtGui import QPainter, QPen, QColor, QPainterPath, QPixmap, QIcon, QCursor
+from PyQt6.QtGui import QPainter, QPen, QColor, QPainterPath, QPixmap, QIcon, QCursor, QFont
 
 # Windows API constants for click-through
 WS_EX_TRANSPARENT = 0x00000020
@@ -44,6 +44,8 @@ class ShortcutSignals(QObject):
     toggle_background = pyqtSignal()
     toggle_visibility = pyqtSignal()
     exit_app = pyqtSignal()
+    change_pen_size = pyqtSignal(int)
+    change_highlighter_size = pyqtSignal(int)
 
 class OverlayWindow(QMainWindow):
     def __init__(self, signals):
@@ -74,6 +76,9 @@ class OverlayWindow(QMainWindow):
         self.pen_color = QColor(COLORS[0])
         self.highlighter_color = QColor(COLORS[5])
         
+        self.pen_size = 5
+        self.highlighter_size = 25
+        
         self.MAX_UNDO_STEPS = 50
         self.paths = []
         self.current_path = None
@@ -94,9 +99,19 @@ class OverlayWindow(QMainWindow):
         self.signals.change_color.connect(self.set_color)
         self.signals.toggle_background.connect(self.toggle_background)
         self.signals.toggle_visibility.connect(self.toggle_visibility)
+        self.signals.change_pen_size.connect(self.set_pen_size)
+        self.signals.change_highlighter_size.connect(self.set_highlighter_size)
         self.signals.exit_app.connect(QApplication.instance().quit)
 
         self.set_mode(ToolMode.PEN)
+
+    def set_pen_size(self, size):
+        self.pen_size = size
+        self.set_mode(ToolMode.PEN)
+        
+    def set_highlighter_size(self, size):
+        self.highlighter_size = size
+        self.set_mode(ToolMode.HIGHLIGHTER)
 
     def update_cursor(self):
         if self.is_click_through or self.mode == ToolMode.CURSOR:
@@ -111,22 +126,30 @@ class OverlayWindow(QMainWindow):
         center = size / 2
 
         if self.mode == ToolMode.PEN:
-            radius = 5 / 2
+            radius = max(2.0, self.pen_size / 2.0)
             painter.setBrush(self.pen_color)
-            painter.setPen(QPen(QColor("white"), 1))
+            painter.setPen(QPen(QColor("black"), 1))
             painter.drawEllipse(QPointF(center, center), radius, radius)
+            # Draw tiny pen icon
+            painter.setPen(QPen(QColor("black"), 1))
+            painter.setFont(QFont("Segoe UI Emoji", 10))
+            painter.drawText(int(center + radius + 2), int(center - radius - 2), "🖊️")
             
         elif self.mode == ToolMode.HIGHLIGHTER:
-            width = 25
+            width = max(4.0, float(self.highlighter_size))
             rect = QRectF(center - width/2, center - width/2, width, width)
             color = QColor(self.highlighter_color)
             color.setAlpha(200) 
             painter.setBrush(color)
-            painter.setPen(QPen(QColor("white"), 1))
-            painter.drawRoundedRect(rect, 4, 4)
+            painter.setPen(QPen(QColor("black"), 1))
+            painter.drawRoundedRect(rect, 4.0, 4.0)
+            # Draw tiny highlighter icon
+            painter.setPen(QPen(QColor("black"), 1))
+            painter.setFont(QFont("Segoe UI Emoji", 10))
+            painter.drawText(int(center + width/2 + 2), int(center - width/2 - 2), "🖍️")
             
         elif self.mode == ToolMode.ERASER:
-            radius = 40 / 2
+            radius = 40.0 / 2.0
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.setPen(QPen(QColor("black"), 2))
             painter.drawEllipse(QPointF(center, center), radius, radius)
@@ -181,16 +204,17 @@ class OverlayWindow(QMainWindow):
         if self.mode == ToolMode.HIGHLIGHTER:
             color = QColor(self.highlighter_color)
             color.setAlpha(60)
-            return QPen(color, 25, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
+            return QPen(color, self.highlighter_size, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
         elif self.mode == ToolMode.ERASER:
             return QPen(QColor(255, 255, 255, 255), 30, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
         else:
-            return QPen(self.pen_color, 5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
+            return QPen(self.pen_color, self.pen_size, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
 
     def rebuild_cache(self):
         self.canvas_cache.fill(Qt.GlobalColor.transparent)
         painter = QPainter(self.canvas_cache)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         for p in self.paths:
             if p['mode'] != ToolMode.ERASER:
                 painter.setPen(p['pen'])
@@ -221,14 +245,14 @@ class OverlayWindow(QMainWindow):
                     return
                 self.raw_points.append(event.position())
                 
-                update_rect = QRectF(self.last_point, event.position()).normalized()
-                padding = self.get_current_pen().width() * 2
-                update_rect.adjust(-padding, -padding, padding, padding)
-                
                 mid_point = (self.last_point + event.position()) / 2.0
                 self.current_path.quadTo(self.last_point, mid_point)
                 self.last_point = event.position()
                 
+                # Large padding to ensure curves and thick strokes are never clipped during drawing
+                padding = max(100.0, float(self.get_current_pen().width() * 4))
+                update_rect = self.current_path.boundingRect()
+                update_rect.adjust(-padding, -padding, padding, padding)
                 self.update(update_rect.toRect())
                 
                 if self.mode == ToolMode.PEN:
@@ -248,6 +272,7 @@ class OverlayWindow(QMainWindow):
                 
                 painter = QPainter(self.canvas_cache)
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+                painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
                 painter.setPen(self.get_current_pen())
                 painter.drawPath(self.current_path)
                 painter.end()
@@ -315,6 +340,7 @@ class OverlayWindow(QMainWindow):
         painter.drawPixmap(0, 0, self.canvas_cache)
         if self.drawing and self.current_path:
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
             painter.setPen(self.get_current_pen())
             painter.drawPath(self.current_path)
 
@@ -333,6 +359,7 @@ class ToolbarWindow(QWidget):
     def __init__(self, signals, parent=None):
         super().__init__(parent)
         self.signals = signals
+        self.active_tool_btn = None
         
         self.setWindowFlags(
             Qt.WindowType.Tool |
@@ -342,36 +369,97 @@ class ToolbarWindow(QWidget):
         
         self.setStyleSheet("""
             QWidget {
-                background-color: #2b2d30;
+                background-color: #F5E8D5;
                 border-radius: 20px;
             }
             QPushButton {
-                background-color: #3b3d40;
-                color: white;
+                background-color: #E6D5B8;
+                color: #333333;
                 border: none;
                 border-radius: 18px;
                 font-size: 18px;
             }
             QPushButton:hover {
-                background-color: #4b4d50;
+                background-color: #D6C3A1;
             }
             QPushButton:pressed {
-                background-color: #5b5d60;
+                background-color: #C6B18D;
+            }
+            QPushButton#activeTool {
+                background-color: #B5A07A;
+                border: 2px solid #555555;
             }
             QToolTip {
-                background-color: #1e1f22;
+                background-color: #333333;
                 color: white;
                 border: 1px solid #555;
                 border-radius: 4px;
                 padding: 4px;
                 font-size: 12px;
             }
+            QFrame#separator {
+                background-color: #D6C3A1;
+                max-height: 2px;
+                min-height: 2px;
+                border: none;
+                margin: 4px 10px 4px 10px;
+            }
+            QMenu {
+                background-color: #F5E8D5;
+                color: #333333;
+                border: 1px solid #D6C3A1;
+                font-size: 14px;
+            }
+            QMenu::item {
+                padding: 6px 20px 6px 20px;
+            }
+            QMenu::item:selected {
+                background-color: #E6D5B8;
+            }
         """)
         
         layout = QVBoxLayout()
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(8)
+        layout.setContentsMargins(10, 15, 10, 15)
+        layout.setSpacing(10)
         
+        # --- SECTION 1: TOOLS ---
+        self.btn_pen = self.create_tool_button("🖊️", "Pen (Ctrl+1) - Right-click for Size", lambda: self.set_active_tool(self.btn_pen, self.signals.switch_pen.emit))
+        pen_menu = QMenu(self)
+        pen_menu.addAction("Mini", lambda: self.signals.change_pen_size.emit(2))
+        pen_menu.addAction("Small", lambda: self.signals.change_pen_size.emit(5))
+        pen_menu.addAction("Medium", lambda: self.signals.change_pen_size.emit(10))
+        pen_menu.addAction("Big", lambda: self.signals.change_pen_size.emit(15))
+        pen_menu.addAction("Large", lambda: self.signals.change_pen_size.emit(20))
+        self.btn_pen.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.btn_pen.customContextMenuRequested.connect(lambda pos: pen_menu.exec(self.btn_pen.mapToGlobal(pos)))
+        layout.addWidget(self.btn_pen, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.btn_hl = self.create_tool_button("🖍️", "Highlighter (Ctrl+2) - Right-click for Size", lambda: self.set_active_tool(self.btn_hl, self.signals.switch_highlighter.emit))
+        hl_menu = QMenu(self)
+        hl_menu.addAction("Mini", lambda: self.signals.change_highlighter_size.emit(10))
+        hl_menu.addAction("Small", lambda: self.signals.change_highlighter_size.emit(15))
+        hl_menu.addAction("Medium", lambda: self.signals.change_highlighter_size.emit(25))
+        hl_menu.addAction("Big", lambda: self.signals.change_highlighter_size.emit(35))
+        hl_menu.addAction("Large", lambda: self.signals.change_highlighter_size.emit(45))
+        self.btn_hl.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.btn_hl.customContextMenuRequested.connect(lambda pos: hl_menu.exec(self.btn_hl.mapToGlobal(pos)))
+        layout.addWidget(self.btn_hl, alignment=Qt.AlignmentFlag.AlignCenter)
+        
+        self.btn_eraser = self.create_tool_button("🧽", "Eraser (Ctrl+3)", lambda: self.set_active_tool(self.btn_eraser, self.signals.switch_eraser.emit))
+        layout.addWidget(self.btn_eraser, alignment=Qt.AlignmentFlag.AlignCenter)
+        
+        self.btn_cursor = self.create_tool_button("🖱️", "Cursor Mode (Ctrl+4)", lambda: self.set_active_tool(self.btn_cursor, self.signals.switch_cursor.emit))
+        layout.addWidget(self.btn_cursor, alignment=Qt.AlignmentFlag.AlignCenter)
+        
+        # Set Pen as default active
+        self.set_active_tool(self.btn_pen, None)
+        
+        # Separator
+        sep1 = QFrame()
+        sep1.setObjectName("separator")
+        layout.addWidget(sep1)
+
+        # --- SECTION 2: COLORS ---
         self.color_buttons = {}
         palette_grid = QGridLayout()
         palette_grid.setSpacing(4)
@@ -385,10 +473,12 @@ class ToolbarWindow(QWidget):
         layout.addLayout(palette_grid)
         self.select_color(COLORS[0], emit=False)
         
-        self.add_button(layout, "🖊️", "Pen (Ctrl+1)", self.signals.switch_pen.emit)
-        self.add_button(layout, "🖍️", "Highlighter (Ctrl+2)", self.signals.switch_highlighter.emit)
-        self.add_button(layout, "🧽", "Eraser (Ctrl+3)", self.signals.switch_eraser.emit)
-        self.add_button(layout, "🖱️", "Cursor Mode (Ctrl+4)", self.signals.switch_cursor.emit)
+        # Separator
+        sep2 = QFrame()
+        sep2.setObjectName("separator")
+        layout.addWidget(sep2)
+
+        # --- SECTION 3: ACTIONS ---
         self.add_button(layout, "↩️", "Undo (Ctrl+Z)", self.signals.undo.emit)
         self.add_button(layout, "👁️", "Toggle Ink Visibility (Ctrl+5)", self.signals.toggle_visibility.emit)
         self.add_button(layout, "⬜", "Toggle Whiteboard/Blackboard", self.signals.toggle_background.emit)
@@ -403,15 +493,42 @@ class ToolbarWindow(QWidget):
         
         self.setLayout(layout)
         self._drag_pos = None
+        
+        # Connect signals for shortcut sync
+        self.signals.switch_pen.connect(lambda: self.set_active_tool(self.btn_pen, None))
+        self.signals.switch_highlighter.connect(lambda: self.set_active_tool(self.btn_hl, None))
+        self.signals.switch_eraser.connect(lambda: self.set_active_tool(self.btn_eraser, None))
+        self.signals.switch_cursor.connect(lambda: self.set_active_tool(self.btn_cursor, None))
+
+    def create_tool_button(self, icon, tooltip, callback):
+        btn = QPushButton(icon)
+        btn.setFixedSize(36, 36)
+        btn.setToolTip(tooltip)
+        btn.clicked.connect(callback)
+        return btn
+
+    def set_active_tool(self, btn, callback):
+        if self.active_tool_btn:
+            self.active_tool_btn.setObjectName("")
+            self.active_tool_btn.style().unpolish(self.active_tool_btn)
+            self.active_tool_btn.style().polish(self.active_tool_btn)
+            
+        self.active_tool_btn = btn
+        self.active_tool_btn.setObjectName("activeTool")
+        self.active_tool_btn.style().unpolish(self.active_tool_btn)
+        self.active_tool_btn.style().polish(self.active_tool_btn)
+        
+        if callback:
+            callback()
 
     def select_color(self, hex_color, emit=True):
         if emit:
             self.signals.change_color.emit(hex_color)
         for c, btn in self.color_buttons.items():
             if c == hex_color:
-                btn.setStyleSheet(f"background-color: {c}; border-radius: 12px; border: 2px solid white;")
+                btn.setStyleSheet(f"background-color: {c}; border-radius: 12px; border: 2px solid #333333;")
             else:
-                btn.setStyleSheet(f"background-color: {c}; border-radius: 12px; border: none;")
+                btn.setStyleSheet(f"background-color: {c}; border-radius: 12px; border: 1px solid #D6C3A1;")
 
     def add_button(self, layout, icon, tooltip, callback):
         btn = QPushButton(icon)
