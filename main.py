@@ -27,20 +27,10 @@ class BackgroundMode:
     WHITEBOARD = 1
     BLACKBOARD = 2
 
-# Microsoft Journal inspired color palette
 COLORS = [
-    "#000000", # Black
-    "#FFFFFF", # White
-    "#717171", # Gray
-    "#FF3B30", # Red
-    "#FF9500", # Orange
-    "#FFCC00", # Yellow
-    "#4CD964", # Green
-    "#5AC8FA", # Light Blue
-    "#007AFF", # Blue
-    "#5856D6", # Purple
-    "#FF2D55", # Pink
-    "#A2845E"  # Brown
+    "#000000", "#FFFFFF", "#717171", "#FF3B30",
+    "#FF9500", "#FFCC00", "#4CD964", "#5AC8FA",
+    "#007AFF", "#5856D6", "#FF2D55", "#A2845E"
 ]
 
 class ShortcutSignals(QObject):
@@ -67,15 +57,14 @@ class OverlayWindow(QMainWindow):
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         
-        # Make full screen
         virtual_rect = QRect()
         for screen in QApplication.screens():
             virtual_rect = virtual_rect.united(screen.geometry())
         self.setGeometry(virtual_rect)
         
-        # Optimization: O(1) Rendering Cache
         self.canvas_cache = QPixmap(virtual_rect.size())
-        self.canvas_cache.fill(Qt.GlobalColor.transparent)
+        # FIX: Alpha=1 instead of 0 prevents Windows from passing clicks through entirely
+        self.canvas_cache.fill(QColor(0, 0, 0, 1))
         
         self.mode = ToolMode.PEN
         self.bg_mode = BackgroundMode.TRANSPARENT
@@ -86,19 +75,16 @@ class OverlayWindow(QMainWindow):
         self.highlighter_color = QColor(COLORS[5])
         
         self.MAX_UNDO_STEPS = 50
-        self.paths = [] # {'path': QPainterPath, 'pen': QPen, 'mode': ToolMode}
+        self.paths = []
         self.current_path = None
         self.last_point = None
         self.raw_points = []
         
         self.drawing = False
-        
-        # Smart shapes timer
         self.shape_timer = QTimer()
         self.shape_timer.setSingleShot(True)
         self.shape_timer.timeout.connect(self.detect_shape)
         
-        # Setup signals
         self.signals.switch_pen.connect(lambda: self.set_mode(ToolMode.PEN))
         self.signals.switch_highlighter.connect(lambda: self.set_mode(ToolMode.HIGHLIGHTER))
         self.signals.switch_eraser.connect(lambda: self.set_mode(ToolMode.ERASER))
@@ -110,7 +96,6 @@ class OverlayWindow(QMainWindow):
         self.signals.toggle_visibility.connect(self.toggle_visibility)
         self.signals.exit_app.connect(QApplication.instance().quit)
 
-        # Set initial cursor
         self.set_mode(ToolMode.PEN)
 
     def set_mode(self, new_mode):
@@ -151,7 +136,7 @@ class OverlayWindow(QMainWindow):
     def get_current_pen(self):
         if self.mode == ToolMode.HIGHLIGHTER:
             color = QColor(self.highlighter_color)
-            color.setAlpha(60) # Much lower alpha to prevent text blocking
+            color.setAlpha(60)
             return QPen(color, 25, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
         elif self.mode == ToolMode.ERASER:
             return QPen(QColor(255, 255, 255, 255), 30, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
@@ -159,8 +144,7 @@ class OverlayWindow(QMainWindow):
             return QPen(self.pen_color, 5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
 
     def rebuild_cache(self):
-        """Redraws all completed strokes onto the static pixmap."""
-        self.canvas_cache.fill(Qt.GlobalColor.transparent)
+        self.canvas_cache.fill(QColor(0, 0, 0, 1))
         painter = QPainter(self.canvas_cache)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         for p in self.paths:
@@ -192,7 +176,6 @@ class OverlayWindow(QMainWindow):
                 self.current_path.quadTo(self.last_point, mid_point)
                 self.last_point = event.position()
                 self.update()
-                
                 if self.mode == ToolMode.PEN:
                     self.shape_timer.start(400)
 
@@ -201,14 +184,10 @@ class OverlayWindow(QMainWindow):
             self.shape_timer.stop()
             if self.drawing and self.current_path:
                 self.current_path.lineTo(event.position())
-                
-                # Enforce Max Undo Steps memory limit
                 if len(self.paths) >= self.MAX_UNDO_STEPS:
                     self.paths.pop(0)
-                    
                 self.paths.append({'path': self.current_path, 'pen': self.get_current_pen(), 'mode': self.mode})
                 
-                # Incrementally draw on the cache
                 painter = QPainter(self.canvas_cache)
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)
                 painter.setPen(self.get_current_pen())
@@ -220,41 +199,31 @@ class OverlayWindow(QMainWindow):
             self.drawing = False
 
     def erase_at(self, pos):
-        # Increased eraser size for better UX
         rect = QRectF(pos.x() - 20, pos.y() - 20, 40, 40)
         removed = False
-        
-        # Traverse backwards and use fast bounding box rejection
         for i in range(len(self.paths) - 1, -1, -1):
             p = self.paths[i]['path']
             if p.boundingRect().intersects(rect):
                 if p.intersects(rect):
                     self.paths.pop(i)
                     removed = True
-                    
         if removed:
             self.rebuild_cache()
             self.update()
 
     def detect_shape(self):
-        if not self.drawing or len(self.raw_points) < 10:
-            return
-            
-        start = self.raw_points[0]
-        end = self.raw_points[-1]
-        
+        if not self.drawing or len(self.raw_points) < 10: return
+        start, end = self.raw_points[0], self.raw_points[-1]
         min_x = min(p.x() for p in self.raw_points)
         max_x = max(p.x() for p in self.raw_points)
         min_y = min(p.y() for p in self.raw_points)
         max_y = max(p.y() for p in self.raw_points)
-        width = max_x - min_x
-        height = max_y - min_y
+        width, height = max_x - min_x, max_y - min_y
         
         path_length = sum(self.distance(self.raw_points[i], self.raw_points[i+1]) for i in range(len(self.raw_points)-1))
         direct_dist = self.distance(start, end)
         
         new_path = QPainterPath()
-        
         if direct_dist < max(width, height) * 0.3:
             new_path.addEllipse(QRectF(min_x, min_y, width, height))
             self.replace_current_path(new_path)
@@ -275,25 +244,19 @@ class OverlayWindow(QMainWindow):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        
-        # 1. Draw Background
         if self.bg_mode == BackgroundMode.WHITEBOARD:
             painter.fillRect(self.rect(), QColor("white"))
         elif self.bg_mode == BackgroundMode.BLACKBOARD:
             painter.fillRect(self.rect(), QColor("#222222"))
             
-        if not self.ink_visible:
-            return
+        if not self.ink_visible: return
             
-        # 2. Draw Cached Strokes (O(1) operation)
         painter.drawPixmap(0, 0, self.canvas_cache)
-        
-        # 3. Draw Active Stroke
         if self.drawing and self.current_path:
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
             painter.setPen(self.get_current_pen())
             painter.drawPath(self.current_path)
-            
+
     def clear_screen(self):
         self.paths.clear()
         self.rebuild_cache()
@@ -306,60 +269,89 @@ class OverlayWindow(QMainWindow):
             self.update()
 
 class ToolbarWindow(QWidget):
-    def __init__(self, signals):
-        super().__init__()
+    def __init__(self, signals, parent=None):
+        super().__init__(parent)
         self.signals = signals
+        
+        # Parented to overlay, so it won't hide behind it
         self.setWindowFlags(
-            Qt.WindowType.WindowStaysOnTopHint |
             Qt.WindowType.Tool |
-            Qt.WindowType.FramelessWindowHint
+            Qt.WindowType.FramelessWindowHint |
+            Qt.WindowType.WindowStaysOnTopHint
         )
-        self.setStyleSheet("background-color: #2b2b2b; border-radius: 10px;")
+        
+        # Material You Design
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #2b2d30;
+                border-radius: 20px;
+            }
+            QPushButton {
+                background-color: #3b3d40;
+                color: white;
+                border: none;
+                border-radius: 18px;
+                font-size: 18px;
+            }
+            QPushButton:hover {
+                background-color: #4b4d50;
+            }
+            QPushButton:pressed {
+                background-color: #5b5d60;
+            }
+            QToolTip {
+                background-color: #1e1f22;
+                color: white;
+                border: 1px solid #555;
+                border-radius: 4px;
+                padding: 4px;
+                font-size: 12px;
+            }
+        """)
         
         layout = QVBoxLayout()
         layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(8)
         
-        title = QLabel("Epic Pen Clone")
-        title.setStyleSheet("color: white; font-weight: bold;")
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(title)
-        
+        # Color Palette
         palette_grid = QGridLayout()
-        palette_grid.setSpacing(5)
+        palette_grid.setSpacing(4)
         for i, color_hex in enumerate(COLORS):
             btn = QPushButton()
-            btn.setFixedSize(25, 25)
-            btn.setStyleSheet(f"background-color: {color_hex}; border: 1px solid #555; border-radius: 12px;")
+            btn.setFixedSize(24, 24)
+            btn.setStyleSheet(f"background-color: {color_hex}; border-radius: 12px;")
+            btn.setToolTip("Select Color")
             btn.clicked.connect(lambda checked, c=color_hex: self.signals.change_color.emit(c))
             palette_grid.addWidget(btn, i // 4, i % 4)
         layout.addLayout(palette_grid)
         
-        self.add_button(layout, "Pen (Ctrl+1)", self.signals.switch_pen.emit)
-        self.add_button(layout, "Highlighter (Ctrl+2)", self.signals.switch_highlighter.emit)
-        self.add_button(layout, "Eraser (Ctrl+3)", self.signals.switch_eraser.emit)
-        self.add_button(layout, "Cursor (Ctrl+4)", self.signals.switch_cursor.emit)
-        self.add_button(layout, "Undo (Ctrl+Z)", self.signals.undo.emit)
-        self.add_button(layout, "Hide Ink (Ctrl+5)", self.signals.toggle_visibility.emit)
-        self.add_button(layout, "Clear (Ctrl+Shift+C)", self.signals.clear_screen.emit)
-        self.add_button(layout, "Toggle Whiteboard", self.signals.toggle_background.emit)
+        # Buttons with Icons
+        self.add_button(layout, "🖊️", "Pen (Ctrl+1)", self.signals.switch_pen.emit)
+        self.add_button(layout, "🖍️", "Highlighter (Ctrl+2)", self.signals.switch_highlighter.emit)
+        self.add_button(layout, "🧽", "Eraser (Ctrl+3)", self.signals.switch_eraser.emit)
+        self.add_button(layout, "🖱️", "Cursor Mode (Ctrl+4)", self.signals.switch_cursor.emit)
+        self.add_button(layout, "↩️", "Undo (Ctrl+Z)", self.signals.undo.emit)
+        self.add_button(layout, "👁️", "Toggle Ink Visibility (Ctrl+5)", self.signals.toggle_visibility.emit)
+        self.add_button(layout, "⬜", "Toggle Whiteboard/Blackboard", self.signals.toggle_background.emit)
+        self.add_button(layout, "🗑️", "Clear Screen (Ctrl+Shift+C)", self.signals.clear_screen.emit)
         
-        btn_close = QPushButton("Exit (Ctrl+Q)")
-        btn_close.setStyleSheet("background-color: #ff4444; color: white; padding: 8px; border-radius: 5px;")
+        # Exit Button
+        btn_close = QPushButton("❌")
+        btn_close.setFixedSize(36, 36)
+        btn_close.setToolTip("Exit App (Ctrl+Q)")
+        btn_close.setStyleSheet("background-color: #ff4d4d; color: white; border-radius: 18px; font-size: 14px;")
         btn_close.clicked.connect(self.signals.exit_app.emit)
-        layout.addWidget(btn_close)
+        layout.addWidget(btn_close, alignment=Qt.AlignmentFlag.AlignCenter)
         
         self.setLayout(layout)
         self._drag_pos = None
 
-    def add_button(self, layout, text, callback):
-        btn = QPushButton(text)
-        btn.setStyleSheet("""
-            QPushButton { background-color: #444; color: white; padding: 8px; border-radius: 5px; }
-            QPushButton:hover { background-color: #555; }
-            QPushButton:pressed { background-color: #666; }
-        """)
+    def add_button(self, layout, icon, tooltip, callback):
+        btn = QPushButton(icon)
+        btn.setFixedSize(36, 36)
+        btn.setToolTip(tooltip)
         btn.clicked.connect(callback)
-        layout.addWidget(btn)
+        layout.addWidget(btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -376,7 +368,6 @@ class ToolbarWindow(QWidget):
 
 class AppSystemTray(QSystemTrayIcon):
     def __init__(self, signals, parent=None):
-        # Create a simple red icon
         pixmap = QPixmap(32, 32)
         pixmap.fill(QColor("#FF3B30"))
         icon = QIcon(pixmap)
@@ -402,22 +393,22 @@ def setup_global_shortcuts(signals):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    # Ensure app doesn't close if toolbar is hidden but tray is alive
     app.setQuitOnLastWindowClosed(False)
     
     signals = ShortcutSignals()
     
-    # System Tray
     tray = AppSystemTray(signals)
     tray.show()
     
     overlay = OverlayWindow(signals)
     overlay.show()
     
-    toolbar = ToolbarWindow(signals)
-    toolbar.resize(150, 450)
+    # Passing overlay as parent guarantees it never goes behind the drawing layer
+    toolbar = ToolbarWindow(signals, parent=overlay)
+    toolbar.resize(80, 500)
     screen_rect = QApplication.primaryScreen().geometry()
-    toolbar.move(screen_rect.width() - 200, 50)
+    # Move to the far right, vertically centered
+    toolbar.move(screen_rect.width() - 100, (screen_rect.height() - 500) // 2)
     toolbar.show()
     
     setup_global_shortcuts(signals)
