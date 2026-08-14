@@ -1,4 +1,9 @@
 import sys
+if sys.platform != "win32":
+    print("This application is heavily optimized for Windows and uses Windows-specific APIs.")
+    print("It will not run on macOS or Linux.")
+    sys.exit(1)
+
 import ctypes
 import keyboard
 import math
