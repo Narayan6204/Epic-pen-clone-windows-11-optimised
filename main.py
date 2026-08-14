@@ -7,9 +7,9 @@ if sys.platform != "win32":
 import ctypes
 import keyboard
 import math
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QGridLayout
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QGridLayout, QSystemTrayIcon, QMenu
 from PyQt6.QtCore import Qt, QPoint, QRect, QRectF, pyqtSignal, QObject, QTimer, QPointF
-from PyQt6.QtGui import QPainter, QPen, QColor, QPainterPath, QPixmap
+from PyQt6.QtGui import QPainter, QPen, QColor, QPainterPath, QPixmap, QIcon
 
 # Windows API constants for click-through
 WS_EX_TRANSPARENT = 0x00000020
@@ -52,6 +52,7 @@ class ShortcutSignals(QObject):
     undo = pyqtSignal()
     change_color = pyqtSignal(str)
     toggle_background = pyqtSignal()
+    toggle_visibility = pyqtSignal()
     exit_app = pyqtSignal()
 
 class OverlayWindow(QMainWindow):
@@ -79,6 +80,7 @@ class OverlayWindow(QMainWindow):
         self.mode = ToolMode.PEN
         self.bg_mode = BackgroundMode.TRANSPARENT
         self.is_click_through = False
+        self.ink_visible = True
         
         self.pen_color = QColor(COLORS[0])
         self.highlighter_color = QColor(COLORS[5])
@@ -105,14 +107,20 @@ class OverlayWindow(QMainWindow):
         self.signals.undo.connect(self.undo)
         self.signals.change_color.connect(self.set_color)
         self.signals.toggle_background.connect(self.toggle_background)
+        self.signals.toggle_visibility.connect(self.toggle_visibility)
         self.signals.exit_app.connect(QApplication.instance().quit)
+
+        # Set initial cursor
+        self.set_mode(ToolMode.PEN)
 
     def set_mode(self, new_mode):
         self.mode = new_mode
         if new_mode == ToolMode.CURSOR:
             self.set_click_through(True)
+            self.setCursor(Qt.CursorShape.ArrowCursor)
         else:
             self.set_click_through(False)
+            self.setCursor(Qt.CursorShape.CrossCursor)
 
     def set_color(self, hex_color):
         if self.mode == ToolMode.HIGHLIGHTER:
@@ -123,6 +131,10 @@ class OverlayWindow(QMainWindow):
 
     def toggle_background(self):
         self.bg_mode = (self.bg_mode + 1) % 3
+        self.update()
+
+    def toggle_visibility(self):
+        self.ink_visible = not self.ink_visible
         self.update()
 
     def set_click_through(self, enabled):
@@ -139,8 +151,8 @@ class OverlayWindow(QMainWindow):
     def get_current_pen(self):
         if self.mode == ToolMode.HIGHLIGHTER:
             color = QColor(self.highlighter_color)
-            color.setAlpha(100) # Translucent
-            return QPen(color, 20, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
+            color.setAlpha(60) # Much lower alpha to prevent text blocking
+            return QPen(color, 25, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
         elif self.mode == ToolMode.ERASER:
             return QPen(QColor(255, 255, 255, 255), 30, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
         else:
@@ -158,6 +170,7 @@ class OverlayWindow(QMainWindow):
         painter.end()
 
     def mousePressEvent(self, event):
+        if not self.ink_visible: return
         if event.button() == Qt.MouseButton.LeftButton and not self.is_click_through:
             if self.mode == ToolMode.ERASER:
                 self.erase_at(event.position())
@@ -169,6 +182,7 @@ class OverlayWindow(QMainWindow):
                 self.last_point = event.position()
 
     def mouseMoveEvent(self, event):
+        if not self.ink_visible: return
         if (event.buttons() & Qt.MouseButton.LeftButton) and not self.is_click_through:
             if self.mode == ToolMode.ERASER:
                 self.erase_at(event.position())
@@ -268,6 +282,9 @@ class OverlayWindow(QMainWindow):
         elif self.bg_mode == BackgroundMode.BLACKBOARD:
             painter.fillRect(self.rect(), QColor("#222222"))
             
+        if not self.ink_visible:
+            return
+            
         # 2. Draw Cached Strokes (O(1) operation)
         painter.drawPixmap(0, 0, self.canvas_cache)
         
@@ -322,6 +339,7 @@ class ToolbarWindow(QWidget):
         self.add_button(layout, "Eraser (Ctrl+3)", self.signals.switch_eraser.emit)
         self.add_button(layout, "Cursor (Ctrl+4)", self.signals.switch_cursor.emit)
         self.add_button(layout, "Undo (Ctrl+Z)", self.signals.undo.emit)
+        self.add_button(layout, "Hide Ink (Ctrl+5)", self.signals.toggle_visibility.emit)
         self.add_button(layout, "Clear (Ctrl+Shift+C)", self.signals.clear_screen.emit)
         self.add_button(layout, "Toggle Whiteboard", self.signals.toggle_background.emit)
         
@@ -356,25 +374,48 @@ class ToolbarWindow(QWidget):
     def mouseReleaseEvent(self, event):
         self._drag_pos = None
 
+class AppSystemTray(QSystemTrayIcon):
+    def __init__(self, signals, parent=None):
+        # Create a simple red icon
+        pixmap = QPixmap(32, 32)
+        pixmap.fill(QColor("#FF3B30"))
+        icon = QIcon(pixmap)
+        
+        super().__init__(icon, parent)
+        self.setToolTip("Epic Pen Clone")
+        
+        menu = QMenu()
+        exit_action = menu.addAction("Exit")
+        exit_action.triggered.connect(signals.exit_app.emit)
+        
+        self.setContextMenu(menu)
+
 def setup_global_shortcuts(signals):
     keyboard.add_hotkey('ctrl+1', lambda: signals.switch_pen.emit(), suppress=True)
     keyboard.add_hotkey('ctrl+2', lambda: signals.switch_highlighter.emit(), suppress=True)
     keyboard.add_hotkey('ctrl+3', lambda: signals.switch_eraser.emit(), suppress=True)
     keyboard.add_hotkey('ctrl+4', lambda: signals.switch_cursor.emit(), suppress=True)
+    keyboard.add_hotkey('ctrl+5', lambda: signals.toggle_visibility.emit(), suppress=True)
     keyboard.add_hotkey('ctrl+z', lambda: signals.undo.emit(), suppress=True)
     keyboard.add_hotkey('ctrl+shift+c', lambda: signals.clear_screen.emit(), suppress=True)
     keyboard.add_hotkey('ctrl+q', lambda: signals.exit_app.emit(), suppress=True)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    # Ensure app doesn't close if toolbar is hidden but tray is alive
+    app.setQuitOnLastWindowClosed(False)
     
     signals = ShortcutSignals()
+    
+    # System Tray
+    tray = AppSystemTray(signals)
+    tray.show()
     
     overlay = OverlayWindow(signals)
     overlay.show()
     
     toolbar = ToolbarWindow(signals)
-    toolbar.resize(150, 400)
+    toolbar.resize(150, 450)
     screen_rect = QApplication.primaryScreen().geometry()
     toolbar.move(screen_rect.width() - 200, 50)
     toolbar.show()
