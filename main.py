@@ -134,7 +134,7 @@ class OverlayWindow(QMainWindow):
             painter.drawEllipse(QPointF(center, center), radius - 1, radius - 1)
 
         painter.end()
-        self.setCursor(QCursor(pixmap, hotspot_x=int(center), hotspot_y=int(center)))
+        self.setCursor(QCursor(pixmap, int(center), int(center)))
 
     def set_mode(self, new_mode):
         self.mode = new_mode
