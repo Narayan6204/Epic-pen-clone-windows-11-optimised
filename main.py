@@ -9,7 +9,7 @@ import keyboard
 import math
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QGridLayout, QSystemTrayIcon, QMenu
 from PyQt6.QtCore import Qt, QPoint, QRect, QRectF, pyqtSignal, QObject, QTimer, QPointF
-from PyQt6.QtGui import QPainter, QPen, QColor, QPainterPath, QPixmap, QIcon
+from PyQt6.QtGui import QPainter, QPen, QColor, QPainterPath, QPixmap, QIcon, QCursor
 
 # Windows API constants for click-through
 WS_EX_TRANSPARENT = 0x00000020
@@ -63,7 +63,6 @@ class OverlayWindow(QMainWindow):
         self.setGeometry(virtual_rect)
         
         self.canvas_cache = QPixmap(virtual_rect.size())
-        # FIX: Alpha=1 instead of 0 prevents Windows from passing clicks through entirely
         self.canvas_cache.fill(QColor(0, 0, 0, 1))
         
         self.mode = ToolMode.PEN
@@ -98,21 +97,60 @@ class OverlayWindow(QMainWindow):
 
         self.set_mode(ToolMode.PEN)
 
+    def update_cursor(self):
+        if self.is_click_through or self.mode == ToolMode.CURSOR:
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+            return
+
+        size = 64
+        pixmap = QPixmap(size, size)
+        pixmap.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        center = size / 2
+
+        if self.mode == ToolMode.PEN:
+            radius = 5 / 2
+            painter.setBrush(self.pen_color)
+            painter.setPen(QPen(QColor("white"), 1))
+            painter.drawEllipse(QPointF(center, center), radius, radius)
+            
+        elif self.mode == ToolMode.HIGHLIGHTER:
+            width = 25
+            rect = QRectF(center - width/2, center - width/2, width, width)
+            color = QColor(self.highlighter_color)
+            color.setAlpha(200) 
+            painter.setBrush(color)
+            painter.setPen(QPen(QColor("white"), 1))
+            painter.drawRoundedRect(rect, 4, 4)
+            
+        elif self.mode == ToolMode.ERASER:
+            radius = 40 / 2
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.setPen(QPen(QColor("black"), 2))
+            painter.drawEllipse(QPointF(center, center), radius, radius)
+            painter.setPen(QPen(QColor("white"), 1))
+            painter.drawEllipse(QPointF(center, center), radius - 1, radius - 1)
+
+        painter.end()
+        self.setCursor(QCursor(pixmap, hotspot_x=int(center), hotspot_y=int(center)))
+
     def set_mode(self, new_mode):
         self.mode = new_mode
         if new_mode == ToolMode.CURSOR:
             self.set_click_through(True)
-            self.setCursor(Qt.CursorShape.ArrowCursor)
         else:
             self.set_click_through(False)
-            self.setCursor(Qt.CursorShape.CrossCursor)
+        self.update_cursor()
 
     def set_color(self, hex_color):
         if self.mode == ToolMode.HIGHLIGHTER:
             self.highlighter_color = QColor(hex_color)
         else:
             self.pen_color = QColor(hex_color)
-            self.set_mode(ToolMode.PEN)
+            self.mode = ToolMode.PEN
+            self.set_click_through(False)
+        self.update_cursor()
 
     def toggle_background(self):
         self.bg_mode = (self.bg_mode + 1) % 3
@@ -156,6 +194,7 @@ class OverlayWindow(QMainWindow):
     def mousePressEvent(self, event):
         if not self.ink_visible: return
         if event.button() == Qt.MouseButton.LeftButton and not self.is_click_through:
+            self.setCursor(Qt.CursorShape.BlankCursor)
             if self.mode == ToolMode.ERASER:
                 self.erase_at(event.position())
             else:
@@ -182,6 +221,7 @@ class OverlayWindow(QMainWindow):
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             self.shape_timer.stop()
+            self.update_cursor()
             if self.drawing and self.current_path:
                 self.current_path.lineTo(event.position())
                 if len(self.paths) >= self.MAX_UNDO_STEPS:
@@ -273,14 +313,12 @@ class ToolbarWindow(QWidget):
         super().__init__(parent)
         self.signals = signals
         
-        # Parented to overlay, so it won't hide behind it
         self.setWindowFlags(
             Qt.WindowType.Tool |
             Qt.WindowType.FramelessWindowHint |
             Qt.WindowType.WindowStaysOnTopHint
         )
         
-        # Material You Design
         self.setStyleSheet("""
             QWidget {
                 background-color: #2b2d30;
@@ -313,7 +351,6 @@ class ToolbarWindow(QWidget):
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(8)
         
-        # Color Palette
         palette_grid = QGridLayout()
         palette_grid.setSpacing(4)
         for i, color_hex in enumerate(COLORS):
@@ -325,7 +362,6 @@ class ToolbarWindow(QWidget):
             palette_grid.addWidget(btn, i // 4, i % 4)
         layout.addLayout(palette_grid)
         
-        # Buttons with Icons
         self.add_button(layout, "🖊️", "Pen (Ctrl+1)", self.signals.switch_pen.emit)
         self.add_button(layout, "🖍️", "Highlighter (Ctrl+2)", self.signals.switch_highlighter.emit)
         self.add_button(layout, "🧽", "Eraser (Ctrl+3)", self.signals.switch_eraser.emit)
@@ -335,7 +371,6 @@ class ToolbarWindow(QWidget):
         self.add_button(layout, "⬜", "Toggle Whiteboard/Blackboard", self.signals.toggle_background.emit)
         self.add_button(layout, "🗑️", "Clear Screen (Ctrl+Shift+C)", self.signals.clear_screen.emit)
         
-        # Exit Button
         btn_close = QPushButton("❌")
         btn_close.setFixedSize(36, 36)
         btn_close.setToolTip("Exit App (Ctrl+Q)")
@@ -403,11 +438,9 @@ if __name__ == '__main__':
     overlay = OverlayWindow(signals)
     overlay.show()
     
-    # Passing overlay as parent guarantees it never goes behind the drawing layer
     toolbar = ToolbarWindow(signals, parent=overlay)
     toolbar.resize(80, 500)
     screen_rect = QApplication.primaryScreen().geometry()
-    # Move to the far right, vertically centered
     toolbar.move(screen_rect.width() - 100, (screen_rect.height() - 500) // 2)
     toolbar.show()
     
