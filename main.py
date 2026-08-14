@@ -279,6 +279,16 @@ class OverlayWindow(QMainWindow):
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         for p in self.paths:
             if p['mode'] != ToolMode.ERASER:
+                # Add tiny halo blur to pen to prevent pixelation on sharp edges
+                if p['mode'] == ToolMode.PEN:
+                    halo = QPen(p['pen'])
+                    c = halo.color()
+                    c.setAlpha(int(c.alpha() * 0.04))
+                    halo.setColor(c)
+                    halo.setWidth(halo.width() + 4)
+                    painter.setPen(halo)
+                    painter.drawPath(p['path'])
+                
                 painter.setPen(p['pen'])
                 painter.drawPath(p['path'])
         painter.end()
@@ -342,6 +352,16 @@ class OverlayWindow(QMainWindow):
                 painter = QPainter(self.canvas_cache)
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)
                 painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+                
+                if self.mode == ToolMode.PEN:
+                    halo = QPen(self.get_current_pen())
+                    c = halo.color()
+                    c.setAlpha(int(c.alpha() * 0.04))
+                    halo.setColor(c)
+                    halo.setWidth(halo.width() + 4)
+                    painter.setPen(halo)
+                    painter.drawPath(self.current_path)
+                
                 painter.setPen(self.get_current_pen())
                 painter.drawPath(self.current_path)
                 painter.end()
@@ -409,10 +429,22 @@ class OverlayWindow(QMainWindow):
             
         if not self.ink_visible: return
             
-        painter.drawPixmap(event.rect(), self.canvas_cache, event.rect())
+        painter.setClipRect(event.rect())
+        painter.drawPixmap(0, 0, self.canvas_cache)
+        
         if self.drawing and self.current_path:
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
             painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+            
+            if self.mode == ToolMode.PEN:
+                halo = QPen(self.get_current_pen())
+                c = halo.color()
+                c.setAlpha(int(c.alpha() * 0.04))
+                halo.setColor(c)
+                halo.setWidth(halo.width() + 4)
+                painter.setPen(halo)
+                painter.drawPath(self.current_path)
+                
             painter.setPen(self.get_current_pen())
             painter.drawPath(self.current_path)
 
@@ -437,6 +469,7 @@ class FloatingColorPalette(QWidget):
             Qt.WindowType.FramelessWindowHint |
             Qt.WindowType.WindowStaysOnTopHint
         )
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         
         self.setStyleSheet("""
             QWidget {
@@ -508,6 +541,7 @@ class ToolbarWindow(QWidget):
             Qt.WindowType.FramelessWindowHint |
             Qt.WindowType.WindowStaysOnTopHint
         )
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         
         self.setStyleSheet("""
             QWidget {
@@ -564,6 +598,13 @@ class ToolbarWindow(QWidget):
         layout.setContentsMargins(10, 15, 10, 15)
         layout.setSpacing(10)
         
+        # --- TOP: VISIBILITY TOGGLE ---
+        self.add_button(layout, "👁️", "Toggle Ink Visibility (Ctrl+5)", self.signals.toggle_visibility.emit)
+        
+        sep0 = QFrame()
+        sep0.setObjectName("separator")
+        layout.addWidget(sep0)
+        
         # --- SECTION 1: TOOLS ---
         self.btn_pen = self.create_hold_button("🖊️", "Pen (Ctrl+1) - Hold for Size", lambda: self.set_active_tool(self.btn_pen, self.signals.switch_pen.emit))
         self.setup_size_menu(self.btn_pen, [2, 5, 10, 15, 20], self.signals.change_pen_size.emit)
@@ -596,7 +637,6 @@ class ToolbarWindow(QWidget):
 
         # --- SECTION 3: ACTIONS ---
         self.add_button(layout, "↩️", "Undo (Ctrl+Z)", self.signals.undo.emit)
-        self.add_button(layout, "👁️", "Toggle Ink Visibility (Ctrl+5)", self.signals.toggle_visibility.emit)
         self.add_button(layout, "⬜", "Toggle Whiteboard/Blackboard", self.signals.toggle_background.emit)
         self.add_button(layout, "🗑️", "Clear Screen (Ctrl+Shift+C)", self.signals.clear_screen.emit)
         
