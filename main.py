@@ -29,6 +29,15 @@ class ToolMode:
     HIGHLIGHTER = 1
     ERASER = 2
     CURSOR = 3
+    SHAPE = 4
+
+class ShapeType:
+    LINE = "Line"
+    ARROW = "Arrow"
+    RECTANGLE = "Rectangle"
+    ROUNDED_RECTANGLE = "Rounded Rectangle"
+    TRIANGLE = "Triangle"
+    CIRCLE = "Circle"
 
 class BackgroundMode:
     TRANSPARENT = 0
@@ -60,6 +69,7 @@ class ShortcutSignals(QObject):
     increment_size      = pyqtSignal()
     decrement_size      = pyqtSignal()
     toggle_color_palette = pyqtSignal()
+    switch_shape        = pyqtSignal(str)
 
 
 # ── Reusable Widgets ──
@@ -92,8 +102,70 @@ class HoldButton(QPushButton):
         self.hold_triggered.emit()
 
 
+class CustomHoverMenu(QWidget):
+    def __init__(self, parent=None):
+        # Must pass no parent (or a dummy) so it can be a top-level tool window
+        super().__init__(None)
+        self.setWindowFlags(Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setStyleSheet(TOOLBAR_STYLESHEET)
+        self.layout = QHBoxLayout(self)
+        self.layout.setContentsMargins(8, 8, 8, 8)
+        self.layout.setSpacing(5)
+        self.hide_timer = QTimer(self)
+        self.hide_timer.setSingleShot(True)
+        self.hide_timer.timeout.connect(self.hide)
+
+    def add_action(self, icon, tooltip, callback):
+        btn = QPushButton(icon)
+        btn.setFixedSize(36, 36)
+        btn.setToolTip(tooltip)
+        btn.clicked.connect(callback)
+        btn.clicked.connect(self.hide)
+        self.layout.addWidget(btn)
+        return btn
+
+    def enterEvent(self, event):
+        self.hide_timer.stop()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self.hide_timer.start(150)
+        super().leaveEvent(event)
+
+    def show_menu(self, anchor_widget):
+        self.hide_timer.stop()
+        self.adjustSize()
+        # Position menu to the left of the anchor button
+        global_pos = anchor_widget.mapToGlobal(QPoint(-self.width() - 10, 0))
+        self.move(global_pos)
+        self.show()
+
+    def schedule_hide(self):
+        self.hide_timer.start(150)
+
+
+class HoverMenuButton(QPushButton):
+    def __init__(self, icon, tooltip, parent=None):
+        super().__init__(icon, parent)
+        self.setToolTip(tooltip)
+        self.menu_widget = None
+
+    def set_menu(self, menu_widget):
+        self.menu_widget = menu_widget
+
+    def enterEvent(self, event):
+        super().enterEvent(event)
+        if self.menu_widget:
+            self.menu_widget.show_menu(self)
+
+    def leaveEvent(self, event):
+        super().leaveEvent(event)
+        if self.menu_widget:
+            self.menu_widget.schedule_hide()
+
+
 class DragHandle(QWidget):
-    """Small pill-shaped drag handle for frameless windows."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -161,6 +233,7 @@ class OverlayWindow(QMainWindow):
         self.is_click_through = False
         self.ink_visible = True
         self.shape_detected = False
+        self.current_shape = ShapeType.LINE
 
         # Colors and sizes
         self.pen_color = QColor(COLORS[0])
@@ -191,6 +264,7 @@ class OverlayWindow(QMainWindow):
         self.signals.change_color.connect(self.set_color)
         self.signals.toggle_background.connect(self.toggle_background)
         self.signals.toggle_visibility.connect(self.toggle_visibility)
+        self.signals.switch_shape.connect(self.set_shape)
         self.signals.change_pen_size.connect(self.set_pen_size)
         self.signals.change_highlighter_size.connect(self.set_highlighter_size)
         self.signals.change_eraser_size.connect(self.set_eraser_size)
@@ -235,6 +309,9 @@ class OverlayWindow(QMainWindow):
     def _update_cursor(self):
         if self.is_click_through or self.mode == ToolMode.CURSOR:
             self.setCursor(Qt.CursorShape.ArrowCursor)
+            return
+        if self.mode == ToolMode.SHAPE:
+            self.setCursor(Qt.CursorShape.CrossCursor)
             return
 
         size = 128
@@ -281,6 +358,10 @@ class OverlayWindow(QMainWindow):
         self.set_click_through(new_mode == ToolMode.CURSOR or not self.ink_visible)
         self._update_cursor()
 
+    def set_shape(self, shape_type):
+        self.current_shape = shape_type
+        self.set_mode(ToolMode.SHAPE)
+
     def set_color(self, hex_color):
         if self.mode == ToolMode.HIGHLIGHTER:
             self.highlighter_color = QColor(hex_color)
@@ -323,6 +404,64 @@ class OverlayWindow(QMainWindow):
         else:
             return QPen(self.pen_color, self.pen_size, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
 
+    def _build_shape_path(self, start_pt, end_pt, shape_type, shift_held):
+        path = QPainterPath()
+        rect = QRectF(start_pt, end_pt).normalized()
+
+        if shift_held:
+            # Force 1:1 aspect ratio based on max dimension
+            side = max(rect.width(), rect.height())
+            
+            # Determine direction of drag to anchor at start_pt correctly
+            dx = 1 if end_pt.x() >= start_pt.x() else -1
+            dy = 1 if end_pt.y() >= start_pt.y() else -1
+            
+            end_x = start_pt.x() + (side * dx)
+            end_y = start_pt.y() + (side * dy)
+            rect = QRectF(start_pt, QPointF(end_x, end_y)).normalized()
+            
+            # For Line and Arrow, just snap angle to 45 degree increments
+            if shape_type in (ShapeType.LINE, ShapeType.ARROW):
+                angle = math.atan2(end_pt.y() - start_pt.y(), end_pt.x() - start_pt.x())
+                # snap to 45 degrees
+                snapped_angle = round(angle / (math.pi/4)) * (math.pi/4)
+                length = math.hypot(end_pt.x() - start_pt.x(), end_pt.y() - start_pt.y())
+                end_pt = QPointF(start_pt.x() + length * math.cos(snapped_angle), start_pt.y() + length * math.sin(snapped_angle))
+
+        if shape_type == ShapeType.LINE:
+            path.moveTo(start_pt)
+            path.lineTo(end_pt)
+        elif shape_type == ShapeType.ARROW:
+            path.moveTo(start_pt)
+            path.lineTo(end_pt)
+            # draw arrow head
+            angle = math.atan2(end_pt.y() - start_pt.y(), end_pt.x() - start_pt.x())
+            head_len = max(15, self.pen_size * 3.5)
+            
+            angle_left = angle - math.pi/7
+            wing_left = QPointF(end_pt.x() - head_len * math.cos(angle_left), end_pt.y() - head_len * math.sin(angle_left))
+            path.moveTo(end_pt)
+            path.lineTo(wing_left)
+            
+            angle_right = angle + math.pi/7
+            wing_right = QPointF(end_pt.x() - head_len * math.cos(angle_right), end_pt.y() - head_len * math.sin(angle_right))
+            path.moveTo(end_pt)
+            path.lineTo(wing_right)
+        elif shape_type == ShapeType.RECTANGLE:
+            path.addRect(rect)
+        elif shape_type == ShapeType.ROUNDED_RECTANGLE:
+            # Radius scales slightly with shape size, capped
+            radius = min(rect.width(), rect.height()) * 0.15
+            path.addRoundedRect(rect, radius, radius)
+        elif shape_type == ShapeType.CIRCLE:
+            path.addEllipse(rect)
+        elif shape_type == ShapeType.TRIANGLE:
+            path.moveTo(rect.center().x(), rect.top())
+            path.lineTo(rect.right(), rect.bottom())
+            path.lineTo(rect.left(), rect.bottom())
+            path.closeSubpath()
+        return path
+
     @staticmethod
     def _draw_stroke(painter, path, pen, mode):
         """Draw a single stroke with optional pen halo for anti-alias softening."""
@@ -359,11 +498,16 @@ class OverlayWindow(QMainWindow):
         if not self.ink_visible:
             return
         if event.button() == Qt.MouseButton.LeftButton and not self.is_click_through:
-            if self.mode != ToolMode.ERASER:
+            if self.mode not in (ToolMode.ERASER, ToolMode.SHAPE):
                 self.setCursor(Qt.CursorShape.BlankCursor)
             self.shape_detected = False
             if self.mode == ToolMode.ERASER:
                 self._erase_at(event.position())
+            elif self.mode == ToolMode.SHAPE:
+                self.drawing = True
+                self.shape_start = event.position()
+                self.current_path = QPainterPath()
+                self.last_point = event.position()
             else:
                 self.drawing = True
                 self.raw_points = [event.position()]
@@ -377,6 +521,14 @@ class OverlayWindow(QMainWindow):
         if (event.buttons() & Qt.MouseButton.LeftButton) and not self.is_click_through:
             if self.mode == ToolMode.ERASER:
                 self._erase_at(event.position())
+            elif self.drawing and self.mode == ToolMode.SHAPE:
+                shift_held = bool(QApplication.keyboardModifiers() & Qt.KeyboardModifier.ShiftModifier)
+                self.current_path = self._build_shape_path(self.shape_start, event.position(), self.current_shape, shift_held)
+                padding = max(100.0, float(self._get_current_pen().width() * 4))
+                update_rect = QRectF(self.shape_start, event.position()).normalized()
+                update_rect.adjust(-padding, -padding, padding, padding)
+                self.update(update_rect.toRect())
+                self.last_point = event.position()
             elif self.drawing and self.current_path and not self.shape_detected:
                 self.raw_points.append(event.position())
                 mid_point = (self.last_point + event.position()) / 2.0
@@ -398,7 +550,7 @@ class OverlayWindow(QMainWindow):
             self.shape_timer.stop()
             self._update_cursor()
             if self.drawing and self.current_path:
-                if not self.shape_detected:
+                if self.mode != ToolMode.SHAPE and not self.shape_detected:
                     self.current_path.lineTo(event.position())
 
                 if len(self.paths) >= self.MAX_UNDO_STEPS:
@@ -612,16 +764,22 @@ class ToolbarWindow(QWidget):
         layout.setContentsMargins(10, 8, 10, 15)
         layout.setSpacing(10)
 
-        # Handle
+        # ── Group 1: Navigation ──
         self.btn_handle = DragHandle(self)
         layout.addWidget(self.btn_handle, alignment=Qt.AlignmentFlag.AlignHCenter)
         layout.addSpacing(2)
 
-        # Visibility toggle
-        self._add_button(layout, "👁️", "Toggle Ink Visibility (Ctrl+5)", self.signals.toggle_visibility.emit)
+        self.btn_cursor = self._create_hover_button("🖱️", "Cursor Options (Ctrl+4)")
+        self.cursor_menu = CustomHoverMenu()
+        self.cursor_menu.add_action("🖱️", "Cursor Mode (Keep Ink) (Ctrl+4)", 
+                                    lambda: self._set_active_tool(self.btn_cursor, self.signals.switch_cursor.emit))
+        self.cursor_menu.add_action("👁️", "Hide Ink (Interact normally) (Ctrl+5)", 
+                                    self.signals.toggle_visibility.emit)
+        self.btn_cursor.set_menu(self.cursor_menu)
+        layout.addWidget(self.btn_cursor, alignment=Qt.AlignmentFlag.AlignCenter)
         self._add_separator(layout)
 
-        # Tools
+        # ── Group 2: Drawing Tools ──
         self.btn_pen = self._create_hold_button("🖊️", "Pen (Ctrl+1) - Hold for Size",
             lambda: self._set_active_tool(self.btn_pen, self.signals.switch_pen.emit))
         self._setup_size_menu(self.btn_pen, [2, 5, 10, 15, 20], self.signals.change_pen_size.emit)
@@ -632,29 +790,44 @@ class ToolbarWindow(QWidget):
         self._setup_size_menu(self.btn_hl, [10, 15, 25, 35, 45], self.signals.change_highlighter_size.emit)
         layout.addWidget(self.btn_hl, alignment=Qt.AlignmentFlag.AlignCenter)
 
+        self.btn_shape = self._create_hover_button("📐", "Shapes")
+        self.shape_menu = CustomHoverMenu()
+        shapes = [
+            ("📏", "Line", ShapeType.LINE),
+            ("↗️", "Arrow", ShapeType.ARROW),
+            ("⬛", "Rectangle", ShapeType.RECTANGLE),
+            ("🟩", "Rounded Rectangle", ShapeType.ROUNDED_RECTANGLE),
+            ("🟡", "Circle", ShapeType.CIRCLE),
+            ("🔺", "Triangle", ShapeType.TRIANGLE),
+        ]
+        for icon, name, stype in shapes:
+            # We must capture stype properly in the lambda
+            self.shape_menu.add_action(icon, name, 
+                                       lambda checked=False, s=stype: self._select_shape(s))
+        self.btn_shape.set_menu(self.shape_menu)
+        layout.addWidget(self.btn_shape, alignment=Qt.AlignmentFlag.AlignCenter)
+
         self.btn_eraser = self._create_hold_button("🧽", "Eraser (Ctrl+3) - Hold for Size",
             lambda: self._set_active_tool(self.btn_eraser, self.signals.switch_eraser.emit))
         self._setup_size_menu(self.btn_eraser, [10, 20, 40, 60, 80], self.signals.change_eraser_size.emit)
         layout.addWidget(self.btn_eraser, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self.btn_cursor = self._create_tool_button("🖱️", "Cursor Mode (Ctrl+4)",
-            lambda: self._set_active_tool(self.btn_cursor, self.signals.switch_cursor.emit))
-        layout.addWidget(self.btn_cursor, alignment=Qt.AlignmentFlag.AlignCenter)
-
-        self._set_active_tool(self.btn_pen, None)
         self._add_separator(layout)
 
-        # Palette toggle
-        self.btn_palette = self._create_tool_button("🎨", "Toggle Colors", self.signals.toggle_color_palette.emit)
+        # ── Group 3: Colors ──
+        self.btn_palette = self._create_tool_button("🎨", "Toggle Colors (Ctrl+P)", self.signals.toggle_color_palette.emit)
         layout.addWidget(self.btn_palette, alignment=Qt.AlignmentFlag.AlignCenter)
         self._add_separator(layout)
 
-        # Actions
+        # ── Group 4: Actions ──
         self._add_button(layout, "↩️", "Undo (Ctrl+Z)", self.signals.undo.emit)
-        self._add_button(layout, "⬜", "Toggle Whiteboard/Blackboard", self.signals.toggle_background.emit)
+        self._add_button(layout, "⬜", "Toggle Whiteboard/Blackboard (Ctrl+B)", self.signals.toggle_background.emit)
         self._add_button(layout, "🗑️", "Clear Screen (Ctrl+Shift+C)", self.signals.clear_screen.emit)
 
         self.setLayout(layout)
+
+        # Initial active tool
+        self._set_active_tool(self.btn_pen, None)
 
         # Sync active tool from keyboard shortcuts
         self.signals.switch_pen.connect(lambda: self._set_active_tool(self.btn_pen, None))
@@ -664,6 +837,9 @@ class ToolbarWindow(QWidget):
         self.signals.change_pen_size.connect(lambda _: self._set_active_tool(self.btn_pen, None))
         self.signals.change_highlighter_size.connect(lambda _: self._set_active_tool(self.btn_hl, None))
         self.signals.change_eraser_size.connect(lambda _: self._set_active_tool(self.btn_eraser, None))
+
+    def _select_shape(self, shape_type):
+        self._set_active_tool(self.btn_shape, lambda: self.signals.switch_shape.emit(shape_type))
 
     # ── Button factory helpers ──
 
@@ -678,6 +854,13 @@ class ToolbarWindow(QWidget):
         btn = HoldButton(icon, tooltip)
         btn.setFixedSize(36, 36)
         btn.clicked.connect(callback)
+        return btn
+
+    def _create_hover_button(self, icon, tooltip):
+        btn = HoverMenuButton(icon, tooltip)
+        btn.setFixedSize(36, 36)
+        # Using clicked to also trigger the menu is optional, hover does it naturally
+        btn.clicked.connect(lambda: btn.menu_widget.show_menu(btn) if btn.menu_widget else None)
         return btn
 
     def _setup_size_menu(self, btn, sizes, signal_emitter):
@@ -761,6 +944,8 @@ def setup_global_shortcuts(signals):
         'ctrl+q': signals.exit_app.emit,
         'ctrl+]': signals.increment_size.emit,
         'ctrl+[': signals.decrement_size.emit,
+        'ctrl+p': signals.toggle_color_palette.emit,
+        'ctrl+b': signals.toggle_background.emit,
     }
     for combo, callback in hotkeys.items():
         keyboard.add_hotkey(combo, callback, suppress=True)
