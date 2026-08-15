@@ -63,9 +63,17 @@ If you found Pen 11 helpful for your studies or your work and want to support it
   <img src="assets/donate_qr.jpg" alt="UPI QR Code" width="300">
 </p>
 
-## 🛠️ For Developers (Building from Source)
+## 🛠️ For Developers (Building & Modifying)
 
-Pen 11 is built using Python 3.14 and PyQt6.
+Pen 11 is built using **Python 3.14** and **PyQt6**. The code is completely open for you to edit and improve!
+
+### How to Modify the Source Code
+You can edit `main.py` directly. **Note:** Although the final executable is heavily optimized (using bytecode optimization `optimize=2`), this optimization only happens during the PyInstaller build process. The source code in `main.py` remains perfectly human-readable and safe to edit.
+
+- **To add a new tool:** Look for the `_create_tool_button` function and add your new logic to the `ToolbarWindow` class.
+- **To add new shapes:** Extend the `ShapeType` Enum and update the drawing logic inside `OverlayWindow.paintEvent`.
+
+### Build Instructions
 
 1. **Clone the repository:**
    ```bash
@@ -76,11 +84,15 @@ Pen 11 is built using Python 3.14 and PyQt6.
    ```bash
    pip install -r requirements.txt
    ```
-3. **Compile the executable:**
+3. **Run locally for testing:**
+   ```bash
+   python main.py
+   ```
+4. **Compile the optimized executable:**
    ```bash
    python -m PyInstaller --noconfirm main.spec
    ```
-   *Your optimized executable will be located in the `dist` folder.*
+   *Your newly compiled and optimized executable will be located in the `dist` folder.*
 
 ## 📄 License & Credits
 
