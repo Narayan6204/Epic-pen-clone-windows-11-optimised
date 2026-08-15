@@ -23,7 +23,7 @@ A high-performance, lightweight, and completely free screen annotation tool buil
 
 ## 🚀 Installation & Usage
 
-1. **Download:** Grab the latest `Pen 11.exe` from the [Releases](#) page.
+1. **Download:** Grab the latest `Pen 11.exe` from the [Releases](https://github.com/Narayan6204/Epic-pen-clone-windows-11-optimised/releases/latest) page.
 2. **Run Portable:** No installation required! Just double-click the `.exe` file.
 
 ### 📚 How to Use
