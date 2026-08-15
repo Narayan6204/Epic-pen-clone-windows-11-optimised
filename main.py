@@ -270,7 +270,7 @@ class OverlayWindow(QMainWindow):
         self.signals.change_eraser_size.connect(self.set_eraser_size)
         self.signals.increment_size.connect(self._increment_active_tool_size)
         self.signals.decrement_size.connect(self._decrement_active_tool_size)
-        self.signals.exit_app.connect(QApplication.instance().quit)
+        # Exit app signal is now handled by MainAppCoordinator for clean shutdown
 
         self.set_mode(ToolMode.PEN)
 
@@ -976,10 +976,18 @@ class MainAppCoordinator(QObject):
         self.color_palette.hide()
 
         self.signals.toggle_color_palette.connect(self._toggle_palette)
+        self.signals.exit_app.connect(self._quit_app)
         setup_global_shortcuts(self.signals)
 
     def _toggle_palette(self):
         self.color_palette.setVisible(not self.color_palette.isVisible())
+
+    def _quit_app(self):
+        """Cleanly shut down the application, unhooking global shortcuts so the process terminates."""
+        keyboard.unhook_all()
+        if hasattr(self, 'tray') and self.tray:
+            self.tray.hide()
+        QApplication.instance().quit()
 
 
 # ── Entry point ──
