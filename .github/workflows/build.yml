@@ -34,10 +34,10 @@ jobs:
 
     - name: Rename Executable
       run: |
-        Move-Item -Path dist\main.exe -Destination dist\EpicPenClone-${{ matrix.architecture }}.exe
+        Move-Item -Path dist\Pen` 11.exe -Destination dist\Pen11-${{ matrix.architecture }}.exe
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: EpicPenClone-Windows-${{ matrix.architecture }}
-        path: dist\EpicPenClone-${{ matrix.architecture }}.exe
+        name: Pen11-Windows-${{ matrix.architecture }}
+        path: dist\Pen11-${{ matrix.architecture }}.exe

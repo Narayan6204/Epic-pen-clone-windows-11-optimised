@@ -1,5 +1,5 @@
 """
-Pen 11 — A lightweight screen annotation tool optimized for Windows 11.
+Epic Pen Clone — A lightweight screen annotation tool optimized for Windows 11.
 Supports pen, highlighter, eraser, shape detection, global shortcuts, and system tray.
 """
 import sys
@@ -33,7 +33,7 @@ if sys.platform == "win32":
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QGridLayout, QSystemTrayIcon, QMenu, QFrame,
-    QGraphicsDropShadowEffect, QMessageBox
+    QGraphicsDropShadowEffect
 )
 from PyQt6.QtCore import Qt, QPoint, QRect, QRectF, pyqtSignal, QObject, QTimer, QPointF
 from PyQt6.QtGui import QPainter, QPen, QColor, QPainterPath, QPainterPathStroker, QPixmap, QIcon, QCursor, QFont, QTransform, QPolygonF
@@ -1327,18 +1327,14 @@ class AppSystemTray(QSystemTrayIcon):
     def __init__(self, signals, parent=None):
         icon_path = resource_path("app_icon.ico")
         super().__init__(QIcon(icon_path), parent)
-        self.setToolTip("Pen 11")
+        self.setToolTip("Epic Pen Clone")
 
         menu = QMenu()
         menu.addAction("Toggle Ink Visibility (Ctrl+5)").triggered.connect(signals.toggle_visibility.emit)
         menu.addAction("Clear Screen (Ctrl+Shift+C)").triggered.connect(signals.clear_screen.emit)
         menu.addSeparator()
-        menu.addAction("About").triggered.connect(self._show_about)
         menu.addAction("Exit").triggered.connect(signals.exit_app.emit)
         self.setContextMenu(menu)
-        
-    def _show_about(self):
-        QMessageBox.information(None, "About Pen 11", "Pen 11\n\nDeveloped by Narayan Dev\n\nAn optimized screen annotation tool for Windows 11.")
 
 
 # ── Global Shortcuts ──
