@@ -109,9 +109,9 @@ class CustomHoverMenu(QWidget):
         self.setWindowFlags(Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setStyleSheet(TOOLBAR_STYLESHEET)
-        self.layout = QHBoxLayout(self)
-        self.layout.setContentsMargins(8, 8, 8, 8)
-        self.layout.setSpacing(5)
+        self.layout = QGridLayout(self)
+        self.layout.setContentsMargins(15, 15, 15, 15)
+        self.layout.setSpacing(8)
         self.hide_timer = QTimer(self)
         self.hide_timer.setSingleShot(True)
         self.hide_timer.timeout.connect(self.hide)
@@ -122,7 +122,9 @@ class CustomHoverMenu(QWidget):
         btn.setToolTip(tooltip)
         btn.clicked.connect(callback)
         btn.clicked.connect(self.hide)
-        self.layout.addWidget(btn)
+        
+        idx = self.layout.count()
+        self.layout.addWidget(btn, idx // 2, idx % 2)
         return btn
 
     def enterEvent(self, event):
@@ -136,13 +138,22 @@ class CustomHoverMenu(QWidget):
     def show_menu(self, anchor_widget):
         self.hide_timer.stop()
         self.adjustSize()
-        # Position menu to the left of the anchor button
-        global_pos = anchor_widget.mapToGlobal(QPoint(-self.width() - 10, 0))
+        # Position menu to the left of the anchor button with minimal gap
+        global_pos = anchor_widget.mapToGlobal(QPoint(-self.width() - 5, 0))
         self.move(global_pos)
         self.show()
 
     def schedule_hide(self):
         self.hide_timer.start(150)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        path = QPainterPath()
+        path.addRoundedRect(QRectF(self.rect()), 20, 20)
+        painter.fillPath(path, QColor('#F5E8D5'))
+        painter.setPen(QPen(QColor('#D6C3A1'), 1))
+        painter.drawPath(path)
 
 
 class HoverMenuButton(QPushButton):
