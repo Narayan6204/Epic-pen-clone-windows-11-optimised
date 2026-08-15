@@ -723,11 +723,20 @@ class ToolbarWindow(QWidget):
 
 # ── System Tray ──
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    import os
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 class AppSystemTray(QSystemTrayIcon):
     def __init__(self, signals, parent=None):
-        pixmap = QPixmap(32, 32)
-        pixmap.fill(QColor("#FF3B30"))
-        super().__init__(QIcon(pixmap), parent)
+        icon_path = resource_path("app_icon.ico")
+        super().__init__(QIcon(icon_path), parent)
         self.setToolTip("Epic Pen Clone")
 
         menu = QMenu()
@@ -792,6 +801,7 @@ class MainAppCoordinator(QObject):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon(resource_path("app_icon.ico")))
     app.setQuitOnLastWindowClosed(False)
     coordinator = MainAppCoordinator()
     sys.exit(app.exec())
