@@ -529,8 +529,13 @@ class OverlayWindow(QMainWindow):
     # ── Mode / state ──
 
     def set_mode(self, new_mode):
-        if not self.ink_visible and new_mode not in (ToolMode.CURSOR, ToolMode.SELECT):
+        # Rule 5: Only PEN and HIGHLIGHTER shortcuts can activate a hidden canvas
+        if not self.ink_visible and new_mode in (ToolMode.PEN, ToolMode.HIGHLIGHTER):
             self.toggle_visibility()
+        
+        # Rule 2: Block cursor mode when canvas is hidden
+        if not self.ink_visible and new_mode == ToolMode.CURSOR:
+            return
             
         if self.mode == ToolMode.SELECT and new_mode != ToolMode.SELECT:
             self.selected_path_index = -1
