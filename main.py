@@ -529,9 +529,6 @@ class OverlayWindow(QMainWindow):
             self.highlighter_color = QColor(hex_color)
         else:
             self.pen_color = QColor(hex_color)
-            self.mode = ToolMode.PEN
-            if self.ink_visible:
-                self.set_click_through(False)
         self._update_cursor()
 
     def toggle_background(self):
