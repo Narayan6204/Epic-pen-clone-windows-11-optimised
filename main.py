@@ -384,6 +384,7 @@ class DragHandle(QWidget):
 
 class OverlayWindow(QMainWindow):
     MAX_UNDO_STEPS = 5000
+    MAX_STROKES = 50000
 
     def __init__(self, signals):
         super().__init__()
@@ -916,6 +917,9 @@ class OverlayWindow(QMainWindow):
             if self.drawing and self.current_path:
                 if self.mode != ToolMode.SHAPE and not self.shape_detected:
                     self.current_path.lineTo(event.position())
+
+                if len(self.paths) >= self.MAX_STROKES:
+                    self.paths.pop(0)
 
                 obb = QPolygonF(self.current_path.boundingRect())
                 self.paths.append({'path': self.current_path, 'pen': self._get_current_pen(), 'mode': self.mode, 'obb': obb})
