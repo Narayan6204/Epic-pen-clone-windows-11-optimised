@@ -1229,10 +1229,6 @@ class ToolbarWindow(QWidget):
 
         self.btn_cursor = self._create_click_button("🖱️", "Cursor Options (Ctrl+4)")
         self.cursor_menu = CustomHoverMenu(self)
-        self.cursor_menu.add_action("🖱️", "Cursor Mode (Keep Ink) (Ctrl+4)", 
-                                    lambda: self._set_active_tool(self.btn_cursor, self.signals.switch_cursor.emit))
-        self.cursor_menu.add_action("🙈", "Hide/Show Ink (Ctrl+5)", 
-                                    self.signals.toggle_visibility.emit)
         self.btn_cursor.set_menu(self.cursor_menu)
         layout.addWidget(self.btn_cursor, alignment=Qt.AlignmentFlag.AlignCenter)
         self._add_separator(layout)
@@ -1524,14 +1520,16 @@ class MainAppCoordinator(QObject):
 
         # Connect toggle signals
         self.signals.toggle_color_palette.connect(self.toggle_color_palette)
-        self.signals.toolbar_moved.connect(self._sync_palette_position)
+        self.signals.toolbar_moved.connect(self._sync_toolboxes_position)
         self.signals.toggle_shape_toolbox.connect(self._toggle_shape_toolbox)
         self.signals.exit_app.connect(self._quit_app)
         setup_global_shortcuts(self)
 
-    def _sync_palette_position(self, delta):
+    def _sync_toolboxes_position(self, delta):
         if not self.color_palette.has_been_dragged:
             self.color_palette.move(self.color_palette.pos() + delta)
+        if not self.shape_toolbox.has_been_dragged:
+            self.shape_toolbox.move(self.shape_toolbox.pos() + delta)
 
     def toggle_color_palette(self):
         if self.color_palette.isVisible():
