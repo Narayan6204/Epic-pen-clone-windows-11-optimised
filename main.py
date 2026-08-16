@@ -33,9 +33,9 @@ if sys.platform == "win32":
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QGridLayout, QSystemTrayIcon, QMenu, QFrame,
-    QGraphicsDropShadowEffect, QMessageBox
+    QGraphicsDropShadowEffect, QMessageBox, QGraphicsOpacityEffect
 )
-from PyQt6.QtCore import Qt, QPoint, QRect, QRectF, pyqtSignal, QObject, QTimer, QPointF
+from PyQt6.QtCore import Qt, QPoint, QRect, QRectF, pyqtSignal, QObject, QTimer, QPointF, QPropertyAnimation, QEasingCurve
 from PyQt6.QtGui import QPainter, QPen, QColor, QPainterPath, QPainterPathStroker, QPixmap, QIcon, QCursor, QFont, QTransform, QPolygonF
 
 # ── Windows API constants for click-through ──
@@ -197,7 +197,14 @@ class CustomHoverMenu(QWidget):
         # Position menu to the left of the anchor button with minimal gap
         global_pos = anchor_widget.mapToGlobal(QPoint(-self.width() - 5, 0))
         self.move(global_pos)
+        
+        self.fade_anim.stop()
+        self.opacity_effect.setOpacity(0.0)
         self.show()
+        
+        self.fade_anim.setStartValue(0.0)
+        self.fade_anim.setEndValue(1.0)
+        self.fade_anim.start()
 
     # schedule_hide removed
 
