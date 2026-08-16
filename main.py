@@ -181,6 +181,13 @@ class CustomHoverMenu(QWidget):
         self.layout.setSpacing(8)
         self.layout.setSpacing(8)
 
+    def clear_actions(self):
+        while self.layout.count():
+            item = self.layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
     def add_action(self, icon_or_text, tooltip, callback):
         btn = QPushButton()
         if isinstance(icon_or_text, str):
@@ -317,6 +324,11 @@ class ClickMenuButton(QPushButton):
         self.menu_widget = menu_widget
 
     def _toggle_menu(self):
+        if self.text() == "🙈":
+            if hasattr(self.window(), 'signals'):
+                self.window().signals.toggle_visibility.emit()
+            return
+            
         if self.menu_widget:
             if self.menu_widget.isVisible():
                 self.menu_widget.hide_menu()
@@ -567,6 +579,8 @@ class OverlayWindow(QMainWindow):
 
     def toggle_visibility(self):
         self.ink_visible = not self.ink_visible
+        if self.ink_visible and self.mode == ToolMode.CURSOR:
+            self.set_mode(ToolMode.PEN)
         self.set_click_through(not self.ink_visible or self.mode == ToolMode.CURSOR)
         self.signals.visibility_changed.emit(self.ink_visible)
         self.update()
@@ -1330,15 +1344,28 @@ class ToolbarWindow(QWidget):
         ink_vis = getattr(self, 'ink_visible', True)
         is_cursor_active = getattr(self, 'active_tool_btn', None) == self.btn_cursor
         
+        self.cursor_menu.clear_actions()
+        
         if not ink_vis:
             self.btn_cursor.setText("🙈")
+            self.btn_cursor.setToolTip("Click to Unhide")
             self.btn_cursor.setStyleSheet("")
         elif is_cursor_active:
             self.btn_cursor.setText("🖱️")
+            self.btn_cursor.setToolTip("Drawing Options")
             self.btn_cursor.setStyleSheet("")
+            self.cursor_menu.add_action("🐵", "Drawing Mode", 
+                                        lambda: self._set_active_tool(self.btn_pen, self.signals.switch_pen.emit))
+            self.cursor_menu.add_action("🙈", "Hide Canvas (Ctrl+5)", 
+                                        self.signals.toggle_visibility.emit)
         else:
             self.btn_cursor.setText("🐵")
+            self.btn_cursor.setToolTip("Cursor Options")
             self.btn_cursor.setStyleSheet("")
+            self.cursor_menu.add_action("🖱️", "Cursor Mode (Keep Ink) (Ctrl+4)", 
+                                        lambda: self._set_active_tool(self.btn_cursor, self.signals.switch_cursor.emit))
+            self.cursor_menu.add_action("🙈", "Hide Canvas (Ctrl+5)", 
+                                        self.signals.toggle_visibility.emit)
 
     def _add_button(self, layout, icon, tooltip, callback):
         btn = QPushButton(icon)
@@ -1410,23 +1437,25 @@ class AppSystemTray(QSystemTrayIcon):
 def setup_global_shortcuts(coordinator):
     signals = coordinator.signals
     
-    def try_switch_cursor():
-        if getattr(coordinator.overlay, 'ink_visible', True):
-            signals.switch_cursor.emit()
+    def execute_if_visible(callback):
+        def wrapper():
+            if getattr(coordinator.overlay, 'ink_visible', True):
+                callback()
+        return wrapper
             
     hotkeys = {
         'ctrl+1': signals.switch_pen.emit,
         'ctrl+2': signals.switch_highlighter.emit,
-        'ctrl+3': signals.switch_eraser.emit,
-        'ctrl+4': try_switch_cursor,
+        'ctrl+3': execute_if_visible(signals.switch_eraser.emit),
+        'ctrl+4': execute_if_visible(signals.switch_cursor.emit),
         'ctrl+5': signals.toggle_visibility.emit,
-        'ctrl+z': signals.undo.emit,
-        'ctrl+shift+c': signals.clear_screen.emit,
+        'ctrl+z': execute_if_visible(signals.undo.emit),
+        'ctrl+shift+c': execute_if_visible(signals.clear_screen.emit),
         'ctrl+q': signals.exit_app.emit,
-        'ctrl+]': signals.increment_size.emit,
-        'ctrl+[': signals.decrement_size.emit,
-        'ctrl+p': signals.toggle_color_palette.emit,
-        'ctrl+b': signals.toggle_background.emit,
+        'ctrl+]': execute_if_visible(signals.increment_size.emit),
+        'ctrl+[': execute_if_visible(signals.decrement_size.emit),
+        'ctrl+p': execute_if_visible(signals.toggle_color_palette.emit),
+        'ctrl+b': execute_if_visible(signals.toggle_background.emit),
     }
     for combo, callback in hotkeys.items():
         keyboard.add_hotkey(combo, callback, suppress=True)
