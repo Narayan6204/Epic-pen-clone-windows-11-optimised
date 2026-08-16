@@ -199,7 +199,7 @@ class CustomHoverMenu(QWidget):
         self.move(global_pos)
         
         self.fade_anim.stop()
-        self.opacity_effect.setOpacity(0.0)
+        self.setWindowOpacity(0.0)
         self.show()
         
         self.fade_anim.setStartValue(0.0)
