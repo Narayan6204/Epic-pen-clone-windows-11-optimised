@@ -688,7 +688,6 @@ class OverlayWindow(QMainWindow):
         top_center = QPointF((tl.x() + tr.x()) / 2, (tl.y() + tr.y()) / 2)
         v = QPointF(tr.x() - tl.x(), tr.y() - tl.y())
         normal = QPointF(v.y(), -v.x())
-        import math
         length = math.hypot(normal.x(), normal.y())
         if length > 0:
             normal = QPointF(normal.x() / length, normal.y() / length)
@@ -737,7 +736,6 @@ class OverlayWindow(QMainWindow):
                             obb_center = QPointF((obb.at(0).x() + obb.at(2).x()) / 2, (obb.at(0).y() + obb.at(2).y()) / 2)
                             self.selection_start_center = obb_center
                             self.selection_start_pos = event.position()
-                            import math
                             self.selection_rotation_start_angle = math.atan2(event.position().y() - obb_center.y(), event.position().x() - obb_center.x())
                             print(f"[DEBUG] Rotation started: center={obb_center}, start_angle={self.selection_rotation_start_angle:.2f}")
                             return
@@ -830,7 +828,6 @@ class OverlayWindow(QMainWindow):
                     self.paths[self.selected_path_index]['obb'] = transform.map(self.selection_start_obb)
                     self.update()
                 elif self.selection_action == 'scale' and self.selected_path_index != -1:
-                    import math
                     start_dist = math.hypot(self.selection_start_pos.x() - self.selection_start_center.x(), 
                                             self.selection_start_pos.y() - self.selection_start_center.y())
                     current_dist = math.hypot(event.position().x() - self.selection_start_center.x(), 
