@@ -1144,9 +1144,11 @@ class FloatingColorPalette(QWidget):
             tooltip_color = "#333333" if c.upper() == "#FFFFFF" else c
             if c.upper() == active_color:
                 btn.setStyleSheet(f"""
-                    background-color: {c};
-                    border-radius: 14px;
-                    border: 2px solid {c};
+                    QPushButton {{
+                        background-color: {c};
+                        border-radius: 14px;
+                        border: 2px solid {c};
+                    }}
                     QToolTip {{ background-color: white; color: {tooltip_color}; border: 1px solid {tooltip_color}; }}
                 """)
                 shadow = QGraphicsDropShadowEffect(self)
@@ -1156,9 +1158,11 @@ class FloatingColorPalette(QWidget):
                 btn.setGraphicsEffect(shadow)
             else:
                 btn.setStyleSheet(f"""
-                    background-color: {c}; 
-                    border-radius: 14px; 
-                    border: 1px solid #D6C3A1;
+                    QPushButton {{
+                        background-color: {c}; 
+                        border-radius: 14px; 
+                        border: 1px solid #D6C3A1;
+                    }}
                     QToolTip {{ background-color: white; color: {tooltip_color}; border: 1px solid {tooltip_color}; }}
                 """)
                 btn.setGraphicsEffect(None)
