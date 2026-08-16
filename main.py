@@ -383,7 +383,7 @@ class DragHandle(QWidget):
 # ── Main Canvas Overlay ──
 
 class OverlayWindow(QMainWindow):
-    MAX_UNDO_STEPS = 50
+    MAX_UNDO_STEPS = 5000
 
     def __init__(self, signals):
         super().__init__()
