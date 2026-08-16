@@ -504,6 +504,9 @@ class OverlayWindow(QMainWindow):
     # ── Mode / state ──
 
     def set_mode(self, new_mode):
+        if not self.ink_visible and new_mode not in (ToolMode.CURSOR, ToolMode.SELECT):
+            self.toggle_visibility()
+            
         if self.mode == ToolMode.SELECT and new_mode != ToolMode.SELECT:
             self.selected_path_index = -1
             self.update()
@@ -1161,9 +1164,7 @@ class ToolbarWindow(QWidget):
         self.btn_handle = DragHandle(self)
         layout.addWidget(self.btn_handle, alignment=Qt.AlignmentFlag.AlignHCenter)
         
-        v2_label = QLabel("V2")
-        v2_label.setStyleSheet("color: red; font-weight: bold; font-size: 10px;")
-        layout.addWidget(v2_label, alignment=Qt.AlignmentFlag.AlignHCenter)
+
         
         layout.addSpacing(2)
 
@@ -1171,7 +1172,7 @@ class ToolbarWindow(QWidget):
         self.cursor_menu = CustomHoverMenu(self)
         self.cursor_menu.add_action("🖱️", "Cursor Mode (Keep Ink) (Ctrl+4)", 
                                     lambda: self._set_active_tool(self.btn_cursor, self.signals.switch_cursor.emit))
-        self.cursor_menu.add_action("👁️", "Hide Ink (Interact normally) (Ctrl+5)", 
+        self.cursor_menu.add_action("🙈", "Hide/Show Ink (Ctrl+5)", 
                                     self.signals.toggle_visibility.emit)
         self.btn_cursor.set_menu(self.cursor_menu)
         layout.addWidget(self.btn_cursor, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -1303,13 +1304,13 @@ class ToolbarWindow(QWidget):
         is_cursor_active = getattr(self, 'active_tool_btn', None) == self.btn_cursor
         
         if not ink_vis:
-            self.btn_cursor.setText("👁️❌")
-            self.btn_cursor.setStyleSheet("background-color: #FF3B30; color: white; border-radius: 4px;")
+            self.btn_cursor.setText("🙈")
+            self.btn_cursor.setStyleSheet("")
         elif is_cursor_active:
             self.btn_cursor.setText("🖱️")
             self.btn_cursor.setStyleSheet("")
         else:
-            self.btn_cursor.setText("🚫")
+            self.btn_cursor.setText("🐵")
             self.btn_cursor.setStyleSheet("")
 
     def _add_button(self, layout, icon, tooltip, callback):
@@ -1357,7 +1358,12 @@ def resource_path(relative_path):
 class AppSystemTray(QSystemTrayIcon):
     def __init__(self, signals, parent=None):
         icon_path = resource_path("app_icon.ico")
-        super().__init__(QIcon(icon_path), parent)
+        icon = QIcon(icon_path)
+        if icon.isNull():
+            pixmap = QPixmap(16, 16)
+            pixmap.fill(Qt.GlobalColor.transparent)
+            icon = QIcon(pixmap)
+        super().__init__(icon, parent)
         self.setToolTip("Pen 11")
 
         menu = QMenu()
