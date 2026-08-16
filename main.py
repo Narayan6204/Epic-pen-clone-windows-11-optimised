@@ -689,9 +689,6 @@ class OverlayWindow(QMainWindow):
         return rot_center, del_center, scale_center
 
     # ── Cache management (Removed for Pure Vector Rendering) ──
-
-    def _get_selection_handles(self, obb):
-
     # ── Mouse events ──
 
     def mousePressEvent(self, event):
