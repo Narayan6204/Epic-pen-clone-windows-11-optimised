@@ -429,6 +429,7 @@ class OverlayWindow(QMainWindow):
         self.last_point = None
         self.raw_points = []
         self.drawing = False
+        self.undo_stack_size = 0
 
         # Shape detection timer
         self.shape_timer = QTimer(self)
@@ -760,9 +761,10 @@ class OverlayWindow(QMainWindow):
                             print(f"[DEBUG] Rotation started: center={obb_center}, start_angle={self.selection_rotation_start_angle:.2f}")
                             return
                         elif del_rect.contains(event.position()):
+                            self.selection_action = None
                             del self.paths[self.selected_path_index]
                             self.selected_path_index = -1
-                            self.selection_action = None
+                            self.undo_stack_size = min(self.undo_stack_size, len(self.paths))
                             self.update()
                             return
                         elif scale_rect.contains(event.position()):
@@ -915,10 +917,9 @@ class OverlayWindow(QMainWindow):
                 if self.mode != ToolMode.SHAPE and not self.shape_detected:
                     self.current_path.lineTo(event.position())
 
-                if len(self.paths) >= self.MAX_UNDO_STEPS:
-                    self.paths.pop(0)
                 obb = QPolygonF(self.current_path.boundingRect())
                 self.paths.append({'path': self.current_path, 'pen': self._get_current_pen(), 'mode': self.mode, 'obb': obb})
+                self.undo_stack_size = min(self.MAX_UNDO_STEPS, self.undo_stack_size + 1)
 
                 self.current_path = None
                 self.update()
@@ -939,7 +940,9 @@ class OverlayWindow(QMainWindow):
             if p.boundingRect().intersects(rect) and p.intersects(rect):
                 self.paths.pop(i)
                 removed = True
+        
         if removed:
+            self.undo_stack_size = min(self.undo_stack_size, len(self.paths))
             self.update()
 
     # ── Shape detection ──
@@ -1064,10 +1067,11 @@ class OverlayWindow(QMainWindow):
                 painter.drawLine(QPointF(scale_center.x()+4, scale_center.y()+4), QPointF(scale_center.x()+1, scale_center.y()+4))
 
     def keyPressEvent(self, event):
-        if self.mode == ToolMode.SELECT and self.selected_path_index != -1 and self.selected_path_index < len(self.paths):
-            if event.key() in (Qt.Key.Key_Delete, Qt.Key.Key_Backspace):
+        if event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
+            if self.mode == ToolMode.SELECT and self.selected_path_index != -1 and self.selected_path_index < len(self.paths):
                 self.paths.pop(self.selected_path_index)
                 self.selected_path_index = -1
+                self.undo_stack_size = min(self.undo_stack_size, len(self.paths))
                 self.update()
                 return
         super().keyPressEvent(event)
@@ -1076,13 +1080,16 @@ class OverlayWindow(QMainWindow):
 
     def clear_screen(self):
         self.paths.clear()
+        self.undo_stack_size = 0
         self.selected_path_index = -1
         self.update()
 
     def undo(self):
-        if self.paths:
+        if self.paths and self.undo_stack_size > 0:
             self.paths.pop()
-            self.selected_path_index = -1
+            self.undo_stack_size -= 1
+            if self.selected_path_index >= len(self.paths):
+                self.selected_path_index = -1
             self.update()
 
 
