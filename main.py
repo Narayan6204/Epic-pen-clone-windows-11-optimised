@@ -192,7 +192,7 @@ class CustomHoverMenu(QWidget):
         btn.setFixedSize(36, 36)
         btn.setToolTip(tooltip)
         btn.clicked.connect(callback)
-        btn.clicked.connect(self.hide)
+        btn.clicked.connect(self.hide_menu)
         
         idx = self.layout.count()
         self.layout.addWidget(btn, idx // 2, idx % 2)
@@ -214,7 +214,17 @@ class CustomHoverMenu(QWidget):
         self.fade_anim.setEndValue(1.0)
         self.fade_anim.start()
 
-    # schedule_hide removed
+    def hide_menu(self):
+        """Smoothly fade out the menu before hiding it."""
+        self.fade_anim.stop()
+        self.fade_anim.setStartValue(self.windowOpacity())
+        self.fade_anim.setEndValue(0.0)
+        self.fade_anim.start()
+
+    def _on_fade_finished(self):
+        """Called when any fade animation completes. Only hide if we faded OUT."""
+        if self.fade_anim.endValue() == 0.0:
+            self.hide()
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -309,7 +319,7 @@ class ClickMenuButton(QPushButton):
     def _toggle_menu(self):
         if self.menu_widget:
             if self.menu_widget.isVisible():
-                self.menu_widget.hide()
+                self.menu_widget.hide_menu()
             else:
                 self.menu_widget.show_menu(self)
 
