@@ -1195,13 +1195,7 @@ class ToolbarWindow(QWidget):
         
         layout.addSpacing(2)
 
-        self.btn_cursor = self._create_click_button("🖱️", "Cursor Options (Ctrl+4)")
-        self.cursor_menu = CustomHoverMenu(self)
-        self.cursor_menu.add_action("🖱️", "Cursor Mode (Keep Ink) (Ctrl+4)", 
-                                    lambda: self._set_active_tool(self.btn_cursor, self.signals.switch_cursor.emit))
-        self.cursor_menu.add_action("🙈", "Hide/Show Ink (Ctrl+5)", 
-                                    self.signals.toggle_visibility.emit)
-        self.btn_cursor.set_menu(self.cursor_menu)
+        self.btn_cursor = self._create_tool_button("🖱️", "Cursor / Hide (Ctrl+4/Ctrl+5)", self._on_cursor_btn_clicked)
         layout.addWidget(self.btn_cursor, alignment=Qt.AlignmentFlag.AlignCenter)
         self._add_separator(layout)
 
@@ -1278,6 +1272,20 @@ class ToolbarWindow(QWidget):
     def _on_visibility_changed(self, visible):
         self.ink_visible = visible
         self._update_cursor_button_icon()
+
+    def _on_cursor_btn_clicked(self):
+        ink_vis = getattr(self, 'ink_visible', True)
+        is_cursor_active = getattr(self, 'active_tool_btn', None) == self.btn_cursor
+        
+        if not ink_vis:
+            # Currently 🙈 -> unhide
+            self.signals.toggle_visibility.emit()
+        elif is_cursor_active:
+            # Currently 🖱️ -> hide
+            self.signals.toggle_visibility.emit()
+        else:
+            # Currently 🐵 -> switch to cursor
+            self._set_active_tool(self.btn_cursor, self.signals.switch_cursor.emit)
 
     def _select_shape(self, shape_type):
         self.current_shape_type = shape_type
