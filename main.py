@@ -72,6 +72,12 @@ COLORS = [
     "#007AFF", "#5856D6", "#FF2D55", "#A2845E"
 ]
 
+COLOR_NAMES = {
+    "#000000": "Black", "#FFFFFF": "White", "#717171": "Gray", "#FF3B30": "Red",
+    "#FF9500": "Orange", "#FFCC00": "Yellow", "#4CD964": "Green", "#5AC8FA": "Light Blue",
+    "#007AFF": "Blue", "#5856D6": "Purple", "#FF2D55": "Pink", "#A2845E": "Brown"
+}
+
 # ── Signals ──
 class ShortcutSignals(QObject):
     switch_pen          = pyqtSignal()
@@ -1115,7 +1121,8 @@ class FloatingColorPalette(QWidget):
         for i, color_hex in enumerate(COLORS):
             btn = QPushButton()
             btn.setFixedSize(28, 28)
-            btn.setToolTip("Select Color")
+            color_name = COLOR_NAMES.get(color_hex, "Color")
+            btn.setToolTip(color_name)
             btn.clicked.connect(lambda checked, c=color_hex: self._select_color(c))
             palette_grid.addWidget(btn, i // 4, i % 4)
             self.color_buttons[color_hex] = btn
@@ -1134,11 +1141,13 @@ class FloatingColorPalette(QWidget):
     def _sync_color_selection(self, hex_color):
         active_color = hex_color.upper()
         for c, btn in self.color_buttons.items():
+            tooltip_color = "#333333" if c.upper() == "#FFFFFF" else c
             if c.upper() == active_color:
                 btn.setStyleSheet(f"""
                     background-color: {c};
                     border-radius: 14px;
                     border: 2px solid {c};
+                    QToolTip {{ background-color: white; color: {tooltip_color}; border: 1px solid {tooltip_color}; }}
                 """)
                 shadow = QGraphicsDropShadowEffect(self)
                 shadow.setBlurRadius(15)
@@ -1146,7 +1155,12 @@ class FloatingColorPalette(QWidget):
                 shadow.setOffset(0, 0)
                 btn.setGraphicsEffect(shadow)
             else:
-                btn.setStyleSheet(f"background-color: {c}; border-radius: 14px; border: 1px solid #D6C3A1;")
+                btn.setStyleSheet(f"""
+                    background-color: {c}; 
+                    border-radius: 14px; 
+                    border: 1px solid #D6C3A1;
+                    QToolTip {{ background-color: white; color: {tooltip_color}; border: 1px solid {tooltip_color}; }}
+                """)
                 btn.setGraphicsEffect(None)
 
     def paintEvent(self, event):
