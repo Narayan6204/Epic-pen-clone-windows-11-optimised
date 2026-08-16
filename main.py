@@ -1266,9 +1266,9 @@ class ToolbarWindow(QWidget):
         self._add_separator(layout)
 
         # ── Group 4: Actions ──
-        self._add_button(layout, "↩️", "Undo (Ctrl+Z)", self.signals.undo.emit)
-        self._add_button(layout, "⬜", "Toggle Whiteboard/Blackboard (Ctrl+B)", self.signals.toggle_background.emit)
-        self._add_button(layout, "🗑️", "Clear Screen (Ctrl+Shift+C)", self.signals.clear_screen.emit)
+        self.btn_undo = self._add_button(layout, "↩️", "Undo (Ctrl+Z)", self.signals.undo.emit)
+        self.btn_bg = self._add_button(layout, "⬜", "Toggle Whiteboard/Blackboard (Ctrl+B)", self.signals.toggle_background.emit)
+        self.btn_clear = self._add_button(layout, "🗑️", "Clear Screen (Ctrl+Shift+C)", self.signals.clear_screen.emit)
 
         self.setLayout(layout)
         
@@ -1291,6 +1291,21 @@ class ToolbarWindow(QWidget):
 
     def _on_visibility_changed(self, visible):
         self.ink_visible = visible
+        
+        # Bug 1: Sync active tool visually if backend reverted cursor to pen on unhide
+        if visible and getattr(self, 'active_tool_btn', None) == self.btn_cursor:
+            self._set_active_tool(self.btn_pen, None)
+            
+        # Bug 2: Disable irrelevant buttons when hidden
+        disable_when_hidden = [
+            self.btn_select, self.btn_eraser, self.btn_shape, 
+            self.btn_palette, getattr(self, 'btn_undo', None), 
+            getattr(self, 'btn_bg', None), getattr(self, 'btn_clear', None)
+        ]
+        for btn in disable_when_hidden:
+            if btn:
+                btn.setEnabled(visible)
+                
         self._update_cursor_button_icon()
 
     def _select_shape(self, shape_type):
@@ -1373,6 +1388,7 @@ class ToolbarWindow(QWidget):
         btn.setToolTip(tooltip)
         btn.clicked.connect(callback)
         layout.addWidget(btn, alignment=Qt.AlignmentFlag.AlignCenter)
+        return btn
 
     @staticmethod
     def _add_separator(layout):
