@@ -723,10 +723,11 @@ class OverlayWindow(QMainWindow):
                     rot_center, del_center, scale_center = self._get_selection_handles(obb)
                     
                     if not rot_center.isNull():
-                        # Check for rotate click
-                        rot_rect = QRectF(rot_center.x() - 10, rot_center.y() - 10, 20, 20)
-                        del_rect = QRectF(del_center.x() - 10, del_center.y() - 10, 20, 20)
-                        scale_rect = QRectF(scale_center.x() - 10, scale_center.y() - 10, 20, 20)
+                        # Check for rotate click (enlarged 30x30 hit zone for DPI compatibility)
+                        HANDLE_RADIUS = 15
+                        rot_rect = QRectF(rot_center.x() - HANDLE_RADIUS, rot_center.y() - HANDLE_RADIUS, HANDLE_RADIUS * 2, HANDLE_RADIUS * 2)
+                        del_rect = QRectF(del_center.x() - HANDLE_RADIUS, del_center.y() - HANDLE_RADIUS, HANDLE_RADIUS * 2, HANDLE_RADIUS * 2)
+                        scale_rect = QRectF(scale_center.x() - HANDLE_RADIUS, scale_center.y() - HANDLE_RADIUS, HANDLE_RADIUS * 2, HANDLE_RADIUS * 2)
                         
                         if rot_rect.contains(event.position()):
                             self.selection_action = 'rotate'
@@ -735,8 +736,10 @@ class OverlayWindow(QMainWindow):
                             
                             obb_center = QPointF((obb.at(0).x() + obb.at(2).x()) / 2, (obb.at(0).y() + obb.at(2).y()) / 2)
                             self.selection_start_center = obb_center
+                            self.selection_start_pos = event.position()
                             import math
                             self.selection_rotation_start_angle = math.atan2(event.position().y() - obb_center.y(), event.position().x() - obb_center.x())
+                            print(f"[DEBUG] Rotation started: center={obb_center}, start_angle={self.selection_rotation_start_angle:.2f}")
                             return
                         elif del_rect.contains(event.position()):
                             del self.paths[self.selected_path_index]
