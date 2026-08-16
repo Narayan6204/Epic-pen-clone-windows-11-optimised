@@ -168,6 +168,14 @@ class CustomHoverMenu(QWidget):
         self.setWindowFlags(Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setStyleSheet(TOOLBAR_STYLESHEET)
+        
+        # Setup Fade Animation (Using windowOpacity to prevent Top-Level crashes)
+        self.setWindowOpacity(1.0)
+        self.fade_anim = QPropertyAnimation(self, b"windowOpacity", self)
+        self.fade_anim.setDuration(150)
+        self.fade_anim.setEasingCurve(QEasingCurve.Type.InOutQuad)
+        self.fade_anim.finished.connect(self._on_fade_finished)
+        
         self.layout = QGridLayout(self)
         self.layout.setContentsMargins(15, 15, 15, 15)
         self.layout.setSpacing(8)
