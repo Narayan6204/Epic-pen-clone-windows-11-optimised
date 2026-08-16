@@ -30,11 +30,11 @@ jobs:
 
     - name: Build with PyInstaller
       run: |
-        python -m PyInstaller --noconsole --onefile main.py
+        python -m PyInstaller main.spec
 
     - name: Rename Executable
       run: |
-        Move-Item -Path dist\Pen` 11.exe -Destination dist\Pen11-${{ matrix.architecture }}.exe
+        Move-Item -Path "dist\Pen 11.exe" -Destination "dist\Pen11-${{ matrix.architecture }}.exe"
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4

@@ -83,6 +83,7 @@ class ShortcutSignals(QObject):
     change_color        = pyqtSignal(str)
     toggle_background   = pyqtSignal()
     toggle_visibility   = pyqtSignal()
+    visibility_changed  = pyqtSignal(bool)
     exit_app            = pyqtSignal()
     change_pen_size     = pyqtSignal(int)
     change_highlighter_size = pyqtSignal(int)
@@ -138,6 +139,10 @@ def create_shape_icon(shape_type, size=32):
     
     if shape_type == ShapeType.LINE:
         painter.drawLine(6, 26, 26, 6)
+    elif shape_type == ShapeType.ARROW:
+        painter.drawLine(6, 26, 24, 8)
+        painter.drawLine(24, 8, 14, 8)
+        painter.drawLine(24, 8, 24, 18)
     elif shape_type == ShapeType.RECTANGLE:
         painter.drawRect(6, 8, 20, 16)
     elif shape_type == ShapeType.ROUNDED_RECTANGLE:
@@ -286,24 +291,22 @@ class FloatingShapeToolbox(QWidget):
         painter.drawPath(path)
 
 
-class HoverMenuButton(QPushButton):
+class ClickMenuButton(QPushButton):
     def __init__(self, icon, tooltip, parent=None):
         super().__init__(icon, parent)
         self.setToolTip(tooltip)
         self.menu_widget = None
+        self.clicked.connect(self._toggle_menu)
 
     def set_menu(self, menu_widget):
         self.menu_widget = menu_widget
 
-    def enterEvent(self, event):
-        super().enterEvent(event)
+    def _toggle_menu(self):
         if self.menu_widget:
-            self.menu_widget.show_menu(self)
-
-    def leaveEvent(self, event):
-        super().leaveEvent(event)
-        if self.menu_widget:
-            self.menu_widget.schedule_hide()
+            if self.menu_widget.isVisible():
+                self.menu_widget.hide()
+            else:
+                self.menu_widget.show_menu(self)
 
 
 class DragHandle(QWidget):
@@ -366,11 +369,11 @@ class OverlayWindow(QMainWindow):
             virtual_rect = virtual_rect.united(screen.geometry())
         self.setGeometry(virtual_rect)
 
-        # High-DPI aware canvas cache
-        dpr = QApplication.primaryScreen().devicePixelRatio()
-        self.canvas_cache = QPixmap(int(virtual_rect.width() * dpr), int(virtual_rect.height() * dpr))
-        self.canvas_cache.setDevicePixelRatio(dpr)
-        self.canvas_cache.fill(Qt.GlobalColor.transparent)
+        # Span all monitors
+        virtual_rect = QRect()
+        for screen in QApplication.screens():
+            virtual_rect = virtual_rect.united(screen.geometry())
+        self.setGeometry(virtual_rect)
 
         # Tool state
         self.mode = ToolMode.PEN
@@ -526,7 +529,6 @@ class OverlayWindow(QMainWindow):
         if self.mode == ToolMode.SELECT and self.selected_path_index != -1:
             # Change color of selected object
             self.paths[self.selected_path_index]['pen'].setColor(QColor(hex_color))
-            self._rebuild_cache()
             self.update()
             return
 
@@ -546,6 +548,7 @@ class OverlayWindow(QMainWindow):
     def toggle_visibility(self):
         self.ink_visible = not self.ink_visible
         self.set_click_through(not self.ink_visible or self.mode == ToolMode.CURSOR)
+        self.signals.visibility_changed.emit(self.ink_visible)
         self.update()
 
     def set_click_through(self, enabled):
@@ -655,10 +658,11 @@ class OverlayWindow(QMainWindow):
     def _get_selection_handles(self, obb):
         # obb is a QPolygonF with at least 4 points (0: TL, 1: TR, 2: BR, 3: BL)
         if obb.size() < 4:
-            return QPointF(), QPointF()
+            return QPointF(), QPointF(), QPointF()
             
         tl = obb.at(0)
         tr = obb.at(1)
+        br = obb.at(2)
         
         # rotation handle (stick extending up from top center)
         top_center = QPointF((tl.x() + tr.x()) / 2, (tl.y() + tr.y()) / 2)
@@ -680,21 +684,13 @@ class OverlayWindow(QMainWindow):
             
         del_center = QPointF(tr.x() + dir_tr.x() * 15, tr.y() + dir_tr.y() * 15)
         
-        return rot_center, del_center
+        scale_center = QPointF(br.x(), br.y())
+        
+        return rot_center, del_center, scale_center
 
-    def _rebuild_cache(self):
-        dpr = self.canvas_cache.devicePixelRatio()
-        sz = self.size()
-        self.canvas_cache = QPixmap(int(sz.width() * dpr), int(sz.height() * dpr))
-        self.canvas_cache.setDevicePixelRatio(dpr)
-        self.canvas_cache.fill(Qt.GlobalColor.transparent)
-        painter = QPainter(self.canvas_cache)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-        for p in self.paths:
-            if p['mode'] != ToolMode.ERASER:
-                self._draw_stroke(painter, p['path'], p['pen'], p['mode'])
-        painter.end()
+    # ── Cache management (Removed for Pure Vector Rendering) ──
+
+    def _get_selection_handles(self, obb):
 
     # ── Mouse events ──
 
@@ -707,12 +703,13 @@ class OverlayWindow(QMainWindow):
                 if self.selected_path_index != -1 and self.selected_path_index < len(self.paths):
                     p = self.paths[self.selected_path_index]['path']
                     obb = self.paths[self.selected_path_index].get('obb', QPolygonF(p.boundingRect()))
-                    rot_center, del_center = self._get_selection_handles(obb)
+                    rot_center, del_center, scale_center = self._get_selection_handles(obb)
                     
                     if not rot_center.isNull():
                         # Check for rotate click
                         rot_rect = QRectF(rot_center.x() - 10, rot_center.y() - 10, 20, 20)
                         del_rect = QRectF(del_center.x() - 10, del_center.y() - 10, 20, 20)
+                        scale_rect = QRectF(scale_center.x() - 10, scale_center.y() - 10, 20, 20)
                         
                         if rot_rect.contains(event.position()):
                             self.selection_action = 'rotate'
@@ -728,8 +725,15 @@ class OverlayWindow(QMainWindow):
                             del self.paths[self.selected_path_index]
                             self.selected_path_index = -1
                             self.selection_action = None
-                            self._rebuild_cache()
                             self.update()
+                            return
+                        elif scale_rect.contains(event.position()):
+                            self.selection_action = 'scale'
+                            self.selection_start_path = QPainterPath(p)
+                            self.selection_start_obb = QPolygonF(obb)
+                            self.selection_start_pos = event.position()
+                            self.selection_start_center = obb.at(0) # TL acts as anchor
+                            self.selection_start_pen_width = self.paths[self.selected_path_index]['pen'].width()
                             return
                     
                     # Check for drag click (inside bounding box)
@@ -795,7 +799,6 @@ class OverlayWindow(QMainWindow):
                     transform = QTransform().translate(delta.x(), delta.y())
                     self.paths[self.selected_path_index]['path'] = transform.map(self.selection_start_path)
                     self.paths[self.selected_path_index]['obb'] = transform.map(self.selection_start_obb)
-                    self._rebuild_cache()
                     self.update()
                 elif self.selection_action == 'rotate' and self.selected_path_index != -1:
                     center = self.selection_start_center
@@ -805,8 +808,25 @@ class OverlayWindow(QMainWindow):
                     transform = QTransform().translate(center.x(), center.y()).rotate(angle_diff).translate(-center.x(), -center.y())
                     self.paths[self.selected_path_index]['path'] = transform.map(self.selection_start_path)
                     self.paths[self.selected_path_index]['obb'] = transform.map(self.selection_start_obb)
-                    self._rebuild_cache()
                     self.update()
+                elif self.selection_action == 'scale' and self.selected_path_index != -1:
+                    import math
+                    start_dist = math.hypot(self.selection_start_pos.x() - self.selection_start_center.x(), 
+                                            self.selection_start_pos.y() - self.selection_start_center.y())
+                    current_dist = math.hypot(event.position().x() - self.selection_start_center.x(), 
+                                              event.position().y() - self.selection_start_center.y())
+                    
+                    if start_dist > 0:
+                        scale_factor = current_dist / start_dist
+                        transform = QTransform().translate(self.selection_start_center.x(), self.selection_start_center.y()) \
+                                                .scale(scale_factor, scale_factor) \
+                                                .translate(-self.selection_start_center.x(), -self.selection_start_center.y())
+                        
+                        self.paths[self.selected_path_index]['path'] = transform.map(self.selection_start_path)
+                        self.paths[self.selected_path_index]['obb'] = transform.map(self.selection_start_obb)
+                        new_width = max(1, int(self.selection_start_pen_width * scale_factor))
+                        self.paths[self.selected_path_index]['pen'].setWidth(new_width)
+                        self.update()
                 return
 
             if self.mode == ToolMode.ERASER:
@@ -863,13 +883,6 @@ class OverlayWindow(QMainWindow):
                 obb = QPolygonF(self.current_path.boundingRect())
                 self.paths.append({'path': self.current_path, 'pen': self._get_current_pen(), 'mode': self.mode, 'obb': obb})
 
-                # Bake the new stroke into the cache
-                painter = QPainter(self.canvas_cache)
-                painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-                painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-                self._draw_stroke(painter, self.current_path, self._get_current_pen(), self.mode)
-                painter.end()
-
                 self.current_path = None
                 self.update()
             self.drawing = False
@@ -890,7 +903,6 @@ class OverlayWindow(QMainWindow):
                 self.paths.pop(i)
                 removed = True
         if removed:
-            self._rebuild_cache()
             self.update()
 
     # ── Shape detection ──
@@ -944,11 +956,15 @@ class OverlayWindow(QMainWindow):
             return
 
         painter.setClipRect(event.rect())
-        painter.drawPixmap(0, 0, self.canvas_cache)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+
+        # Pure Vector Rendering: Draw all saved paths dynamically
+        for p in self.paths:
+            if p['mode'] != ToolMode.ERASER:
+                self._draw_stroke(painter, p['path'], p['pen'], p['mode'])
         
         if self.drawing and self.current_path:
-            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
             self._draw_stroke(painter, self.current_path, self._get_current_pen(), self.mode)
 
         if self.mode == ToolMode.SELECT and self.selected_path_index != -1 and self.selected_path_index < len(self.paths):
@@ -971,8 +987,8 @@ class OverlayWindow(QMainWindow):
                 pt = obb.at(i)
                 painter.drawRect(QRectF(pt.x() - handle_size/2, pt.y() - handle_size/2, handle_size, handle_size))
                 
-            # Draw rotation and delete handles
-            rot_center, del_center = self._get_selection_handles(obb)
+            # Draw rotation, delete, and scale handles
+            rot_center, del_center, scale_center = self._get_selection_handles(obb)
             
             if not rot_center.isNull():
                 # Draw stick
@@ -1000,12 +1016,21 @@ class OverlayWindow(QMainWindow):
                 painter.drawLine(QPointF(del_center.x() - 4, del_center.y() - 4), QPointF(del_center.x() + 4, del_center.y() + 4))
                 painter.drawLine(QPointF(del_center.x() - 4, del_center.y() + 4), QPointF(del_center.x() + 4, del_center.y() - 4))
 
+                # Draw scale handle circle
+                painter.setPen(QPen(QColor(0, 122, 255), 1.5))
+                painter.setBrush(QColor(255, 255, 255))
+                painter.drawEllipse(scale_center, 10, 10)
+                
+                # Draw resize arrow inside
+                painter.drawLine(QPointF(scale_center.x()-4, scale_center.y()-4), QPointF(scale_center.x()+4, scale_center.y()+4))
+                painter.drawLine(QPointF(scale_center.x()+4, scale_center.y()+4), QPointF(scale_center.x()+4, scale_center.y()+1))
+                painter.drawLine(QPointF(scale_center.x()+4, scale_center.y()+4), QPointF(scale_center.x()+1, scale_center.y()+4))
+
     def keyPressEvent(self, event):
         if self.mode == ToolMode.SELECT and self.selected_path_index != -1 and self.selected_path_index < len(self.paths):
             if event.key() in (Qt.Key.Key_Delete, Qt.Key.Key_Backspace):
                 self.paths.pop(self.selected_path_index)
                 self.selected_path_index = -1
-                self._rebuild_cache()
                 self.update()
                 return
         super().keyPressEvent(event)
@@ -1015,14 +1040,12 @@ class OverlayWindow(QMainWindow):
     def clear_screen(self):
         self.paths.clear()
         self.selected_path_index = -1
-        self._rebuild_cache()
         self.update()
 
     def undo(self):
         if self.paths:
             self.paths.pop()
             self.selected_path_index = -1
-            self._rebuild_cache()
             self.update()
 
 
@@ -1157,7 +1180,7 @@ class ToolbarWindow(QWidget):
         
         layout.addSpacing(2)
 
-        self.btn_cursor = self._create_hover_button("🖱️", "Cursor Options (Ctrl+4)")
+        self.btn_cursor = self._create_click_button("🖱️", "Cursor Options (Ctrl+4)")
         self.cursor_menu = CustomHoverMenu(self)
         self.cursor_menu.add_action("🖱️", "Cursor Mode (Keep Ink) (Ctrl+4)", 
                                     lambda: self._set_active_tool(self.btn_cursor, self.signals.switch_cursor.emit))
@@ -1183,7 +1206,7 @@ class ToolbarWindow(QWidget):
         self._setup_size_menu(self.btn_hl, [10, 15, 25, 35, 45], self.signals.change_highlighter_size.emit)
         layout.addWidget(self.btn_hl, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self.btn_shape = self._create_hover_button("📐", "Shapes")
+        self.btn_shape = self._create_click_button("📐", "Shapes")
         self.shape_menu = CustomHoverMenu(self)
         
         # Use crisp programmatically generated icons for shapes
@@ -1234,6 +1257,15 @@ class ToolbarWindow(QWidget):
         self.signals.change_pen_size.connect(lambda _: self._set_active_tool(self.btn_pen, None))
         self.signals.change_highlighter_size.connect(lambda _: self._set_active_tool(self.btn_hl, None))
         self.signals.change_eraser_size.connect(lambda _: self._set_active_tool(self.btn_eraser, None))
+        self.signals.visibility_changed.connect(self._on_visibility_changed)
+
+    def _on_visibility_changed(self, visible):
+        if visible:
+            self.btn_cursor.setText("🖱️")
+            self.btn_cursor.setStyleSheet("")
+        else:
+            self.btn_cursor.setText("🚫")
+            self.btn_cursor.setStyleSheet("background-color: #FF3B30; color: white;")
 
     def _select_shape(self, shape_type):
         self.current_shape_type = shape_type
@@ -1258,8 +1290,8 @@ class ToolbarWindow(QWidget):
         btn.clicked.connect(callback)
         return btn
 
-    def _create_hover_button(self, icon, tooltip):
-        btn = HoverMenuButton(icon, tooltip)
+    def _create_click_button(self, icon, tooltip):
+        btn = ClickMenuButton(icon, tooltip)
         btn.setFixedSize(36, 36)
         return btn
 
