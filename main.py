@@ -1248,12 +1248,8 @@ class ToolbarWindow(QWidget):
         self.signals.visibility_changed.connect(self._on_visibility_changed)
 
     def _on_visibility_changed(self, visible):
-        if visible:
-            self.btn_cursor.setText("🖱️")
-            self.btn_cursor.setStyleSheet("")
-        else:
-            self.btn_cursor.setText("🚫")
-            self.btn_cursor.setStyleSheet("background-color: #FF3B30; color: white;")
+        self.ink_visible = visible
+        self._update_cursor_button_icon()
 
     def _select_shape(self, shape_type):
         self.current_shape_type = shape_type
@@ -1290,7 +1286,7 @@ class ToolbarWindow(QWidget):
         btn.hold_triggered.connect(lambda: menu.exec(btn.mapToGlobal(QPoint(btn.width() + 5, 0))))
 
     def _set_active_tool(self, btn, callback):
-        if self.active_tool_btn:
+        if hasattr(self, 'active_tool_btn') and self.active_tool_btn:
             self.active_tool_btn.setObjectName("")
             self.active_tool_btn.style().unpolish(self.active_tool_btn)
             self.active_tool_btn.style().polish(self.active_tool_btn)
@@ -1298,8 +1294,23 @@ class ToolbarWindow(QWidget):
         btn.setObjectName("activeTool")
         btn.style().unpolish(btn)
         btn.style().polish(btn)
+        self._update_cursor_button_icon()
         if callback:
             callback()
+
+    def _update_cursor_button_icon(self):
+        ink_vis = getattr(self, 'ink_visible', True)
+        is_cursor_active = getattr(self, 'active_tool_btn', None) == self.btn_cursor
+        
+        if not ink_vis:
+            self.btn_cursor.setText("👁️❌")
+            self.btn_cursor.setStyleSheet("background-color: #FF3B30; color: white; border-radius: 4px;")
+        elif is_cursor_active:
+            self.btn_cursor.setText("🖱️")
+            self.btn_cursor.setStyleSheet("")
+        else:
+            self.btn_cursor.setText("🚫")
+            self.btn_cursor.setStyleSheet("")
 
     def _add_button(self, layout, icon, tooltip, callback):
         btn = QPushButton(icon)
