@@ -171,9 +171,7 @@ class CustomHoverMenu(QWidget):
         self.layout = QGridLayout(self)
         self.layout.setContentsMargins(15, 15, 15, 15)
         self.layout.setSpacing(8)
-        self.hide_timer = QTimer(self)
-        self.hide_timer.setSingleShot(True)
-        self.hide_timer.timeout.connect(self.hide)
+        self.layout.setSpacing(8)
 
     def add_action(self, icon_or_text, tooltip, callback):
         btn = QPushButton()
@@ -192,24 +190,16 @@ class CustomHoverMenu(QWidget):
         self.layout.addWidget(btn, idx // 2, idx % 2)
         return btn
 
-    def enterEvent(self, event):
-        self.hide_timer.stop()
-        super().enterEvent(event)
-
-    def leaveEvent(self, event):
-        self.hide_timer.start(150)
-        super().leaveEvent(event)
+    # Removed enterEvent and leaveEvent to prevent accidental closing with pen tablets.
 
     def show_menu(self, anchor_widget):
-        self.hide_timer.stop()
         self.adjustSize()
         # Position menu to the left of the anchor button with minimal gap
         global_pos = anchor_widget.mapToGlobal(QPoint(-self.width() - 5, 0))
         self.move(global_pos)
         self.show()
 
-    def schedule_hide(self):
-        self.hide_timer.start(150)
+    # schedule_hide removed
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -1208,6 +1198,7 @@ class ToolbarWindow(QWidget):
         
         # Use crisp programmatically generated icons for shapes
         self.shape_menu.add_action(create_shape_icon(ShapeType.LINE), "Line", lambda: self._select_shape(ShapeType.LINE))
+        self.shape_menu.add_action(create_shape_icon(ShapeType.ARROW), "Arrow", lambda: self._select_shape(ShapeType.ARROW))
         self.shape_menu.add_action(create_shape_icon(ShapeType.RECTANGLE), "Rectangle", lambda: self._select_shape(ShapeType.RECTANGLE))
         self.shape_menu.add_action(create_shape_icon(ShapeType.ROUNDED_RECTANGLE), "Rounded Rectangle", lambda: self._select_shape(ShapeType.ROUNDED_RECTANGLE))
         self.shape_menu.add_action(create_shape_icon(ShapeType.CIRCLE), "Circle", lambda: self._select_shape(ShapeType.CIRCLE))
