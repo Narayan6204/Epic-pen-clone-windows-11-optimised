@@ -1,0 +1,8 @@
+# Gemini Agent Rules
+1. ALWAYS ask clarifying questions before writing code if requirements are ambiguous.
+2. DO NOT rewrite entire files automatically; provide targeted code snippets.
+3. Explain your plan in 1-2 sentences before writing any code.
+4. Follow high-quality software architecture standards (Opus-level precision).
+5. ANIMATION RULE: Before writing ANY animation code in main.py (including hide/show effects, transitions, collapse/expand, fades, slides, or any QPropertyAnimation usage), you MUST first read and strictly follow .agents/skills/pyqt-animation-skill/SKILL.md. This is mandatory — do not skip it.
+6. WEB DESIGN DEFAULT RULE: Whenever asked to build, design, or develop any website or web application, you MUST ALWAYS default to Material Design 3 (Material You / m3.material.io) standards using .agents/skills/material-you-web/SKILL.md (HCT dynamic colors, --md-sys-* tokens, state layers, ink ripples, typography scale, surface containers, and adaptive navigation).
+7. PONYTAIL DEFAULT RULE: Apply Ponytail principles by default on all coding tasks (YAGNI, standard library & native platform features first, reuse existing helpers, shortest clean diff, no unasked-for boilerplate or unnecessary dependencies).

@@ -98,6 +98,7 @@ class ShortcutSignals(QObject):
     change_eraser_size  = pyqtSignal(int)
     increment_size      = pyqtSignal()
     decrement_size      = pyqtSignal()
+    toolbar_expanded    = pyqtSignal()   # Fired when toolbar finishes expanding
     toggle_color_palette = pyqtSignal()
     switch_shape        = pyqtSignal(str)
     toggle_shape_toolbox = pyqtSignal()
@@ -236,6 +237,12 @@ class CustomHoverMenu(QWidget):
         self.fade_anim.setEndValue(0.0)
         self.fade_anim.start()
 
+    def instant_hide(self):
+        """Immediately hide without animation (used during canvas hide)."""
+        self.fade_anim.stop()
+        self.setWindowOpacity(1.0)
+        self.hide()
+
     def _on_fade_finished(self):
         """Called when any fade animation completes. Only hide if we faded OUT."""
         if self.fade_anim.endValue() == 0.0:
@@ -257,6 +264,7 @@ class FloatingShapeToolbox(QWidget):
         self.overlay_window = overlay_window
         self._drag_pos = None
         self.has_been_dragged = False
+        self._fade_state = 0  # 0=hidden, 1=fading_in, 2=visible, 3=fading_out
 
         self.setWindowFlags(
             Qt.WindowType.Tool |
@@ -264,6 +272,11 @@ class FloatingShapeToolbox(QWidget):
             Qt.WindowType.WindowStaysOnTopHint
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+        # Fade animation — safe on Qt.WindowType.Tool windows
+        self._opacity_anim = QPropertyAnimation(self, b"windowOpacity")
+        self._opacity_anim.setEasingCurve(QEasingCurve.Type.InOutSine)
+        self._opacity_anim.finished.connect(self._on_fade_finished)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(15, 8, 15, 15)
@@ -298,6 +311,45 @@ class FloatingShapeToolbox(QWidget):
 
         layout.addLayout(self.grid)
         self.setLayout(layout)
+
+    def fade_in(self):
+        """Fade the panel in smoothly."""
+        if self._fade_state in (1, 2):  # Already visible or fading in
+            return
+        self._fade_state = 1
+        self._opacity_anim.stop()
+        self.setWindowOpacity(0.0)
+        super().show()
+        self._opacity_anim.setDuration(180)
+        self._opacity_anim.setStartValue(0.0)
+        self._opacity_anim.setEndValue(1.0)
+        self._opacity_anim.start()
+
+    def fade_out(self):
+        """Fade the panel out smoothly, then hide."""
+        if self._fade_state in (0, 3):  # Already hidden or fading out
+            return
+        self._fade_state = 3
+        self._opacity_anim.stop()
+        self._opacity_anim.setDuration(120)
+        self._opacity_anim.setStartValue(self.windowOpacity())
+        self._opacity_anim.setEndValue(0.0)
+        self._opacity_anim.start()
+
+    def instant_hide(self):
+        """Immediately hide without animation (used during canvas hide)."""
+        self._opacity_anim.stop()
+        self._fade_state = 0
+        self.setWindowOpacity(1.0)
+        super().hide()
+
+    def _on_fade_finished(self):
+        if self._fade_state == 1:   # Finished fading in
+            self._fade_state = 2
+        elif self._fade_state == 3: # Finished fading out
+            self._fade_state = 0
+            self.setWindowOpacity(1.0)
+            super().hide()
 
     def add_action(self, icon, tooltip, callback):
         btn = QPushButton(icon)
@@ -702,6 +754,7 @@ class OverlayWindow(QMainWindow):
             
         painter.setPen(pen)
         painter.drawPath(path)
+        painter.setOpacity(1.0)
 
     # ── Cache management ──
     
@@ -716,10 +769,10 @@ class OverlayWindow(QMainWindow):
                 obb = self.paths[idx].get('obb', QPolygonF(self.paths[idx]['path'].boundingRect()))
                 master_rect = master_rect.united(obb.boundingRect())
                 
-        if master_rect.width() < 40:
-            master_rect.adjust(- (40 - master_rect.width()) / 2, 0, (40 - master_rect.width()) / 2, 0)
-        if master_rect.height() < 40:
-            master_rect.adjust(0, - (40 - master_rect.height()) / 2, 0, (40 - master_rect.height()) / 2)
+        if master_rect.width() < 50:
+            master_rect.adjust(- (50 - master_rect.width()) / 2, 0, (50 - master_rect.width()) / 2, 0)
+        if master_rect.height() < 50:
+            master_rect.adjust(0, - (50 - master_rect.height()) / 2, 0, (50 - master_rect.height()) / 2)
             
         self.master_obb = QPolygonF(master_rect)
 
@@ -732,31 +785,59 @@ class OverlayWindow(QMainWindow):
         tl = obb.at(0)
         tr = obb.at(1)
         br = obb.at(2)
+        bl = obb.at(3)
         
-        # rotation handle (stick extending up from top center)
+        # Unit vector along top edge (TL -> TR): width axis (rightward)
+        v_top = QPointF(tr.x() - tl.x(), tr.y() - tl.y())
+        len_top = math.hypot(v_top.x(), v_top.y())
+        if len_top > 0:
+            u_right = QPointF(v_top.x() / len_top, v_top.y() / len_top)
+        else:
+            u_right = QPointF(1.0, 0.0)
+            
+        # Unit vector along right edge (TR -> BR): height axis (downward)
+        v_right = QPointF(br.x() - tr.x(), br.y() - tr.y())
+        len_right = math.hypot(v_right.x(), v_right.y())
+        if len_right > 0:
+            u_down = QPointF(v_right.x() / len_right, v_right.y() / len_right)
+        else:
+            u_down = QPointF(0.0, 1.0)
+            
+        u_up = QPointF(-u_down.x(), -u_down.y())
+        u_left = QPointF(-u_right.x(), -u_right.y())
+        
+        # 1. Rotation handle: extends straight UP from top center
         top_center = QPointF((tl.x() + tr.x()) / 2, (tl.y() + tr.y()) / 2)
-        v = QPointF(tr.x() - tl.x(), tr.y() - tl.y())
-        normal = QPointF(v.y(), -v.x())
-        length = math.hypot(normal.x(), normal.y())
-        if length > 0:
-            normal = QPointF(normal.x() / length, normal.y() / length)
-            
-        rot_center = QPointF(top_center.x() + normal.x() * 35, top_center.y() + normal.y() * 35)
+        rot_center = QPointF(top_center.x() + u_up.x() * 32, top_center.y() + u_up.y() * 32)
         
-        # delete handle (hovering outside top-right corner)
-        center_obb = QPointF((obb.at(0).x() + obb.at(2).x()) / 2, (obb.at(0).y() + obb.at(2).y()) / 2)
-        dir_tr = QPointF(tr.x() - center_obb.x(), tr.y() - center_obb.y())
-        len_tr = math.hypot(dir_tr.x(), dir_tr.y())
-        if len_tr > 0:
-            dir_tr = QPointF(dir_tr.x() / len_tr, dir_tr.y() / len_tr)
-            
-        del_center = QPointF(tr.x() + dir_tr.x() * 25, tr.y() + dir_tr.y() * 25)
+        # 2. Delete handle: offset outward from Top-Right corner
+        del_center = QPointF(tr.x() + u_right.x() * 20 + u_up.x() * 20,
+                             tr.y() + u_right.y() * 20 + u_up.y() * 20)
+                             
+        # 3. Scale / Resize handle: offset outward from Bottom-Right corner
+        scale_center = QPointF(br.x() + u_right.x() * 16 + u_down.x() * 16,
+                               br.y() + u_right.y() * 16 + u_down.y() * 16)
         
-        dir_br = QPointF(br.x() - center_obb.x(), br.y() - center_obb.y())
-        len_br = math.hypot(dir_br.x(), dir_br.y())
-        if len_br > 0:
-            dir_br = QPointF(dir_br.x() / len_br, dir_br.y() / len_br)
-        scale_center = QPointF(br.x() + dir_br.x() * 15, br.y() + dir_br.y() * 15)
+        # --- Collision avoidance between handles ---
+        MIN_DIST = 36.0
+        
+        # Check collision between Rotate and Delete (common on thin vertical shapes)
+        d_rot_del = math.hypot(del_center.x() - rot_center.x(), del_center.y() - rot_center.y())
+        if d_rot_del < MIN_DIST:
+            overlap = MIN_DIST - d_rot_del
+            del_center = QPointF(del_center.x() + u_right.x() * (overlap + 8),
+                                 del_center.y() + u_right.y() * (overlap + 8))
+            rot_center = QPointF(rot_center.x() + u_up.x() * 8,
+                                 rot_center.y() + u_up.y() * 8)
+                                 
+        # Check collision between Delete and Scale (common on thin horizontal shapes)
+        d_del_scale = math.hypot(del_center.x() - scale_center.x(), del_center.y() - scale_center.y())
+        if d_del_scale < MIN_DIST:
+            overlap = MIN_DIST - d_del_scale
+            del_center = QPointF(del_center.x() + u_up.x() * (overlap / 2 + 6),
+                                 del_center.y() + u_up.y() * (overlap / 2 + 6))
+            scale_center = QPointF(scale_center.x() + u_down.x() * (overlap / 2 + 6),
+                                   scale_center.y() + u_down.y() * (overlap / 2 + 6))
         
         return rot_center, del_center, scale_center
 
@@ -774,43 +855,47 @@ class OverlayWindow(QMainWindow):
                 if self.selected_path_indices and self.master_obb:
                     rot_center, del_center, scale_center = self._get_selection_handles(self.master_obb)
                     
-                    HANDLE_RADIUS = 15
-                    rot_rect = QRectF(rot_center.x() - HANDLE_RADIUS, rot_center.y() - HANDLE_RADIUS, HANDLE_RADIUS * 2, HANDLE_RADIUS * 2)
-                    del_rect = QRectF(del_center.x() - HANDLE_RADIUS, del_center.y() - HANDLE_RADIUS, HANDLE_RADIUS * 2, HANDLE_RADIUS * 2)
-                    scale_rect = QRectF(scale_center.x() - HANDLE_RADIUS, scale_center.y() - HANDLE_RADIUS, HANDLE_RADIUS * 2, HANDLE_RADIUS * 2)
-
-                    if rot_rect.contains(event.position()):
-                        self.selection_action = 'rotate'
-                        self.selection_start_pos = event.position()
-                        self.selection_start_master_obb = QPolygonF(self.master_obb)
-                        self.selection_start_states = [{'path': QPainterPath(self.paths[idx]['path']), 'obb': QPolygonF(self.paths[idx].get('obb', QPolygonF(self.paths[idx]['path'].boundingRect()))), 'index': idx} for idx in self.selected_path_indices if idx < len(self.paths)]
-                        
-                        center = QPointF((self.master_obb.at(0).x() + self.master_obb.at(2).x()) / 2, (self.master_obb.at(0).y() + self.master_obb.at(2).y()) / 2)
-                        self.selection_start_center = center
-                        
-                        dy = event.position().y() - center.y()
-                        dx = event.position().x() - center.x()
-                        self.selection_rotation_start_angle = math.degrees(math.atan2(dy, dx))
-                        return
-                        
-                    elif del_rect.contains(event.position()):
-                        self.selection_action = None
-                        for idx in sorted(self.selected_path_indices, reverse=True):
-                            if idx < len(self.paths):
-                                del self.paths[idx]
-                        self.selected_path_indices.clear()
-                        self._recalculate_master_obb()
-                        self.undo_stack_size = min(self.undo_stack_size, len(self.paths))
-                        self.update()
-                        return
-                        
-                    elif scale_rect.contains(event.position()):
-                        self.selection_action = 'scale'
-                        self.selection_start_pos = event.position()
-                        self.selection_start_master_obb = QPolygonF(self.master_obb)
-                        self.selection_start_states = [{'path': QPainterPath(self.paths[idx]['path']), 'obb': QPolygonF(self.paths[idx].get('obb', QPolygonF(self.paths[idx]['path'].boundingRect()))), 'index': idx, 'pen_width': self.paths[idx]['pen'].widthF()} for idx in self.selected_path_indices if idx < len(self.paths)]
-                        self.selection_start_center = QPointF((self.master_obb.at(0).x() + self.master_obb.at(2).x()) / 2, (self.master_obb.at(0).y() + self.master_obb.at(2).y()) / 2)
-                        return
+                    pos = event.position()
+                    d_rot = math.hypot(pos.x() - rot_center.x(), pos.y() - rot_center.y())
+                    d_del = math.hypot(pos.x() - del_center.x(), pos.y() - del_center.y())
+                    d_scale = math.hypot(pos.x() - scale_center.x(), pos.y() - scale_center.y())
+                    
+                    HANDLE_RADIUS = 18
+                    min_dist = min(d_rot, d_del, d_scale)
+                    
+                    if min_dist <= HANDLE_RADIUS:
+                        if min_dist == d_rot:
+                            self.selection_action = 'rotate'
+                            self.selection_start_pos = event.position()
+                            self.selection_start_master_obb = QPolygonF(self.master_obb)
+                            self.selection_start_states = [{'path': QPainterPath(self.paths[idx]['path']), 'obb': QPolygonF(self.paths[idx].get('obb', QPolygonF(self.paths[idx]['path'].boundingRect()))), 'index': idx} for idx in self.selected_path_indices if idx < len(self.paths)]
+                            
+                            center = QPointF((self.master_obb.at(0).x() + self.master_obb.at(2).x()) / 2, (self.master_obb.at(0).y() + self.master_obb.at(2).y()) / 2)
+                            self.selection_start_center = center
+                            
+                            dy = event.position().y() - center.y()
+                            dx = event.position().x() - center.x()
+                            self.selection_rotation_start_angle = math.atan2(dy, dx)
+                            return
+                            
+                        elif min_dist == d_del:
+                            self.selection_action = None
+                            for idx in sorted(self.selected_path_indices, reverse=True):
+                                if idx < len(self.paths):
+                                    del self.paths[idx]
+                            self.selected_path_indices.clear()
+                            self._recalculate_master_obb()
+                            self.undo_stack_size = min(self.undo_stack_size, len(self.paths))
+                            self.update()
+                            return
+                            
+                        elif min_dist == d_scale:
+                            self.selection_action = 'scale'
+                            self.selection_start_pos = event.position()
+                            self.selection_start_master_obb = QPolygonF(self.master_obb)
+                            self.selection_start_states = [{'path': QPainterPath(self.paths[idx]['path']), 'obb': QPolygonF(self.paths[idx].get('obb', QPolygonF(self.paths[idx]['path'].boundingRect()))), 'index': idx, 'pen_width': self.paths[idx]['pen'].widthF()} for idx in self.selected_path_indices if idx < len(self.paths)]
+                            self.selection_start_center = QPointF((self.master_obb.at(0).x() + self.master_obb.at(2).x()) / 2, (self.master_obb.at(0).y() + self.master_obb.at(2).y()) / 2)
+                            return
                         
                     elif self.master_obb.boundingRect().contains(event.position()):
                         self.selection_action = 'drag'
@@ -1091,6 +1176,7 @@ class OverlayWindow(QMainWindow):
         if self.drawing and self.current_path:
             self._draw_stroke(painter, self.current_path, self._get_current_pen(), self.mode)
 
+        painter.setOpacity(1.0)
         if self.mode == ToolMode.SELECT:
             if self.is_lassoing and self.lasso_path is not None:
                 painter.setPen(QPen(QColor(0, 122, 255), 2, Qt.PenStyle.DashLine))
@@ -1202,6 +1288,7 @@ class FloatingColorPalette(QWidget):
         self.signals = signals
         self._drag_pos = None
         self.has_been_dragged = False
+        self._fade_state = 0  # 0=hidden, 1=fading_in, 2=visible, 3=fading_out
 
         self.setWindowFlags(
             Qt.WindowType.Tool |
@@ -1209,6 +1296,11 @@ class FloatingColorPalette(QWidget):
             Qt.WindowType.WindowStaysOnTopHint
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+        # Fade animation — safe on Qt.WindowType.Tool windows
+        self._opacity_anim = QPropertyAnimation(self, b"windowOpacity")
+        self._opacity_anim.setEasingCurve(QEasingCurve.Type.InOutSine)
+        self._opacity_anim.finished.connect(self._on_fade_finished)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(15, 8, 15, 15)
@@ -1275,6 +1367,45 @@ class FloatingColorPalette(QWidget):
                 """)
                 btn.setGraphicsEffect(None)
 
+    def fade_in(self):
+        """Fade the panel in smoothly."""
+        if self._fade_state in (1, 2):
+            return
+        self._fade_state = 1
+        self._opacity_anim.stop()
+        self.setWindowOpacity(0.0)
+        super().show()
+        self._opacity_anim.setDuration(180)
+        self._opacity_anim.setStartValue(0.0)
+        self._opacity_anim.setEndValue(1.0)
+        self._opacity_anim.start()
+
+    def fade_out(self):
+        """Fade the panel out smoothly, then hide."""
+        if self._fade_state in (0, 3):
+            return
+        self._fade_state = 3
+        self._opacity_anim.stop()
+        self._opacity_anim.setDuration(120)
+        self._opacity_anim.setStartValue(self.windowOpacity())
+        self._opacity_anim.setEndValue(0.0)
+        self._opacity_anim.start()
+
+    def instant_hide(self):
+        """Immediately hide without animation (used during canvas hide)."""
+        self._opacity_anim.stop()
+        self._fade_state = 0
+        self.setWindowOpacity(1.0)
+        super().hide()
+
+    def _on_fade_finished(self):
+        if self._fade_state == 1:
+            self._fade_state = 2
+        elif self._fade_state == 3:
+            self._fade_state = 0
+            self.setWindowOpacity(1.0)
+            super().hide()
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -1329,11 +1460,18 @@ class ToolbarWindow(QWidget):
         self._collapsible_widgets = []
         self._collapsible_separators = []
 
-        # Height shrink/expand animation
+        # Phase 1: Height shrink/expand animation
         self._height_anim = QPropertyAnimation(self, b"maximumHeight")
         self._height_anim.setDuration(300)
         self._height_anim.setEasingCurve(QEasingCurve.Type.InOutCubic)
         self._height_anim.finished.connect(self._on_height_anim_finished)
+
+        # Phase 2: Opacity fade-in for button reveal (expand only)
+        # Safe: windowOpacity on top-level QWidget — no QGraphicsOpacityEffect
+        self._toolbar_opacity_anim = QPropertyAnimation(self, b"windowOpacity")
+        self._toolbar_opacity_anim.setDuration(200)
+        self._toolbar_opacity_anim.setEasingCurve(QEasingCurve.Type.InOutSine)
+        self._toolbar_opacity_anim.finished.connect(self._on_opacity_anim_finished)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(10, 8, 10, 15)
@@ -1561,6 +1699,10 @@ class ToolbarWindow(QWidget):
         if self._collapse_state == 3:  # Currently expanding — reverse it
             self._height_anim.stop()
 
+        # Stop any ongoing opacity animation and reset opacity
+        self._toolbar_opacity_anim.stop()
+        self.setWindowOpacity(1.0)
+
         self._collapse_state = 1  # COLLAPSING
         self._full_height = self.height()
 
@@ -1592,12 +1734,16 @@ class ToolbarWindow(QWidget):
         if self._collapse_state == 1:  # Currently collapsing — reverse it
             self._height_anim.stop()
 
+        # Stop any ongoing opacity animation, keep toolbar visible during height animation
+        self._toolbar_opacity_anim.stop()
+        self.setWindowOpacity(1.0)
+
         self._collapse_state = 3  # EXPANDING
 
         current_h = self.height()
-        target_h = self._full_height or 400  # Fallback to default
+        target_h = self._full_height or 400
 
-        # Release fixed height so animation can work
+        # Buttons stay HIDDEN during height animation (avoids layout fight + circles bug)
         self.setMinimumHeight(0)
         self.setMaximumHeight(current_h)
 
@@ -1612,20 +1758,32 @@ class ToolbarWindow(QWidget):
             self._collapse_state = 2
             self.setFixedHeight(self.height())
 
-        elif self._collapse_state == 3:  # Was expanding → now expanded
-            # Show all hidden buttons and separators
-            for w in self._collapsible_widgets:
-                w.show()
-            for s in self._collapsible_separators:
-                s.show()
-
-            # Reset height constraints to Qt defaults
+        elif self._collapse_state == 3:  # Height done → now start button fade-in
+            # Reset height constraints
             self.setMinimumHeight(0)
             self.setMaximumHeight(16777215)  # QWIDGETSIZE_MAX
             if self._full_height:
                 self.setFixedHeight(self._full_height)
 
+            # Show buttons while toolbar is invisible, then fade in
+            self.setWindowOpacity(0.0)
+            for w in self._collapsible_widgets:
+                w.show()
+            for s in self._collapsible_separators:
+                s.show()
+
+            # Phase 2: Fade toolbar from 0 → 1 so buttons appear to fade in
+            self._toolbar_opacity_anim.setStartValue(0.0)
+            self._toolbar_opacity_anim.setEndValue(1.0)
+            self._toolbar_opacity_anim.start()
+            # NOTE: _collapse_state stays at 3 until opacity finishes
+
+    def _on_opacity_anim_finished(self):
+        """Called after the button fade-in completes. Toolbar is now fully expanded."""
+        if self._collapse_state == 3:
             self._collapse_state = 0
+            # Signal coordinators: toolbar is fully expanded AND visible
+            self.signals.toolbar_expanded.emit()
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -1745,8 +1903,10 @@ class MainAppCoordinator(QObject):
         # Palette persistence state
         self._palette_was_visible = False
 
-        # Save/restore palette when canvas is hidden/shown
+        # Canvas visibility: save/close sub-panels immediately
         self.signals.visibility_changed.connect(self._on_canvas_visibility_changed)
+        # Toolbar expansion done: NOW restore palette (correct order)
+        self.signals.toolbar_expanded.connect(self._on_toolbar_expanded)
         
         # Auto-hide popup menus (NOT color palette) when selecting another tool
         self.signals.switch_pen.connect(lambda: self._on_tool_switched('pen'))
@@ -1829,21 +1989,21 @@ class MainAppCoordinator(QObject):
         self.overlay.raise_()
 
     def hide_toolboxes(self):
-        """Close everything — used only when hiding canvas."""
-        if self.shape_toolbox.isVisible():
-            self.shape_toolbox.hide()
-        if self.color_palette.isVisible():
-            self.color_palette.hide()
+        """Instantly close everything (used during canvas hide)."""
+        if self.shape_toolbox.isVisible() or self.shape_toolbox._fade_state != 0:
+            self.shape_toolbox.instant_hide()
+        if self.color_palette.isVisible() or self.color_palette._fade_state != 0:
+            self.color_palette.instant_hide()
         # Close any open CustomHoverMenus
-        if hasattr(self.toolbar, 'cursor_menu') and self.toolbar.cursor_menu.isVisible():
-            self.toolbar.cursor_menu.hide_menu()
-        if hasattr(self.toolbar, 'shape_menu') and self.toolbar.shape_menu.isVisible():
-            self.toolbar.shape_menu.hide_menu()
+        if hasattr(self.toolbar, 'cursor_menu'):
+            self.toolbar.cursor_menu.instant_hide()
+        if hasattr(self.toolbar, 'shape_menu'):
+            self.toolbar.shape_menu.instant_hide()
 
     def _hide_popup_menus(self):
-        """Close popup menus and shape toolbox, but NEVER the color palette."""
-        if self.shape_toolbox.isVisible():
-            self.shape_toolbox.hide()
+        """Close popup menus and shape toolbox with fade, but NEVER the color palette."""
+        if self.shape_toolbox._fade_state in (1, 2):
+            self.shape_toolbox.fade_out()
         if hasattr(self.toolbar, 'cursor_menu') and self.toolbar.cursor_menu.isVisible():
             self.toolbar.cursor_menu.hide_menu()
         if hasattr(self.toolbar, 'shape_menu') and self.toolbar.shape_menu.isVisible():
@@ -1854,27 +2014,30 @@ class MainAppCoordinator(QObject):
         self._hide_popup_menus()
 
         if tool_name == 'cursor':
-            # Entering cursor mode — save palette state and hide it
-            self._palette_was_visible = self.color_palette.isVisible()
-            if self.color_palette.isVisible():
-                self.color_palette.hide()
+            # Entering cursor mode — save palette state and fade it out
+            self._palette_was_visible = self.color_palette._fade_state in (1, 2)
+            if self.color_palette._fade_state in (1, 2):
+                self.color_palette.fade_out()
         else:
-            # Exiting cursor mode — restore palette if it was open before
+            # Exiting cursor mode — fade palette back in if it was open
             if self._palette_was_visible:
                 self._palette_was_visible = False
-                self.color_palette.show()
+                self.color_palette.fade_in()
 
     def _on_canvas_visibility_changed(self, visible):
-        """Save/restore palette state when canvas is hidden/shown."""
+        """Save sub-panel states when canvas is hidden. Restore is deferred."""
         if not visible:
-            # Canvas is being hidden — save palette state, then close everything
-            self._palette_was_visible = self.color_palette.isVisible()
+            # Save palette state BEFORE hiding
+            self._palette_was_visible = self.color_palette._fade_state in (1, 2)
             self.hide_toolboxes()
-        else:
-            # Canvas is being shown — restore palette if it was open before
-            if self._palette_was_visible:
-                self._palette_was_visible = False
-                self.color_palette.show()
+        # When visible=True: do NOT restore here.
+        # Wait for toolbar_expanded signal so toolbar finishes first.
+
+    def _on_toolbar_expanded(self):
+        """Called after toolbar fully expands. Now safe to fade in palette."""
+        if self._palette_was_visible:
+            self._palette_was_visible = False
+            self.color_palette.fade_in()
 
     def _sync_toolboxes_position(self, delta):
         if not self.color_palette.has_been_dragged:
@@ -1883,23 +2046,22 @@ class MainAppCoordinator(QObject):
             self.shape_toolbox.move(self.shape_toolbox.pos() + delta)
 
     def toggle_color_palette(self):
-        if self.color_palette.isVisible():
-            self.color_palette.hide()
+        if self.color_palette._fade_state in (1, 2):
+            self.color_palette.fade_out()
         else:
             if not self.color_palette.has_been_dragged:
                 global_pos = self.toolbar.btn_palette.mapToGlobal(QPoint(0, 0))
-                # Pop up to the left of the button
                 self.color_palette.move(global_pos.x() - self.color_palette.width() - 10, global_pos.y())
-            self.color_palette.show()
-            self.color_palette.activateWindow()
+            self.color_palette.fade_in()
 
     def _toggle_shape_toolbox(self):
-        if not self.shape_toolbox.isVisible():
+        if self.shape_toolbox._fade_state in (1, 2):
+            self.shape_toolbox.fade_out()
+        else:
             if not self.shape_toolbox.has_been_dragged:
-                # Place next to the shape button in the toolbar
                 btn_pos = self.toolbar.btn_shape.mapToGlobal(QPoint(0, 0))
                 self.shape_toolbox.move(btn_pos.x() - self.shape_toolbox.width() - 10, btn_pos.y())
-        self.shape_toolbox.setVisible(not self.shape_toolbox.isVisible())
+            self.shape_toolbox.fade_in()
 
     def _quit_app(self):
         """Cleanly shut down the application, saving final state."""
