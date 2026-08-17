@@ -1323,6 +1323,18 @@ class ToolbarWindow(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setStyleSheet(TOOLBAR_STYLESHEET)
 
+        # Collapse/Expand Animation State
+        self._collapse_state = 0  # 0=EXPANDED, 1=COLLAPSING, 2=COLLAPSED, 3=EXPANDING
+        self._full_height = None
+        self._collapsible_widgets = []
+        self._collapsible_separators = []
+
+        # Height shrink/expand animation
+        self._height_anim = QPropertyAnimation(self, b"maximumHeight")
+        self._height_anim.setDuration(300)
+        self._height_anim.setEasingCurve(QEasingCurve.Type.InOutCubic)
+        self._height_anim.finished.connect(self._on_height_anim_finished)
+
         layout = QVBoxLayout()
         layout.setContentsMargins(10, 8, 10, 15)
         layout.setSpacing(10)
@@ -1393,6 +1405,17 @@ class ToolbarWindow(QWidget):
         self.btn_clear = self._add_button(layout, "🗑️", "Clear Screen (Ctrl+Shift+C)", self.signals.clear_screen.emit)
 
         self.setLayout(layout)
+
+        # Build list of widgets to hide during collapse
+        self._collapsible_widgets = [
+            self.btn_select, self.btn_pen, self.btn_hl, self.btn_shape,
+            self.btn_eraser, self.btn_palette, self.btn_undo, self.btn_bg, self.btn_clear,
+        ]
+        # Find all separator QFrames in the layout
+        for i in range(layout.count()):
+            item = layout.itemAt(i)
+            if item and item.widget() and item.widget().objectName() == "separator":
+                self._collapsible_separators.append(item.widget())
         
         # Connect signals to active state
         self.signals.switch_shape.connect(lambda s: self._set_active_tool(self.btn_shape, lambda: None))
@@ -1429,6 +1452,12 @@ class ToolbarWindow(QWidget):
                 btn.setEnabled(visible)
                 
         self._update_cursor_button_icon()
+
+        # Trigger collapse/expand animation
+        if not visible:
+            self.start_collapse()
+        else:
+            self.start_expand()
 
     def _select_shape(self, shape_type):
         self.current_shape_type = shape_type
@@ -1522,6 +1551,81 @@ class ToolbarWindow(QWidget):
         sep = QFrame()
         sep.setObjectName("separator")
         layout.addWidget(sep)
+
+    # ── Collapse / Expand Animation ──
+
+    def start_collapse(self):
+        """Smoothly shrink toolbar to pill (handle + cursor button only)."""
+        if self._collapse_state == 2:  # Already collapsed
+            return
+        if self._collapse_state == 3:  # Currently expanding — reverse it
+            self._height_anim.stop()
+
+        self._collapse_state = 1  # COLLAPSING
+        self._full_height = self.height()
+
+        # Lock current height so hiding buttons doesn't cause visual jump
+        self.setFixedHeight(self._full_height)
+
+        # Hide all collapsible buttons and separators
+        for w in self._collapsible_widgets:
+            w.hide()
+        for s in self._collapsible_separators:
+            s.hide()
+
+        # Release the fixed height lock and set up animation constraints
+        self.setMinimumHeight(0)
+        self.setMaximumHeight(self._full_height)
+
+        # Target: pill handle (12) + spacing (2) + cursor btn (36) + margins (8+15) = ~73
+        target_height = 80
+
+        self._height_anim.setStartValue(self._full_height)
+        self._height_anim.setEndValue(target_height)
+        self._height_anim.setEasingCurve(QEasingCurve.Type.InOutCubic)
+        self._height_anim.start()
+
+    def start_expand(self):
+        """Reverse of collapse: expand toolbar back to full size."""
+        if self._collapse_state == 0:  # Already expanded
+            return
+        if self._collapse_state == 1:  # Currently collapsing — reverse it
+            self._height_anim.stop()
+
+        self._collapse_state = 3  # EXPANDING
+
+        current_h = self.height()
+        target_h = self._full_height or 400  # Fallback to default
+
+        # Release fixed height so animation can work
+        self.setMinimumHeight(0)
+        self.setMaximumHeight(current_h)
+
+        self._height_anim.setStartValue(current_h)
+        self._height_anim.setEndValue(target_h)
+        self._height_anim.setEasingCurve(QEasingCurve.Type.InOutCubic)
+        self._height_anim.start()
+
+    def _on_height_anim_finished(self):
+        """Handle animation completion for both collapse and expand."""
+        if self._collapse_state == 1:  # Was collapsing → now collapsed
+            self._collapse_state = 2
+            self.setFixedHeight(self.height())
+
+        elif self._collapse_state == 3:  # Was expanding → now expanded
+            # Show all hidden buttons and separators
+            for w in self._collapsible_widgets:
+                w.show()
+            for s in self._collapsible_separators:
+                s.show()
+
+            # Reset height constraints to Qt defaults
+            self.setMinimumHeight(0)
+            self.setMaximumHeight(16777215)  # QWIDGETSIZE_MAX
+            if self._full_height:
+                self.setFixedHeight(self._full_height)
+
+            self._collapse_state = 0
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -1637,13 +1741,19 @@ class MainAppCoordinator(QObject):
         self.signals.toolbar_moved.connect(self._sync_toolboxes_position)
         self.signals.toggle_shape_toolbox.connect(self._toggle_shape_toolbox)
         self.signals.exit_app.connect(self._quit_app)
+
+        # Palette persistence state
+        self._palette_was_visible = False
+
+        # Save/restore palette when canvas is hidden/shown
+        self.signals.visibility_changed.connect(self._on_canvas_visibility_changed)
         
-        # Auto-hide toolboxes when selecting another main tool
-        self.signals.switch_pen.connect(self.hide_toolboxes)
-        self.signals.switch_highlighter.connect(self.hide_toolboxes)
-        self.signals.switch_eraser.connect(self.hide_toolboxes)
-        self.signals.switch_select.connect(self.hide_toolboxes)
-        self.signals.switch_cursor.connect(self.hide_toolboxes)
+        # Auto-hide popup menus (NOT color palette) when selecting another tool
+        self.signals.switch_pen.connect(lambda: self._on_tool_switched('pen'))
+        self.signals.switch_highlighter.connect(lambda: self._on_tool_switched('highlighter'))
+        self.signals.switch_eraser.connect(lambda: self._on_tool_switched('eraser'))
+        self.signals.switch_select.connect(lambda: self._on_tool_switched('select'))
+        self.signals.switch_cursor.connect(lambda: self._on_tool_switched('cursor'))
         
         # Auto-save settings when they change
         self.signals.change_pen_size.connect(lambda s: self.settings.set('pen_size', s))
@@ -1719,8 +1829,52 @@ class MainAppCoordinator(QObject):
         self.overlay.raise_()
 
     def hide_toolboxes(self):
+        """Close everything — used only when hiding canvas."""
         if self.shape_toolbox.isVisible():
             self.shape_toolbox.hide()
+        if self.color_palette.isVisible():
+            self.color_palette.hide()
+        # Close any open CustomHoverMenus
+        if hasattr(self.toolbar, 'cursor_menu') and self.toolbar.cursor_menu.isVisible():
+            self.toolbar.cursor_menu.hide_menu()
+        if hasattr(self.toolbar, 'shape_menu') and self.toolbar.shape_menu.isVisible():
+            self.toolbar.shape_menu.hide_menu()
+
+    def _hide_popup_menus(self):
+        """Close popup menus and shape toolbox, but NEVER the color palette."""
+        if self.shape_toolbox.isVisible():
+            self.shape_toolbox.hide()
+        if hasattr(self.toolbar, 'cursor_menu') and self.toolbar.cursor_menu.isVisible():
+            self.toolbar.cursor_menu.hide_menu()
+        if hasattr(self.toolbar, 'shape_menu') and self.toolbar.shape_menu.isVisible():
+            self.toolbar.shape_menu.hide_menu()
+
+    def _on_tool_switched(self, tool_name):
+        """Handle tool switch: close popup menus, save/restore palette for cursor mode."""
+        self._hide_popup_menus()
+
+        if tool_name == 'cursor':
+            # Entering cursor mode — save palette state and hide it
+            self._palette_was_visible = self.color_palette.isVisible()
+            if self.color_palette.isVisible():
+                self.color_palette.hide()
+        else:
+            # Exiting cursor mode — restore palette if it was open before
+            if self._palette_was_visible:
+                self._palette_was_visible = False
+                self.color_palette.show()
+
+    def _on_canvas_visibility_changed(self, visible):
+        """Save/restore palette state when canvas is hidden/shown."""
+        if not visible:
+            # Canvas is being hidden — save palette state, then close everything
+            self._palette_was_visible = self.color_palette.isVisible()
+            self.hide_toolboxes()
+        else:
+            # Canvas is being shown — restore palette if it was open before
+            if self._palette_was_visible:
+                self._palette_was_visible = False
+                self.color_palette.show()
 
     def _sync_toolboxes_position(self, delta):
         if not self.color_palette.has_been_dragged:
