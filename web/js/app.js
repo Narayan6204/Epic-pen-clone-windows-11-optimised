@@ -28,12 +28,12 @@ export const PEN_COLORS = [
 ];
 
 export const PEN_SHAPES = [
-  { id: 'line', icon: '📏', name: 'Line' },
-  { id: 'arrow', icon: '↗️', name: 'Arrow' },
-  { id: 'rectangle', icon: '⬛', name: 'Rectangle' },
-  { id: 'rounded_rectangle', icon: '🟩', name: 'Rounded Rectangle' },
-  { id: 'circle', icon: '🟡', name: 'Circle' },
-  { id: 'triangle', icon: '🔺', name: 'Triangle (Shift for 90° Right Angle)' }
+  { id: 'line', icon: '<svg width="24" height="24" viewBox="0 0 32 32"><line x1="6" y1="26" x2="26" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>', name: 'Line' },
+  { id: 'arrow', icon: '<svg width="24" height="24" viewBox="0 0 32 32"><line x1="6" y1="26" x2="24" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="14,8 24,8 24,18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>', name: 'Arrow' },
+  { id: 'rectangle', icon: '<svg width="24" height="24" viewBox="0 0 32 32"><rect x="6" y="8" width="20" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>', name: 'Rectangle' },
+  { id: 'rounded_rectangle', icon: '<svg width="24" height="24" viewBox="0 0 32 32"><rect x="6" y="8" width="20" height="16" rx="4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>', name: 'Rounded Rectangle' },
+  { id: 'circle', icon: '<svg width="24" height="24" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="none" stroke="currentColor" stroke-width="2"/></svg>', name: 'Circle' },
+  { id: 'triangle', icon: '<svg width="24" height="24" viewBox="0 0 32 32"><polygon points="16,6 28,26 4,26" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>', name: 'Triangle' }
 ];
 
 class App {
@@ -44,8 +44,14 @@ class App {
     this.lassoSelector = null;
     
     this.currentColor = '#000000';
-    this.backdropModes = ['whiteboard', 'blackboard', 'transparent'];
+    this.backdropModes = ['transparent', 'whiteboard', 'blackboard'];
     this.currentBackdropIndex = 0;
+
+    this.penSize = 5;
+    this.highlighterSize = 25;
+    this.eraserSize = 40;
+    this.penColor = '#000000';
+    this.highlighterColor = '#FFCC00';
 
     // Monkey State: 'active' (🐵) | 'cursor' (🐒) | 'hidden' (🙈)
     this.monkeyState = 'active';
@@ -73,9 +79,6 @@ class App {
     // 6. Fetch Latest Release Data from GitHub
     this._initGitHubReleases();
 
-    // 7. Seed Initial Demo Vector Artwork
-    this._seedDemoArtwork();
-
     console.log('Pen 11 Web Experience Initialized with Exact Desktop UI & Shortcuts.');
   }
 
@@ -87,10 +90,8 @@ class App {
     if (!container) return;
 
     this.canvasEngine = new CanvasEngine(container, {
-      backgroundColor: 'transparent',
-      gridType: 'dots',
-      gridSize: 24,
-      gridColor: 'rgba(0, 97, 164, 0.12)'
+      backgroundColor: 'rgba(0,0,0,0.008)',
+      gridType: 'none'
     });
 
     this.historyManager = new HistoryManager(this.canvasEngine);
@@ -98,8 +99,8 @@ class App {
     this.lassoSelector = new LassoSelector(this.canvasEngine, this.toolManager, this.historyManager);
 
     // Initial tool & color settings
-    this.toolManager.setColor('#000000');
-    this.toolManager.setSize(4);
+    this.toolManager.setColor(this.penColor);
+    this.toolManager.setSize(this.penSize);
 
     // Sync History Button States (Undo)
     this.historyManager.onChange((state) => {
@@ -149,6 +150,8 @@ class App {
       initialTop = rect.top - parentRect.top;
 
       toolbar.style.transition = 'none';
+      toolbar.style.right = 'auto';
+      toolbar.style.bottom = 'auto';
       dragHandle.setPointerCapture(e.pointerId);
     };
 
@@ -160,8 +163,13 @@ class App {
       const parentRect = stageWrapper.getBoundingClientRect();
       const toolbarRect = toolbar.getBoundingClientRect();
 
-      let newLeft = Math.max(8, Math.min(parentRect.width - toolbarRect.width - 8, initialLeft + dx));
-      let newTop = Math.max(8, Math.min(parentRect.height - toolbarRect.height - 8, initialTop + dy));
+      const minLeft = 8;
+      const maxLeft = Math.max(minLeft, parentRect.width - 40);
+      const minTop = 8;
+      const maxTop = Math.max(minTop, parentRect.height - 40);
+
+      let newLeft = Math.max(minLeft, Math.min(maxLeft, initialLeft + dx));
+      let newTop = Math.max(minTop, Math.min(maxTop, initialTop + dy));
 
       toolbar.style.left = `${newLeft}px`;
       toolbar.style.top = `${newTop}px`;
@@ -182,21 +190,44 @@ class App {
     dragHandle.addEventListener('pointerup', onPointerUp);
     dragHandle.addEventListener('pointercancel', onPointerUp);
 
-    // ── Monkey Button State Handler ──
+    // ── Monkey Button & Cursor Flyout Handler ──
     const monkeyBtn = document.getElementById('tb-btn-monkey');
-    if (monkeyBtn) {
-      monkeyBtn.addEventListener('click', () => {
-        if (!this.isCanvasVisible) {
-          // Unhide canvas and restore to Active Ink (🐵)
+    const monkeyFlyout = document.getElementById('tb-monkey-flyout');
+    const monkeyIcon = document.getElementById('tb-monkey-icon');
+
+    if (monkeyBtn && monkeyFlyout) {
+      monkeyBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!this.isCanvasVisible && toolbar.classList.contains('collapsed')) {
           this.setCanvasVisibility(true);
           this.selectTool('pen');
-        } else if (this.monkeyState === 'active') {
-          // Switch to Cursor Click-Through (🐒)
-          this.selectTool('select');
-        } else {
-          // Switch back to Pen (🐵)
-          this.selectTool('pen');
+          return;
         }
+
+        const isOpen = monkeyFlyout.style.display === 'flex';
+        this._closeAllPopovers();
+        monkeyFlyout.style.display = isOpen ? 'none' : 'flex';
+      });
+
+      monkeyFlyout.querySelectorAll('[data-monkey]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this._closeAllPopovers();
+          const action = btn.getAttribute('data-monkey');
+          
+          if (action === 'active') {
+            this.setCanvasVisibility(true);
+            this.selectTool('pen');
+            monkeyIcon.textContent = '🐵';
+          } else if (action === 'cursor') {
+            this.setCanvasVisibility(true);
+            this.selectTool('cursor');
+            monkeyIcon.textContent = '🐒';
+          } else if (action === 'hidden') {
+            this.setCanvasVisibility(false);
+            monkeyIcon.textContent = '🙈';
+          }
+        });
       });
     }
 
@@ -204,6 +235,10 @@ class App {
     toolbar.querySelectorAll('[data-tool]').forEach(btn => {
       btn.addEventListener('click', () => {
         const tool = btn.dataset.tool;
+        if (tool === 'select') {
+          this.showRestrictedToast();
+          return;
+        }
         this.selectTool(tool);
       });
     });
@@ -214,17 +249,12 @@ class App {
     if (shapesBtn && shapesFlyout) {
       shapesBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const isOpen = shapesFlyout.style.display === 'flex';
-        this._closeAllPopovers();
-        shapesFlyout.style.display = isOpen ? 'none' : 'flex';
+        this.showRestrictedToast();
       });
 
       shapesFlyout.querySelectorAll('[data-shape]').forEach(shapeItem => {
         shapeItem.addEventListener('click', () => {
-          const shape = shapeItem.dataset.shape;
-          this.selectTool(shape);
-          shapesFlyout.style.display = 'none';
-          this.showToast(`Selected Shape: ${shape.toUpperCase()}`, 'shapes');
+          this.showRestrictedToast();
         });
       });
     }
@@ -242,6 +272,10 @@ class App {
 
       palettePopover.querySelectorAll('.palette-color-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+          if (btn.dataset.locked === 'true') {
+            this.showRestrictedToast();
+            return;
+          }
           const hex = btn.dataset.hex;
           this.selectColor(hex);
           this.showToast(`Color: ${btn.title || hex}`, 'palette');
@@ -271,8 +305,7 @@ class App {
     const backdropBtn = document.getElementById('tb-btn-bg');
     if (backdropBtn) {
       backdropBtn.addEventListener('click', () => {
-        const mode = this.cycleBackdrop();
-        this.showToast(`Background: ${mode.toUpperCase()} (Ctrl+B)`, 'wallpaper');
+        this.showRestrictedToast();
       });
     }
 
@@ -285,18 +318,30 @@ class App {
   }
 
   _closeAllPopovers() {
-    const popovers = document.querySelectorAll('.toolbar-palette-popover, .toolbar-shape-flyout');
+    const popovers = document.querySelectorAll('.toolbar-palette-popover, .toolbar-shape-flyout, .toolbar-monkey-flyout');
     popovers.forEach(p => p.style.display = 'none');
   }
 
   selectTool(toolName) {
     if (!this.toolManager) return;
     this.toolManager.setTool(toolName);
+    
+    if (toolName === 'pen') {
+      this.toolManager.setSize(this.penSize);
+      this.toolManager.setColor(this.penColor);
+    } else if (toolName === 'highlighter') {
+      this.toolManager.setSize(this.highlighterSize);
+      this.toolManager.setColor(this.highlighterColor);
+    } else if (toolName === 'eraser') {
+      this.toolManager.setSize(this.eraserSize);
+    }
 
     // If canvas was hidden, restore it
     if (!this.isCanvasVisible) {
       this.setCanvasVisibility(true);
     }
+
+    const canvasContainer = document.getElementById('pen-hero-canvas-container');
 
     // Update Monkey Button State
     const monkeyBtn = document.getElementById('tb-btn-monkey');
@@ -306,11 +351,17 @@ class App {
         monkeyBtn.querySelector('span').textContent = '🐒';
         monkeyBtn.title = 'Cursor Mode Active (Click to switch to Pen)';
       }
+      if (canvasContainer) {
+        canvasContainer.style.pointerEvents = 'none';
+      }
     } else {
       this.monkeyState = 'active';
       if (monkeyBtn) {
         monkeyBtn.querySelector('span').textContent = '🐵';
         monkeyBtn.title = 'Active Ink Mode (Click to switch to Cursor)';
+      }
+      if (canvasContainer) {
+        canvasContainer.style.pointerEvents = 'auto';
       }
     }
 
@@ -346,6 +397,12 @@ class App {
 
   selectColor(hex) {
     this.currentColor = hex;
+    const currentTool = this.toolManager ? this.toolManager.currentTool : 'pen';
+    if (currentTool === 'highlighter') {
+      this.highlighterColor = hex;
+    } else {
+      this.penColor = hex;
+    }
     if (this.toolManager) {
       this.toolManager.setColor(hex);
     }
@@ -404,10 +461,15 @@ class App {
   cycleBackdrop() {
     this.currentBackdropIndex = (this.currentBackdropIndex + 1) % this.backdropModes.length;
     const mode = this.backdropModes[this.currentBackdropIndex];
-    const stage = document.getElementById('canvas-stage-wrapper');
-    if (stage) {
-      stage.classList.remove('canvas-backdrop-whiteboard', 'canvas-backdrop-blackboard', 'canvas-backdrop-transparent');
-      stage.classList.add(`canvas-backdrop-${mode}`);
+    if (this.canvasEngine) {
+      if (mode === 'transparent') {
+        this.canvasEngine.options.backgroundColor = 'rgba(0,0,0,0.008)';
+      } else if (mode === 'whiteboard') {
+        this.canvasEngine.options.backgroundColor = '#FFFFFF';
+      } else if (mode === 'blackboard') {
+        this.canvasEngine.options.backgroundColor = '#222222';
+      }
+      this.canvasEngine.invalidate();
     }
     return mode;
   }
@@ -527,61 +589,17 @@ class App {
   }
 
   // ==========================================
-  // 7. Demo Initial Artwork
-  // ==========================================
-  _seedDemoArtwork() {
-    if (!this.canvasEngine || !this.toolManager) return;
-
-    setTimeout(() => {
-      // 1. Stylized "Pen 11" Header Vector Stroke
-      const stroke1 = new VectorStroke({
-        tool: 'pen',
-        color: '#2C1F0E',
-        size: 5,
-        opacity: 1,
-        points: [
-          { x: 120, y: 140, pressure: 0.6, width: 4 },
-          { x: 140, y: 120, pressure: 0.8, width: 5 },
-          { x: 160, y: 130, pressure: 0.9, width: 5.5 },
-          { x: 180, y: 180, pressure: 0.7, width: 4.5 },
-          { x: 200, y: 160, pressure: 0.5, width: 3.5 }
-        ]
-      });
-
-      // 2. Highlighter Accent
-      const highlight = new VectorStroke({
-        tool: 'highlighter',
-        color: '#E6A23C',
-        size: 24,
-        opacity: 0.45,
-        points: [
-          { x: 100, y: 170, pressure: 0.5, width: 24 },
-          { x: 260, y: 170, pressure: 0.5, width: 24 }
-        ]
-      });
-
-      // 3. Arrow Shape Pointing to Features
-      const arrow = new VectorShape({
-        shapeType: 'arrow',
-        color: '#FF3B30',
-        size: 3,
-        startX: 320,
-        startY: 220,
-        endX: 420,
-        endY: 150
-      });
-
-      this.canvasEngine.addObject(highlight);
-      this.canvasEngine.addObject(stroke1);
-      this.canvasEngine.addObject(arrow);
-      this.canvasEngine.invalidate();
-    }, 200);
-  }
-
-  // ==========================================
   // 8. Toast Notification System
   // ==========================================
-  showToast(message, icon = 'info') {
+  showRestrictedToast() {
+    this.showToast(
+      '🔒 Download Pen 11 to use all features',
+      'lock',
+      '<a href="https://github.com/Narayan6204/Epic-pen-clone-windows-11-optimised/releases/latest" class="m3-btn m3-btn-filled" style="height: 32px; font-size: 13px; padding: 0 12px; text-decoration: none; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">Download</a>'
+    );
+  }
+
+  showToast(message, icon = 'info', actionHtml = '') {
     let snackbar = document.getElementById('m3-global-snackbar');
     if (!snackbar) {
       snackbar = document.createElement('aside');
@@ -594,7 +612,8 @@ class App {
           <span class="material-symbols-rounded" id="m3-snackbar-icon" style="font-size: 20px;">info</span>
           <span id="m3-snackbar-text">Notification</span>
         </span>
-        <button class="m3-btn m3-btn-text" id="m3-snackbar-dismiss" style="color: var(--md-sys-color-inverse-primary); padding: 0 8px; height: 32px;">DISMISS</button>
+        <div id="m3-snackbar-action" class="m3-flex-row m3-align-center" style="margin-left: auto;"></div>
+        <button class="m3-btn m3-btn-text" id="m3-snackbar-dismiss" style="color: var(--md-sys-color-inverse-primary); padding: 0 8px; height: 32px; margin-left: 8px;">DISMISS</button>
       `;
       document.body.appendChild(snackbar);
 
@@ -605,15 +624,21 @@ class App {
 
     const textEl = snackbar.querySelector('#m3-snackbar-text');
     const iconEl = snackbar.querySelector('#m3-snackbar-icon');
+    const actionEl = snackbar.querySelector('#m3-snackbar-action');
     if (textEl) textEl.textContent = message;
     if (iconEl) iconEl.textContent = icon;
+    
+    if (actionEl) {
+      actionEl.innerHTML = actionHtml || '';
+      actionEl.style.display = actionHtml ? 'flex' : 'none';
+    }
 
     snackbar.classList.add('active');
 
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => {
       snackbar.classList.remove('active');
-    }, 3200);
+    }, actionHtml ? 5000 : 3200);
   }
 }
 

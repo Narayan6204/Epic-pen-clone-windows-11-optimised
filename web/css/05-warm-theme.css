@@ -9,35 +9,36 @@
    Body: Parchment Background with subtle paper grain via SVG noise
    -------------------------------------------------------------------------- */
 body {
-  background-color: #E6D5B8;
+  background-color: #F6EFE3;
   /* Subtle paper grain texture via SVG filter noise */
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 300px 300px;
+  color: #534333;
 }
 
 /* --------------------------------------------------------------------------
    Top App Bar: warm cream surface with warm border bottom on scroll
    -------------------------------------------------------------------------- */
 .m3-top-app-bar {
-  background-color: #EDE0C8;
+  background-color: #EBDDBF;
   border-bottom: 1px solid #C9B08A;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
 .m3-top-app-bar.scrolled {
-  background-color: rgba(237, 224, 200, 0.95);
-  box-shadow: 0 2px 16px rgba(100, 70, 30, 0.12);
+  background-color: rgba(235, 221, 191, 0.96);
+  box-shadow: 0 2px 16px rgba(74, 46, 20, 0.12);
 }
 
 /* --------------------------------------------------------------------------
    Bento Cards: warm surface with warm amber glow on hover
    -------------------------------------------------------------------------- */
 .bento-card {
-  background-color: #F0E5D0;
-  border: 1px solid #C9B08A;
+  background-color: #FAF6EC;
+  border: 1px solid #D6C4A6;
   border-radius: var(--md-sys-shape-corner-large);
   padding: 28px;
   display: flex;
@@ -836,21 +837,21 @@ img[alt="UPI Donation QR Code"] {
 
 /* Table Text Guaranteed Contrast */
 .m3-table th {
-  color: #1A0F00 !important;
-  background-color: #DCCBA8 !important;
+  color: #4A2E14 !important;
+  background-color: #EBDDBF !important;
   font-weight: 700 !important;
 }
 
 .m3-table td,
 .m3-table td span,
 .shortcut-col-action {
-  color: #1A0F00 !important;
+  color: #4A2E14 !important;
   font-weight: 600 !important;
 }
 
 .shortcut-col-desc,
 .m3-table td:last-child {
-  color: #3A2810 !important;
+  color: #534333 !important;
   font-weight: 500 !important;
 }
 
@@ -860,35 +861,35 @@ footer p,
 footer span,
 footer a,
 footer strong {
-  color: #2C1F0E !important;
+  color: #4A2E14 !important;
 }
 
 footer p.m3-body-small {
-  color: #4A3520 !important;
+  color: #534333 !important;
 }
 
 footer .m3-btn {
-  color: #2C1F0E !important;
-  border-color: #7C5C35 !important;
+  color: #4A2E14 !important;
+  border-color: #8C7055 !important;
 }
 
 /* General Text Contrast */
 .bento-card-title,
 .bento-card-title * {
-  color: #1A0F00 !important;
+  color: #4A2E14 !important;
 }
 
 .bento-card-description {
-  color: #3A2810 !important;
+  color: #534333 !important;
 }
 
 /* Developer section filenames and descriptions */
 #developers strong {
-  color: #1A0F00 !important;
+  color: #4A2E14 !important;
 }
 
 #developers p {
-  color: #3A2810 !important;
+  color: #534333 !important;
 }
 
 /* Dark Theme Overrides */

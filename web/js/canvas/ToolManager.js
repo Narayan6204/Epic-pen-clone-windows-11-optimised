@@ -16,8 +16,8 @@ export class VectorStroke {
     this.color = options.color || '#000000';
     this.baseWidth = options.baseWidth || options.size || 4;
     this.opacity = options.opacity !== undefined ? options.opacity : 1.0;
-    this.blendMode = options.blendMode || (this.type === 'highlighter' ? 'multiply' : 'source-over');
-    this.lineCap = options.lineCap || (this.type === 'highlighter' ? 'square' : 'round');
+    this.blendMode = options.blendMode || 'source-over';
+    this.lineCap = options.lineCap || 'round';
     this.lineJoin = options.lineJoin || 'round';
     this.rotation = options.rotation || 0; // In radians around centroid
     this.bounds = null;
@@ -157,12 +157,63 @@ export class VectorShape {
     if (x < b.x || x > b.x + b.width || y < b.y || y > b.y + b.height) {
       return false;
     }
-    if (this.isFilled) return true;
+    if (this.isFilled && this.fillColor !== 'transparent') return true;
 
-    // Edge proximity hit test
+    const tolSq = (tolerance + this.strokeWidth / 2) ** 2;
+
+    // Edge proximity hit testing
     if (this.shapeType === 'line' || this.shapeType === 'arrow') {
       const distSq = distToSegmentSquared({ x, y }, { x: this.x1, y: this.y1 }, { x: this.x2, y: this.y2 });
-      return distSq <= (tolerance + this.strokeWidth / 2) ** 2;
+      return distSq <= tolSq;
+    }
+
+    if (this.shapeType === 'rectangle' || this.shapeType === 'rounded_rectangle' || this.shapeType === 'rounded-rectangle') {
+      const minX = Math.min(this.x1, this.x2);
+      const minY = Math.min(this.y1, this.y2);
+      const maxX = Math.max(this.x1, this.x2);
+      const maxY = Math.max(this.y1, this.y2);
+      const tl = { x: minX, y: minY }, tr = { x: maxX, y: minY };
+      const br = { x: maxX, y: maxY }, bl = { x: minX, y: maxY };
+
+      return (
+        distToSegmentSquared({ x, y }, tl, tr) <= tolSq ||
+        distToSegmentSquared({ x, y }, tr, br) <= tolSq ||
+        distToSegmentSquared({ x, y }, br, bl) <= tolSq ||
+        distToSegmentSquared({ x, y }, bl, tl) <= tolSq
+      );
+    }
+
+    if (this.shapeType === 'circle' || this.shapeType === 'ellipse') {
+      const cx = (this.x1 + this.x2) / 2;
+      const cy = (this.y1 + this.y2) / 2;
+      const rx = Math.max(1, Math.abs(this.x2 - this.x1) / 2);
+      const ry = Math.max(1, Math.abs(this.y2 - this.y1) / 2);
+      
+      // Normalized distance from center to point
+      const dx = (x - cx) / rx;
+      const dy = (y - cy) / ry;
+      const normDist = Math.hypot(dx, dy);
+      const avgR = (rx + ry) / 2;
+      const pixelDist = Math.abs(normDist - 1) * avgR;
+      return pixelDist <= (tolerance + this.strokeWidth / 2);
+    }
+
+    if (this.shapeType === 'triangle') {
+      let p1, p2, p3;
+      if (this.isRightAngle) {
+        p1 = { x: this.x1, y: this.y1 };
+        p2 = { x: this.x1, y: this.y2 };
+        p3 = { x: this.x2, y: this.y2 };
+      } else {
+        p1 = { x: (this.x1 + this.x2) / 2, y: this.y1 };
+        p2 = { x: this.x2, y: this.y2 };
+        p3 = { x: this.x1, y: this.y2 };
+      }
+      return (
+        distToSegmentSquared({ x, y }, p1, p2) <= tolSq ||
+        distToSegmentSquared({ x, y }, p2, p3) <= tolSq ||
+        distToSegmentSquared({ x, y }, p3, p1) <= tolSq
+      );
     }
 
     return true;
@@ -467,10 +518,10 @@ export class ToolManager {
         type: this.currentTool,
         points: [...this.currentPoints],
         color: this.color,
-        baseWidth: isHighlighter ? Math.max(16, this.size * 3) : this.size,
-        opacity: isHighlighter ? 0.35 : this.opacity,
-        blendMode: isHighlighter ? 'multiply' : 'source-over',
-        lineCap: isHighlighter ? 'square' : 'round',
+        baseWidth: this.size,
+        opacity: isHighlighter ? 0.117 : this.opacity,
+        blendMode: 'source-over',
+        lineCap: 'round',
         lineJoin: 'round'
       });
 
@@ -524,10 +575,10 @@ export class ToolManager {
         type: this.currentTool,
         points: this.currentPoints,
         color: this.color,
-        baseWidth: isHighlighter ? Math.max(16, this.size * 3) : this.size,
-        opacity: isHighlighter ? 0.35 : this.opacity,
-        blendMode: isHighlighter ? 'multiply' : 'source-over',
-        lineCap: isHighlighter ? 'square' : 'round'
+        baseWidth: this.size,
+        opacity: isHighlighter ? 0.117 : this.opacity,
+        blendMode: 'source-over',
+        lineCap: 'round'
       });
       stroke.render(ctx);
     } else if (this.isShapeTool(this.currentTool) && this.draftShape) {

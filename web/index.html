@@ -158,9 +158,24 @@
               </div>
 
               <!-- 2. Monkey Icon State Button (🐵 Active Ink / 🐒 Cursor Click-Through / 🙈 Hidden Canvas) -->
-              <button id="tb-btn-monkey" class="toolbar-tool-btn" title="Active Ink Mode (Click to switch to Cursor)" aria-label="Monkey State Button">
-                <span>🐵</span>
-              </button>
+              <div style="position: relative; display: flex; justify-content: center;">
+                <button id="tb-btn-monkey" class="toolbar-tool-btn" title="Monkey Menu" aria-label="Monkey State Button">
+                  <span id="tb-monkey-icon">🐵</span>
+                </button>
+                
+                <!-- Monkey Flyout -->
+                <div id="tb-monkey-flyout" class="toolbar-monkey-flyout" style="display: none;">
+                  <button class="toolbar-tool-btn active" data-monkey="active" title="Active Ink Mode" aria-label="Active Ink">
+                    <span>🐵</span>
+                  </button>
+                  <button class="toolbar-tool-btn" data-monkey="cursor" title="Cursor Mode (Click-through)" aria-label="Cursor Mode">
+                    <span>🐒</span>
+                  </button>
+                  <button class="toolbar-tool-btn" data-monkey="hidden" title="Hide Canvas" aria-label="Hide Canvas">
+                    <span>🙈</span>
+                  </button>
+                </div>
+              </div>
 
               <div class="toolbar-divider toolbar-collapsible"></div>
 

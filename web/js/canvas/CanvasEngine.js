@@ -250,6 +250,9 @@ export class CanvasEngine {
    * @param {{ x: number, y: number, width: number, height: number }|null} [rect]
    */
   invalidate(rect = null) {
+    if (this.isDirty && this.dirtyRect === null) {
+      return;
+    }
     if (!rect || !this.dirtyRect) {
       this.dirtyRect = rect ? { ...rect } : null;
     } else {
@@ -276,7 +279,7 @@ export class CanvasEngine {
     const loop = (timestamp) => {
       if (this.options.throttleFPS > 0) {
         const interval = 1000 / this.options.throttleFPS;
-        if (timestamp - this.lastFrameTime < interval) {
+        if (timestamp - this.lastFrameTime < interval - 1) {
           this.rafId = requestAnimationFrame(loop);
           return;
         }
@@ -315,41 +318,6 @@ export class CanvasEngine {
     if (this.options.backgroundColor && this.options.backgroundColor !== 'transparent') {
       ctx.fillStyle = this.options.backgroundColor;
       ctx.fillRect(0, 0, w, h);
-    }
-
-    if (this.options.gridType !== 'none') {
-      const step = this.options.gridSize;
-      ctx.strokeStyle = this.options.gridColor;
-      ctx.fillStyle = this.options.gridColor;
-      ctx.lineWidth = 1;
-
-      if (this.options.gridType === 'dots') {
-        for (let x = step / 2; x < w; x += step) {
-          for (let y = step / 2; y < h; y += step) {
-            ctx.beginPath();
-            ctx.arc(x, y, 1.2, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      } else if (this.options.gridType === 'lines') {
-        ctx.beginPath();
-        for (let y = step; y < h; y += step) {
-          ctx.moveTo(0, y);
-          ctx.lineTo(w, y);
-        }
-        ctx.stroke();
-      } else if (this.options.gridType === 'grid') {
-        ctx.beginPath();
-        for (let x = step; x < w; x += step) {
-          ctx.moveTo(x, 0);
-          ctx.lineTo(x, h);
-        }
-        for (let y = step; y < h; y += step) {
-          ctx.moveTo(0, y);
-          ctx.lineTo(w, y);
-        }
-        ctx.stroke();
-      }
     }
 
     ctx.restore();

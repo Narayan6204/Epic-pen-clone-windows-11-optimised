@@ -169,8 +169,8 @@ export function generateTonalPalette(hue, chroma) {
 
 export class ThemeEngine {
   constructor() {
-    this.currentMode = 'system'; // 'light' | 'dark' | 'system'
-    this.currentSeedKey = 'win11-blue';
+    this.currentMode = 'light'; // Default to light warm parchment
+    this.currentSeedKey = 'warm-parchment';
     this.canvasRetintListeners = new Set();
 
     this._mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -192,8 +192,10 @@ export class ThemeEngine {
         this.currentMode = savedMode;
       }
       const savedSeed = localStorage.getItem('pen11_theme_seed');
-      if (savedSeed && (THEME_SEEDS[savedSeed] || savedSeed.startsWith('#'))) {
+      if (savedSeed && THEME_SEEDS[savedSeed] && savedSeed !== 'win11-blue') {
         this.currentSeedKey = savedSeed;
+      } else {
+        this.currentSeedKey = 'warm-parchment';
       }
     } catch (e) {
       console.warn('[ThemeEngine] LocalStorage unavailable:', e);
