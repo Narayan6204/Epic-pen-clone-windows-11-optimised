@@ -19,18 +19,22 @@ from process_manager import SingleInstanceGuard
 # ── Windows 11 Optimization (Hardware & Process) ──
 if sys.platform == "win32":
     try:
-        # Force Direct3D 11 backend for PyQt6 RHI
+        # 1. Force Direct3D 11 backend for PyQt6 RHI (hardware-accelerated rendering)
         os.environ["QSG_RHI_BACKEND"] = "d3d11"
-        
-        # 1. Enable Per-Monitor V2 DPI Awareness for crisp UI
+
+        # 2. Per-Monitor V2 DPI Awareness — crisp UI on HiDPI / multi-monitor setups
         ctypes.windll.shcore.SetProcessDpiAwareness(2)
-        
-        # 2. Elevate Process Priority to HIGH_PRIORITY_CLASS to prevent lag
+
+        # 3. Elevate to HIGH_PRIORITY_CLASS — prevents lag during active drawing
         kernel32 = ctypes.windll.kernel32
-        HIGH_PRIORITY_CLASS = 0x00000080
-        kernel32.SetPriorityClass(kernel32.GetCurrentProcess(), HIGH_PRIORITY_CLASS)
+        kernel32.SetPriorityClass(kernel32.GetCurrentProcess(), 0x00000080)  # HIGH_PRIORITY_CLASS
+
+        # 4. Set Windows multimedia timer to 1ms resolution (default is 15.6ms).
+        #    This makes QPropertyAnimation / QTimer fire at exact intervals for smooth 60fps.
+        ctypes.windll.winmm.timeBeginPeriod(1)
+
     except Exception as e:
-        print(f"Warning: Optimization setup failed: {e}")
+        print(f"Warning: Windows 11 optimization setup failed: {e}")
 
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
@@ -315,57 +319,6 @@ class CustomHoverMenu(FloatingPanel):
         self.fade_out(120)
 
 
-class FloatingShapeToolbox(FloatingPanel):
-    def __init__(self, signals, overlay_window, parent=None):
-        super().__init__(signals, parent)
-        self.overlay_window = overlay_window
-
-        layout = QVBoxLayout()
-        layout.setContentsMargins(15, 8, 15, 15)
-
-        self.btn_handle = DragHandle(self)
-        layout.addWidget(self.btn_handle, alignment=Qt.AlignmentFlag.AlignHCenter)
-        layout.addSpacing(5)
-
-        title = QLabel("Shapes & Tools")
-        title.setStyleSheet("color: #333333; font-weight: bold; border: none; font-size: 14px;")
-        layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignCenter)
-
-        self.grid = QGridLayout()
-        self.grid.setSpacing(8)
-        self.buttons = []
-        
-        self.add_action("↖️", "Select & Transform", lambda: self.signals.switch_select.emit())
-        
-        shapes = [
-            ("📏", "Line", ShapeType.LINE),
-            ("↗️", "Arrow", ShapeType.ARROW),
-            ("⬛", "Rectangle", ShapeType.RECTANGLE),
-            ("🟩", "Rounded Rectangle", ShapeType.ROUNDED_RECTANGLE),
-            ("🟡", "Circle", ShapeType.CIRCLE),
-            ("🔺", "Triangle", ShapeType.TRIANGLE),
-        ]
-        for icon, name, stype in shapes:
-            self.add_action(icon, name, lambda checked=False, s=stype: self.signals.switch_shape.emit(s))
-
-        layout.addLayout(self.grid)
-        self.setLayout(layout)
-
-    def add_action(self, icon, tooltip, callback):
-        btn = QPushButton(icon)
-        btn.setFixedSize(36, 36)
-        btn.setToolTip(tooltip)
-        btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn.setMouseTracking(True)
-        btn.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
-        btn.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips, True)
-        btn.clicked.connect(callback)
-        btn.setStyleSheet(TOOLBAR_STYLESHEET)
-        
-        idx = len(self.buttons)
-        self.grid.addWidget(btn, idx // 2, idx % 2)
-        self.buttons.append(btn)
-        return btn
 
 
 class ClickMenuButton(QPushButton):
@@ -377,17 +330,18 @@ class ClickMenuButton(QPushButton):
         self.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
         self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips, True)
         self.menu_widget = None
+        self._is_unhide_mode = False  # True when canvas is hidden; click → toggle_visibility
         self.clicked.connect(self._toggle_menu)
 
     def set_menu(self, menu_widget):
         self.menu_widget = menu_widget
 
     def _toggle_menu(self):
-        if self.text() == "🙈":
+        if self._is_unhide_mode:
             if hasattr(self.window(), 'signals'):
                 self.window().signals.toggle_visibility.emit()
             return
-            
+
         if self.menu_widget:
             if self.menu_widget.isVisible() and self.menu_widget._fade_state in (1, 2):
                 self.menu_widget.hide_menu()
@@ -416,21 +370,37 @@ class DragHandle(QWidget):
 
     def mouseMoveEvent(self, event):
         if self._drag_pos is not None:
-            delta = event.globalPosition().toPoint() - self._drag_pos
-            self.parent().move(self.parent().pos() + delta)
+            raw_delta = event.globalPosition().toPoint() - self._drag_pos
+            clamped = self._clamp_handle_to_screen(raw_delta)
+            self.parent().move(self.parent().pos() + clamped)
             self._drag_pos = event.globalPosition().toPoint()
             self.parent().has_been_dragged = True
-            
+
             # ONLY the main toolbar emits toolbar_moved to move attached sub-panels
             if self.parent().__class__.__name__ == 'ToolbarWindow':
                 if hasattr(self.parent(), 'signals') and hasattr(self.parent().signals, 'toolbar_moved'):
-                    self.parent().signals.toolbar_moved.emit(delta)
+                    self.parent().signals.toolbar_moved.emit(clamped)
             event.accept()
 
     def mouseReleaseEvent(self, event):
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self._drag_pos = None
         event.accept()
+
+    def _clamp_handle_to_screen(self, delta):
+        """Return a clamped delta so the pill handle stays fully within the virtual desktop."""
+        virtual_rect = QRect()
+        for s in QApplication.screens():
+            virtual_rect = virtual_rect.united(s.geometry())
+        parent = self.parent()
+        # Proposed global position of the handle widget after move
+        hx = parent.x() + delta.x() + self.x()
+        hy = parent.y() + delta.y() + self.y()
+        # Clamp so handle stays within screen bounds
+        hx = max(virtual_rect.left(), min(virtual_rect.right()  - self.width()  + 1, hx))
+        hy = max(virtual_rect.top(),  min(virtual_rect.bottom() - self.height() + 1, hy))
+        # Convert back to parent-relative delta
+        return QPoint(hx - parent.x() - self.x(), hy - parent.y() - self.y())
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -486,6 +456,9 @@ class OverlayWindow(QMainWindow):
         self.drawing = False
         self.undo_stack_size = 0
 
+        # Cursor pixmap cache: skip rebuild when nothing changed
+        self._cursor_cache_key = None
+
         # Shape detection timer
         self.shape_timer = QTimer(self)
         self.shape_timer.setSingleShot(True)
@@ -538,19 +511,33 @@ class OverlayWindow(QMainWindow):
 
     def set_pen_size(self, size):
         self.pen_size = size
-        self.set_mode(ToolMode.PEN)
+        self._cursor_cache_key = None  # Invalidate cache so cursor rebuilds
+        self._update_cursor()
 
     def set_highlighter_size(self, size):
         self.highlighter_size = size
-        self.set_mode(ToolMode.HIGHLIGHTER)
+        self._cursor_cache_key = None
+        self._update_cursor()
 
     def set_eraser_size(self, size):
         self.eraser_size = size
-        self.set_mode(ToolMode.ERASER)
+        self._cursor_cache_key = None
+        self._update_cursor()
 
     # ── Cursor rendering ──
 
     def _update_cursor(self):
+        # Build a lightweight key; skip the expensive pixmap rebuild if nothing changed
+        cache_key = (
+            self.mode, self.is_click_through,
+            self.pen_size, self.pen_color.name(),
+            self.highlighter_size, self.highlighter_color.name(),
+            self.eraser_size,
+        )
+        if cache_key == self._cursor_cache_key:
+            return
+        self._cursor_cache_key = cache_key
+
         if self.is_click_through or self.mode == ToolMode.CURSOR:
             self.setCursor(Qt.CursorShape.ArrowCursor)
             return
@@ -1087,10 +1074,12 @@ class OverlayWindow(QMainWindow):
                 self.current_path = None
                 self.update()
             self.drawing = False
-            
-            # Re-enable GC and collect
+
+            # Always re-enable GC on mouse release (gc.disable() is called on any mousePressEvent
+            # including eraser, which never sets self.drawing = True, so this MUST be unconditional)
             gc.enable()
             gc.collect(0)
+
 
     # ── Eraser ──
 
@@ -1292,6 +1281,7 @@ class FloatingColorPalette(FloatingPanel):
         layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.color_buttons = {}
+        self._shadow_effects = {}
         palette_grid = QGridLayout()
         palette_grid.setSpacing(8)
         for i, color_hex in enumerate(COLORS):
@@ -1304,6 +1294,13 @@ class FloatingColorPalette(FloatingPanel):
             btn.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
             btn.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips, True)
             btn.clicked.connect(lambda checked, c=color_hex: self._select_color(c))
+            # Pre-allocate shadow effect (enable/disable on selection instead of recreating)
+            shadow = QGraphicsDropShadowEffect(self)
+            shadow.setBlurRadius(15)
+            shadow.setOffset(0, 0)
+            shadow.setEnabled(False)
+            btn.setGraphicsEffect(shadow)
+            self._shadow_effects[color_hex] = shadow
             palette_grid.addWidget(btn, i // 4, i % 4)
             self.color_buttons[color_hex] = btn
 
@@ -1322,16 +1319,16 @@ class FloatingColorPalette(FloatingPanel):
         active_color = hex_color.upper()
         for c, btn in self.color_buttons.items():
             tooltip_color = "#333333" if c.upper() == "#FFFFFF" else c
+            shadow = self._shadow_effects.get(c)
             if c.upper() == active_color:
                 btn.setStyleSheet(f"QPushButton {{ background-color: {c}; border-radius: 14px; border: 2px solid {c}; }} QToolTip {{ background-color: white; color: {tooltip_color}; border: 1px solid {tooltip_color}; }}")
-                shadow = QGraphicsDropShadowEffect(self)
-                shadow.setBlurRadius(15)
-                shadow.setColor(QColor(c))
-                shadow.setOffset(0, 0)
-                btn.setGraphicsEffect(shadow)
+                if shadow:
+                    shadow.setColor(QColor(c))
+                    shadow.setEnabled(True)
             else:
                 btn.setStyleSheet(f"QPushButton {{ background-color: {c}; border-radius: 14px; border: 1px solid #D6C3A1; }} QToolTip {{ background-color: white; color: {tooltip_color}; border: 1px solid {tooltip_color}; }}")
-                btn.setGraphicsEffect(None)
+                if shadow:
+                    shadow.setEnabled(False)
 
 
 # ── Main Toolbar ──
@@ -1363,6 +1360,7 @@ class ToolbarWindow(QWidget):
         self.signals = signals
         self.active_tool_btn = None
         self.has_been_dragged = False
+        self.ink_visible = True  # mirrors OverlayWindow.ink_visible; synced via visibility_changed signal
 
         self.setWindowFlags(
             Qt.WindowType.Tool |
@@ -1584,23 +1582,26 @@ class ToolbarWindow(QWidget):
     def _update_cursor_button_icon(self):
         ink_vis = getattr(self, 'ink_visible', True)
         is_cursor_active = getattr(self, 'active_tool_btn', None) == self.btn_cursor
-        
+
         self.cursor_menu.clear_actions()
-        
+
         if not ink_vis:
             self.btn_cursor.setText("🙈")
             self.btn_cursor.setToolTip("Click to Unhide")
             self.btn_cursor.setStyleSheet("")
+            self.btn_cursor._is_unhide_mode = True
         elif is_cursor_active:
             self.btn_cursor.setText("🐒")
             self.btn_cursor.setToolTip("")
             self.btn_cursor.setStyleSheet("")
+            self.btn_cursor._is_unhide_mode = False
             self.cursor_menu.add_action("🐵", "active(canvas)", self._on_cursor_action_pen)
             self.cursor_menu.add_action("🙈", "disable(canvas)", self._on_cursor_action_visibility)
         else:
             self.btn_cursor.setText("🐵")
             self.btn_cursor.setToolTip("")
             self.btn_cursor.setStyleSheet("")
+            self.btn_cursor._is_unhide_mode = False
             self.cursor_menu.add_action("🐒", "cursor", self._on_cursor_action_cursor)
             self.cursor_menu.add_action("🙈", "disable(canvas)", self._on_cursor_action_visibility)
 
@@ -1743,23 +1744,21 @@ class ToolbarWindow(QWidget):
 
     def moveEvent(self, event):
         super().moveEvent(event)
-        if hasattr(self, 'shape_menu') and self.shape_menu and self.shape_menu.isVisible() and self.shape_menu._fade_state in (1, 2):
-            if not self.shape_menu.has_been_dragged:
-                global_pos = self.btn_shape.mapToGlobal(QPoint(-self.shape_menu.width() - 5, 0))
-                self.shape_menu.move(global_pos)
-        if hasattr(self, 'cursor_menu') and self.cursor_menu and self.cursor_menu.isVisible() and self.cursor_menu._fade_state in (1, 2):
-            if not self.cursor_menu.has_been_dragged:
-                global_pos = self.btn_cursor.mapToGlobal(QPoint(-self.cursor_menu.width() - 5, 0))
-                self.cursor_menu.move(global_pos)
+        shape_visible = hasattr(self, 'shape_menu') and self.shape_menu.isVisible() and self.shape_menu._fade_state in (1, 2)
+        cursor_visible = hasattr(self, 'cursor_menu') and self.cursor_menu.isVisible() and self.cursor_menu._fade_state in (1, 2)
+        if not shape_visible and not cursor_visible:
+            return
+        if shape_visible and not self.shape_menu.has_been_dragged:
+            self.shape_menu.move(self.btn_shape.mapToGlobal(QPoint(-self.shape_menu.width() - 5, 0)))
+        if cursor_visible and not self.cursor_menu.has_been_dragged:
+            self.cursor_menu.move(self.btn_cursor.mapToGlobal(QPoint(-self.cursor_menu.width() - 5, 0)))
 
 
 # ── System Tray ──
 
 def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    import os
+    """Get absolute path to resource, works for dev and for PyInstaller."""
     try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
@@ -1841,14 +1840,9 @@ class MainAppCoordinator(QObject):
         self.color_palette.resize(150, 150)
         self.color_palette.hide()
 
-        self.shape_toolbox = FloatingShapeToolbox(self.signals, self.overlay, parent=self.overlay)
-        self.shape_toolbox.resize(150, 180)
-        self.shape_toolbox.hide()
-
         # Connect toggle signals
         self.signals.toggle_color_palette.connect(self.toggle_color_palette)
         self.signals.toolbar_moved.connect(self._sync_toolboxes_position)
-        self.signals.toggle_shape_toolbox.connect(self._toggle_shape_toolbox)
         self.signals.exit_app.connect(self._quit_app)
 
         # Palette persistence state
@@ -1941,8 +1935,6 @@ class MainAppCoordinator(QObject):
 
     def hide_toolboxes(self):
         """Instantly close everything (used during canvas hide)."""
-        if self.shape_toolbox.isVisible() or self.shape_toolbox._fade_state != 0:
-            self.shape_toolbox.instant_hide()
         if self.color_palette.isVisible() or self.color_palette._fade_state != 0:
             self.color_palette.instant_hide()
         # Close any open CustomHoverMenus
@@ -1952,9 +1944,7 @@ class MainAppCoordinator(QObject):
             self.toolbar.shape_menu.instant_hide()
 
     def _hide_popup_menus(self):
-        """Close popup menus and shape toolbox with fade, but NEVER the color palette."""
-        if self.shape_toolbox._fade_state in (1, 2):
-            self.shape_toolbox.fade_out()
+        """Close popup menus with fade, but NEVER the color palette."""
         if hasattr(self.toolbar, 'cursor_menu') and self.toolbar.cursor_menu.isVisible():
             self.toolbar.cursor_menu.hide_menu()
         if hasattr(self.toolbar, 'shape_menu') and self.toolbar.shape_menu.isVisible():
@@ -1982,8 +1972,6 @@ class MainAppCoordinator(QObject):
     def _sync_toolboxes_position(self, delta):
         if not self.color_palette.has_been_dragged:
             self.color_palette.move(self.color_palette.pos() + delta)
-        if not self.shape_toolbox.has_been_dragged:
-            self.shape_toolbox.move(self.shape_toolbox.pos() + delta)
 
     def toggle_color_palette(self):
         if self.color_palette._fade_state in (1, 2):
@@ -1994,20 +1982,10 @@ class MainAppCoordinator(QObject):
                 self.color_palette.move(global_pos.x() - self.color_palette.width() - 10, global_pos.y())
             self.color_palette.fade_in()
 
-    def _toggle_shape_toolbox(self):
-        if self.shape_toolbox._fade_state in (1, 2):
-            self.shape_toolbox.fade_out()
-        else:
-            if not self.shape_toolbox.has_been_dragged:
-                btn_pos = self.toolbar.btn_shape.mapToGlobal(QPoint(0, 0))
-                self.shape_toolbox.move(btn_pos.x() - self.shape_toolbox.width() - 10, btn_pos.y())
-            self.shape_toolbox.fade_in()
 
     def _quit_app(self):
         """Cleanly shut down the application, saving final state."""
-        # Save toolbar position on exit
         self._save_toolbar_position()
-        # Save current sizes one last time
         self.settings.set_many({
             'pen_size': self.overlay.pen_size,
             'highlighter_size': self.overlay.highlighter_size,
@@ -2016,6 +1994,11 @@ class MainAppCoordinator(QObject):
         keyboard.unhook_all()
         if hasattr(self, 'tray') and self.tray:
             self.tray.hide()
+        # Restore Windows timer resolution before exit
+        try:
+            ctypes.windll.winmm.timeEndPeriod(1)
+        except Exception:
+            pass
         QApplication.instance().quit()
 
 
