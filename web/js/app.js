@@ -261,10 +261,6 @@ class App {
     toolbar.querySelectorAll('[data-tool]').forEach(btn => {
       btn.addEventListener('click', () => {
         const tool = btn.dataset.tool;
-        if (tool === 'select') {
-          this.showRestrictedToast();
-          return;
-        }
         this.selectTool(tool);
       });
     });
@@ -275,12 +271,22 @@ class App {
     if (shapesBtn && shapesFlyout) {
       shapesBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.showRestrictedToast();
+        const isCurrentlyOpen = shapesFlyout.classList.contains('active');
+        this._closeAllPopovers();
+
+        if (!isCurrentlyOpen) {
+          shapesFlyout.style.display = 'flex';
+          void shapesFlyout.offsetWidth; // Force reflow
+          shapesFlyout.classList.add('active');
+        }
       });
 
       shapesFlyout.querySelectorAll('[data-shape]').forEach(shapeItem => {
-        shapeItem.addEventListener('click', () => {
-          this.showRestrictedToast();
+        shapeItem.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const shape = shapeItem.dataset.shape;
+          this.selectTool(shape);
+          this._closeAllPopovers();
         });
       });
     }
@@ -298,10 +304,6 @@ class App {
 
       palettePopover.querySelectorAll('.palette-color-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          if (btn.dataset.locked === 'true') {
-            this.showRestrictedToast();
-            return;
-          }
           const hex = btn.dataset.hex;
           this.selectColor(hex);
           this.showToast(`Color: ${btn.title || hex}`, 'palette');
@@ -331,7 +333,8 @@ class App {
     const backdropBtn = document.getElementById('tb-btn-bg');
     if (backdropBtn) {
       backdropBtn.addEventListener('click', () => {
-        this.showRestrictedToast();
+        const mode = this.cycleBackdrop();
+        this.showToast(`Background: ${mode}`, 'wallpaper');
       });
     }
 

@@ -236,8 +236,20 @@ export class LassoSelector {
     maxX += pad;
     maxY += pad;
 
-    const width = maxX - minX;
-    const height = maxY - minY;
+    let width = maxX - minX;
+    let height = maxY - minY;
+
+    if (width < 50) {
+      minX -= (50 - width) / 2;
+      maxX += (50 - width) / 2;
+      width = 50;
+    }
+    if (height < 50) {
+      minY -= (50 - height) / 2;
+      maxY += (50 - height) / 2;
+      height = 50;
+    }
+
     const cx = minX + width / 2;
     const cy = minY + height / 2;
     const rotation = 0; // Canonical unrotated axis for collective bounding box
