@@ -3,10 +3,19 @@ build/
 dist/
 *.spec
 
+# Virtual environment
+venv/
+
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Temporary logs & test artifacts
+scratch/
+test_*.txt
+*.log
+dummy.txt
 
 # OS generated files
 .DS_Store

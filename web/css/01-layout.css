@@ -1,0 +1,494 @@
+/* ==========================================================================
+   PEN 11 DESIGN SYSTEM - 01-LAYOUT.CSS
+   Adaptive Layout, Breakpoints, Navigation Bars/Rails/Drawers & Bento Grids
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Modern Reset & Box Model
+   -------------------------------------------------------------------------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--md-sys-typescale-font-plain);
+  background-color: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-background);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  position: relative;
+  transition: background-color var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-standard),
+              color var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-standard);
+}
+
+img, svg, video, canvas {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* --------------------------------------------------------------------------
+   2. Page Structure & Adaptive Grid System
+   -------------------------------------------------------------------------- */
+.m3-layout-root {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+.m3-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  width: 100%;
+  padding-bottom: 96px; /* Space for mobile nav bar on compact */
+}
+
+@media (min-width: 600px) {
+  .m3-main-content {
+    padding-bottom: 0;
+  }
+}
+
+/* Standard Content Container */
+.m3-container {
+  width: 100%;
+  max-width: 1320px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+@media (min-width: 600px) {
+  .m3-container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+@media (min-width: 840px) {
+  .m3-container {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .m3-container {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+}
+
+/* Section Spacing */
+.m3-section {
+  padding-top: 64px;
+  padding-bottom: 64px;
+  position: relative;
+}
+
+@media (min-width: 840px) {
+  .m3-section {
+    padding-top: 96px;
+    padding-bottom: 96px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. Adaptive Navigation System
+   - Mobile (<600px): Bottom Navigation Bar
+   - Tablet (600px - 840px): Navigation Rail
+   - Desktop (>840px): Navigation Drawer / Top App Bar
+   -------------------------------------------------------------------------- */
+
+/* --- A. TOP APP BAR (Desktop / Standard) --- */
+.m3-top-app-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background-color: var(--md-sys-color-surface);
+  transition: background-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard),
+              box-shadow var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+}
+
+.m3-top-app-bar.scrolled {
+  background-color: var(--md-sys-color-surface-container);
+  box-shadow: var(--md-sys-elevation-level2);
+}
+
+.m3-top-app-bar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--md-sys-typescale-font-brand);
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+.m3-top-app-bar-brand img,
+.m3-top-app-bar-brand svg {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--md-sys-shape-corner-small);
+}
+
+.m3-top-app-bar-nav {
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (min-width: 840px) {
+  .m3-top-app-bar-nav {
+    display: flex;
+  }
+}
+
+.m3-top-app-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- B. NAVIGATION BAR (Mobile Bottom Nav - Compact <600px) --- */
+.m3-nav-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  z-index: 90;
+  background-color: var(--md-sys-color-surface-container);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 8px;
+}
+
+@media (min-width: 600px) {
+  .m3-nav-bar {
+    display: none;
+  }
+}
+
+.m3-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  color: var(--md-sys-color-on-surface-variant);
+  padding: 4px 8px;
+  min-width: 64px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.m3-nav-pill {
+  width: 64px;
+  height: 32px;
+  border-radius: var(--md-sys-shape-corner-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: background-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard),
+              color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+}
+
+.m3-nav-item.active .m3-nav-pill {
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.m3-nav-item.active .m3-nav-pill .material-symbols-rounded {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.m3-nav-label {
+  font-family: var(--md-sys-typescale-label-small-font);
+  font-size: var(--md-sys-typescale-label-small-size);
+  font-weight: var(--md-sys-typescale-label-small-weight);
+  letter-spacing: var(--md-sys-typescale-label-small-tracking);
+  color: var(--md-sys-color-on-surface-variant);
+  transition: color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard),
+              font-weight var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+}
+
+.m3-nav-item.active .m3-nav-label {
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface);
+}
+
+/* --- C. NAVIGATION RAIL (Tablet 600px - 840px) --- */
+.m3-nav-rail {
+  display: none;
+  width: 80px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  background-color: var(--md-sys-color-surface);
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 0 16px;
+  z-index: 95;
+}
+
+@media (min-width: 600px) and (max-width: 839px) {
+  .m3-nav-rail {
+    display: flex;
+  }
+}
+
+.m3-nav-rail-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
+.m3-nav-rail-destinations {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.m3-nav-rail-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- D. NAVIGATION DRAWER (Desktop >840px / Extended Flyout) --- */
+.m3-nav-drawer {
+  display: none;
+  width: 280px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+  flex-direction: column;
+  padding: 16px 12px;
+  overflow-y: auto;
+  z-index: 95;
+}
+
+.m3-nav-drawer-header {
+  padding: 16px 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--md-sys-typescale-font-brand);
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+.m3-nav-drawer-section-title {
+  padding: 16px 16px 8px;
+  font-family: var(--md-sys-typescale-title-small-font);
+  font-size: var(--md-sys-typescale-title-small-size);
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.m3-drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 56px;
+  padding: 0 16px;
+  border-radius: var(--md-sys-shape-corner-full);
+  color: var(--md-sys-color-on-surface-variant);
+  font-family: var(--md-sys-typescale-label-large-font);
+  font-size: var(--md-sys-typescale-label-large-size);
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  text-decoration: none;
+  transition: background-color var(--md-sys-motion-duration-short2) var(--md-sys-motion-easing-standard),
+              color var(--md-sys-motion-duration-short2) var(--md-sys-motion-easing-standard);
+  position: relative;
+  overflow: hidden;
+}
+
+.m3-drawer-item.active {
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.m3-drawer-item.active .material-symbols-rounded {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* --------------------------------------------------------------------------
+   4. Bento-Grid Layout System
+   Optimized for hardware benchmarks, feature showcases, and interactive modules
+   -------------------------------------------------------------------------- */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+@media (min-width: 840px) {
+  .bento-grid {
+    gap: 24px;
+  }
+}
+
+/* Column Span Utilities */
+.bento-col-12 { grid-column: span 12; }
+.bento-col-8  { grid-column: span 12; }
+.bento-col-7  { grid-column: span 12; }
+.bento-col-6  { grid-column: span 12; }
+.bento-col-5  { grid-column: span 12; }
+.bento-col-4  { grid-column: span 12; }
+.bento-col-3  { grid-column: span 12; }
+
+@media (min-width: 600px) {
+  .bento-col-md-6 { grid-column: span 6; }
+  .bento-col-md-12 { grid-column: span 12; }
+}
+
+@media (min-width: 840px) {
+  .bento-col-8 { grid-column: span 8; }
+  .bento-col-7 { grid-column: span 7; }
+  .bento-col-6 { grid-column: span 6; }
+  .bento-col-5 { grid-column: span 5; }
+  .bento-col-4 { grid-column: span 4; }
+  .bento-col-3 { grid-column: span 3; }
+}
+
+/* Bento Card Base Container */
+.bento-card {
+  background-color: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-extra-large);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-emphasized),
+              box-shadow var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-emphasized),
+              border-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard),
+              background-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+}
+
+@media (min-width: 840px) {
+  .bento-card {
+    padding: 32px;
+  }
+}
+
+.bento-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--md-sys-elevation-level3);
+  border-color: var(--md-sys-color-primary);
+  background-color: var(--md-sys-color-surface-container);
+}
+
+.bento-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.bento-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--md-sys-shape-corner-medium);
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bento-card-title {
+  font-family: var(--md-sys-typescale-title-large-font);
+  font-size: var(--md-sys-typescale-title-large-size);
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 8px;
+}
+
+.bento-card-description {
+  font-family: var(--md-sys-typescale-body-medium-font);
+  font-size: var(--md-sys-typescale-body-medium-size);
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.bento-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --------------------------------------------------------------------------
+   5. Flex & Grid Helper Utilities
+   -------------------------------------------------------------------------- */
+.m3-flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.m3-flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.m3-gap-xs { gap: 4px; }
+.m3-gap-sm { gap: 8px; }
+.m3-gap-md { gap: 16px; }
+.m3-gap-lg { gap: 24px; }
+.m3-gap-xl { gap: 32px; }
+
+.m3-align-center { align-items: center; }
+.m3-justify-between { justify-content: space-between; }
+.m3-justify-center { justify-content: center; }

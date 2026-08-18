@@ -1,0 +1,617 @@
+/* ==========================================================================
+   PEN 11 DESIGN SYSTEM - 00-TOKENS.CSS
+   Material Design 3 (Material You / m3.material.io) Complete Token Specification
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Google Fonts Import: Plus Jakarta Sans (Brand), Roboto Flex & Mono, Icons
+   -------------------------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Roboto+Flex:opsz,wght,GRAD,slnt@8..144,100..1000,-200..150,-10..0&family=Roboto+Mono:wght@400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
+
+:root {
+  /* ==========================================================================
+     1. REFERENCE PALETTE TOKENS (Base Seed: Pen 11 Primary #0061A4 / Windows 11 Blue)
+     ========================================================================== */
+  
+  /* Primary Tonal Palette (Hue 220, Chroma 48) */
+  --md-ref-palette-primary0: #000000;
+  --md-ref-palette-primary10: #001d36;
+  --md-ref-palette-primary20: #003258;
+  --md-ref-palette-primary30: #00497d;
+  --md-ref-palette-primary40: #0061a4;
+  --md-ref-palette-primary50: #0f7bc9;
+  --md-ref-palette-primary60: #3895e6;
+  --md-ref-palette-primary70: #5dafff;
+  --md-ref-palette-primary80: #9ecaff;
+  --md-ref-palette-primary90: #d1e4ff;
+  --md-ref-palette-primary95: #eaf1ff;
+  --md-ref-palette-primary98: #f7f9ff;
+  --md-ref-palette-primary99: #fcfcff;
+  --md-ref-palette-primary100: #ffffff;
+
+  /* Secondary Tonal Palette (Hue 220, Chroma 16) */
+  --md-ref-palette-secondary0: #000000;
+  --md-ref-palette-secondary10: #101c2b;
+  --md-ref-palette-secondary20: #253140;
+  --md-ref-palette-secondary30: #3b4858;
+  --md-ref-palette-secondary40: #535f70;
+  --md-ref-palette-secondary50: #6b788a;
+  --md-ref-palette-secondary60: #8592a5;
+  --md-ref-palette-secondary70: #9facc0;
+  --md-ref-palette-secondary80: #bbc7db;
+  --md-ref-palette-secondary90: #d7e3f7;
+  --md-ref-palette-secondary95: #e8f0fc;
+  --md-ref-palette-secondary98: #f7f9ff;
+  --md-ref-palette-secondary99: #fcfcff;
+  --md-ref-palette-secondary100: #ffffff;
+
+  /* Tertiary Tonal Palette (Hue 280, Chroma 24 - Expressive Cyan/Violet Accent) */
+  --md-ref-palette-tertiary0: #000000;
+  --md-ref-palette-tertiary10: #251431;
+  --md-ref-palette-tertiary20: #3b2948;
+  --md-ref-palette-tertiary30: #523f5f;
+  --md-ref-palette-tertiary40: #6b5778;
+  --md-ref-palette-tertiary50: #856f92;
+  --md-ref-palette-tertiary60: #9f88ad;
+  --md-ref-palette-tertiary70: #baa2c8;
+  --md-ref-palette-tertiary80: #d6bee4;
+  --md-ref-palette-tertiary90: #f2daff;
+  --md-ref-palette-tertiary95: #fbedff;
+  --md-ref-palette-tertiary98: #fff7fb;
+  --md-ref-palette-tertiary99: #fffbff;
+  --md-ref-palette-tertiary100: #ffffff;
+
+  /* Neutral Tonal Palette (Surfaces & Backgrounds) */
+  --md-ref-palette-neutral0: #000000;
+  --md-ref-palette-neutral4: #0c0e13;
+  --md-ref-palette-neutral6: #111318;
+  --md-ref-palette-neutral10: #191c20;
+  --md-ref-palette-neutral12: #1d2024;
+  --md-ref-palette-neutral17: #282a2f;
+  --md-ref-palette-neutral20: #2e3036;
+  --md-ref-palette-neutral22: #33353a;
+  --md-ref-palette-neutral24: #37393e;
+  --md-ref-palette-neutral30: #44474e;
+  --md-ref-palette-neutral40: #5c5f66;
+  --md-ref-palette-neutral50: #75777f;
+  --md-ref-palette-neutral60: #8f9099;
+  --md-ref-palette-neutral70: #aaabb4;
+  --md-ref-palette-neutral80: #c6c6cf;
+  --md-ref-palette-neutral87: #dad9e3;
+  --md-ref-palette-neutral90: #e2e2e9;
+  --md-ref-palette-neutral92: #e9e8ef;
+  --md-ref-palette-neutral94: #efedf5;
+  --md-ref-palette-neutral95: #f2f0f8;
+  --md-ref-palette-neutral96: #f5f3fa;
+  --md-ref-palette-neutral98: #fdfcff;
+  --md-ref-palette-neutral99: #fffbff;
+  --md-ref-palette-neutral100: #ffffff;
+
+  /* Neutral Variant Tonal Palette (Borders, Outlines, Muted Variants) */
+  --md-ref-palette-neutral-variant0: #000000;
+  --md-ref-palette-neutral-variant10: #171c22;
+  --md-ref-palette-neutral-variant20: #2c3138;
+  --md-ref-palette-neutral-variant30: #43474e;
+  --md-ref-palette-neutral-variant40: #5b5f66;
+  --md-ref-palette-neutral-variant50: #73777f;
+  --md-ref-palette-neutral-variant60: #8e9099;
+  --md-ref-palette-neutral-variant70: #a9abb4;
+  --md-ref-palette-neutral-variant80: #c3c7d0;
+  --md-ref-palette-neutral-variant90: #dfe2eb;
+  --md-ref-palette-neutral-variant95: #edf0fa;
+  --md-ref-palette-neutral-variant100: #ffffff;
+
+  /* Error Tonal Palette */
+  --md-ref-palette-error0: #000000;
+  --md-ref-palette-error10: #410002;
+  --md-ref-palette-error20: #690005;
+  --md-ref-palette-error30: #93000a;
+  --md-ref-palette-error40: #ba1a1a;
+  --md-ref-palette-error50: #de3730;
+  --md-ref-palette-error60: #ff5449;
+  --md-ref-palette-error70: #ff897d;
+  --md-ref-palette-error80: #ffb4ab;
+  --md-ref-palette-error90: #ffdad6;
+  --md-ref-palette-error95: #ffedea;
+  --md-ref-palette-error100: #ffffff;
+
+  /* --- Light Theme System Colors --- */
+  /* Primary overridden to warm amber-brown below in the parchment block */
+  --md-sys-color-primary: #7C5C35;
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #F0DFC0;
+  --md-sys-color-on-primary-container: #2C1F0E;
+  --md-sys-color-inverse-primary: #D4B896;
+
+  --md-sys-color-secondary: #8C7055;
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #EAD9C0;
+  --md-sys-color-on-secondary-container: #2C1F0E;
+
+  --md-sys-color-tertiary: #5A7A4A;
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: #D4EDCA;
+  --md-sys-color-on-tertiary-container: #1A2E14;
+
+  --md-sys-color-error: var(--md-ref-palette-error40);
+  --md-sys-color-on-error: var(--md-ref-palette-error100);
+  --md-sys-color-error-container: var(--md-ref-palette-error90);
+  --md-sys-color-on-error-container: var(--md-ref-palette-error10);
+
+  /* ==========================================================================
+     PEN 11 WARM PARCHMENT PALETTE — Light Theme Override
+     Background Seed: #E6D5B8 (User specified warm parchment)
+     Primary:   #7C5C35  (Warm Amber-Brown)
+     Secondary: #A0896A  (Muted Sand)
+     Text:      #2C1F0E  (Deep Walnut)
+     Surface tiers step by ~6% toward darker tan
+     ========================================================================== */
+
+  /* Warm primary (Amber-Brown) — overrides blue primary for light theme */
+  --md-sys-color-primary: #7C5C35;
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #F0DFC0;
+  --md-sys-color-on-primary-container: #2C1F0E;
+  --md-sys-color-inverse-primary: #D4B896;
+
+  --md-sys-color-secondary: #8C7055;
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #EAD9C0;
+  --md-sys-color-on-secondary-container: #2C1F0E;
+
+  --md-sys-color-tertiary: #5A7A4A;
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: #D4EDCA;
+  --md-sys-color-on-tertiary-container: #1A2E14;
+
+  --md-sys-color-background: #E6D5B8;
+  --md-sys-color-on-background: #2C1F0E;
+
+  --md-sys-color-surface: #EDE0C8;
+  --md-sys-color-on-surface: #2C1F0E;
+  --md-sys-color-surface-variant: #DDD0B5;
+  --md-sys-color-on-surface-variant: #4A3520;
+
+  /* Surface Container Tiers — warm parchment family */
+  --md-sys-color-surface-dim: #D4BC96;
+  --md-sys-color-surface-bright: #F5EFE0;
+  --md-sys-color-surface-container-lowest: #F7F0E2;
+  --md-sys-color-surface-container-low: #F0E5D0;
+  --md-sys-color-surface-container: #E6D5B8;
+  --md-sys-color-surface-container-high: #DCCBA8;
+  --md-sys-color-surface-container-highest: #D4BC96;
+
+  --md-sys-color-outline: #9C8060;
+  --md-sys-color-outline-variant: #C9B08A;
+  --md-sys-color-shadow: #000000;
+  --md-sys-color-scrim: #000000;
+  --md-sys-color-inverse-surface: #2C1F0E;
+  --md-sys-color-inverse-on-surface: #F5EFE0;
+
+  /* Surface Tint Level Overlays */
+  --md-sys-color-surface-tint: var(--md-sys-color-primary);
+
+  /* ==========================================================================
+     3. SHAPE CORNER RADIUS TOKENS
+     ========================================================================== */
+  --md-sys-shape-corner-none: 0px;
+  --md-sys-shape-corner-extra-small: 4px;
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 16px;
+  --md-sys-shape-corner-extra-large: 28px;
+  --md-sys-shape-corner-full: 9999px;
+
+  /* ==========================================================================
+     4. ELEVATION SHADOW TOKENS (Levels 0 to 5)
+     ========================================================================== */
+  --md-sys-elevation-level0: none;
+  --md-sys-elevation-level1: 0px 1px 3px 1px rgba(0, 0, 0, 0.12), 0px 1px 2px 0px rgba(0, 0, 0, 0.24);
+  --md-sys-elevation-level2: 0px 2px 6px 2px rgba(0, 0, 0, 0.12), 0px 1px 2px 0px rgba(0, 0, 0, 0.24);
+  --md-sys-elevation-level3: 0px 4px 8px 3px rgba(0, 0, 0, 0.12), 0px 1px 3px 0px rgba(0, 0, 0, 0.24);
+  --md-sys-elevation-level4: 0px 6px 10px 4px rgba(0, 0, 0, 0.12), 0px 2px 3px 0px rgba(0, 0, 0, 0.24);
+  --md-sys-elevation-level5: 0px 8px 12px 6px rgba(0, 0, 0, 0.12), 0px 4px 4px 0px rgba(0, 0, 0, 0.24);
+
+  /* Fluent & Mica Windows 11 Glass Shadows */
+  --pen-glass-shadow-sm: 0 4px 16px 0 rgba(0, 0, 0, 0.08);
+  --pen-glass-shadow-md: 0 8px 32px 0 rgba(0, 0, 0, 0.12);
+  --pen-glass-shadow-lg: 0 16px 48px 0 rgba(0, 0, 0, 0.18);
+
+  /* ==========================================================================
+     5. STATE LAYER OPACITY TOKENS
+     ========================================================================== */
+  --md-sys-state-hover-opacity: 0.08;
+  --md-sys-state-focus-opacity: 0.12;
+  --md-sys-state-pressed-opacity: 0.12;
+  --md-sys-state-dragged-opacity: 0.16;
+
+  /* ==========================================================================
+     6. MOTION EASING AND DURATION TOKENS
+     ========================================================================== */
+  --md-sys-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --md-sys-motion-easing-standard-accelerate: cubic-bezier(0.3, 0, 1, 1);
+  --md-sys-motion-easing-standard-decelerate: cubic-bezier(0, 0, 0.2, 1);
+
+  --md-sys-motion-easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --md-sys-motion-easing-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --md-sys-motion-easing-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+
+  --md-sys-motion-duration-short1: 50ms;
+  --md-sys-motion-duration-short2: 100ms;
+  --md-sys-motion-duration-short3: 150ms;
+  --md-sys-motion-duration-short4: 200ms;
+  --md-sys-motion-duration-medium1: 250ms;
+  --md-sys-motion-duration-medium2: 300ms;
+  --md-sys-motion-duration-medium3: 350ms;
+  --md-sys-motion-duration-medium4: 400ms;
+  --md-sys-motion-duration-long1: 450ms;
+  --md-sys-motion-duration-long2: 500ms;
+  --md-sys-motion-duration-long3: 550ms;
+  --md-sys-motion-duration-long4: 600ms;
+
+  /* ==========================================================================
+     7. TYPOGRAPHY FONT FAMILIES & 15-TIER SCALE
+     ========================================================================== */
+  --md-sys-typescale-font-brand: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --md-sys-typescale-font-plain: 'Roboto Flex', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --md-sys-typescale-font-mono: 'Roboto Mono', 'Cascadia Code', Consolas, monospace;
+
+  /* Display */
+  --md-sys-typescale-display-large-font: var(--md-sys-typescale-font-brand);
+  --md-sys-typescale-display-large-size: 3.5625rem; /* 57px */
+  --md-sys-typescale-display-large-line-height: 4rem; /* 64px */
+  --md-sys-typescale-display-large-weight: 700;
+  --md-sys-typescale-display-large-tracking: -0.25px;
+
+  --md-sys-typescale-display-medium-font: var(--md-sys-typescale-font-brand);
+  --md-sys-typescale-display-medium-size: 2.8125rem; /* 45px */
+  --md-sys-typescale-display-medium-line-height: 3.25rem; /* 52px */
+  --md-sys-typescale-display-medium-weight: 700;
+  --md-sys-typescale-display-medium-tracking: 0px;
+
+  --md-sys-typescale-display-small-font: var(--md-sys-typescale-font-brand);
+  --md-sys-typescale-display-small-size: 2.25rem; /* 36px */
+  --md-sys-typescale-display-small-line-height: 2.75rem; /* 44px */
+  --md-sys-typescale-display-small-weight: 600;
+  --md-sys-typescale-display-small-tracking: 0px;
+
+  /* Headline */
+  --md-sys-typescale-headline-large-font: var(--md-sys-typescale-font-brand);
+  --md-sys-typescale-headline-large-size: 2rem; /* 32px */
+  --md-sys-typescale-headline-large-line-height: 2.5rem; /* 40px */
+  --md-sys-typescale-headline-large-weight: 600;
+  --md-sys-typescale-headline-large-tracking: 0px;
+
+  --md-sys-typescale-headline-medium-font: var(--md-sys-typescale-font-brand);
+  --md-sys-typescale-headline-medium-size: 1.75rem; /* 28px */
+  --md-sys-typescale-headline-medium-line-height: 2.25rem; /* 36px */
+  --md-sys-typescale-headline-medium-weight: 600;
+  --md-sys-typescale-headline-medium-tracking: 0px;
+
+  --md-sys-typescale-headline-small-font: var(--md-sys-typescale-font-brand);
+  --md-sys-typescale-headline-small-size: 1.5rem; /* 24px */
+  --md-sys-typescale-headline-small-line-height: 2rem; /* 32px */
+  --md-sys-typescale-headline-small-weight: 600;
+  --md-sys-typescale-headline-small-tracking: 0px;
+
+  /* Title */
+  --md-sys-typescale-title-large-font: var(--md-sys-typescale-font-brand);
+  --md-sys-typescale-title-large-size: 1.375rem; /* 22px */
+  --md-sys-typescale-title-large-line-height: 1.75rem; /* 28px */
+  --md-sys-typescale-title-large-weight: 600;
+  --md-sys-typescale-title-large-tracking: 0px;
+
+  --md-sys-typescale-title-medium-font: var(--md-sys-typescale-font-plain);
+  --md-sys-typescale-title-medium-size: 1rem; /* 16px */
+  --md-sys-typescale-title-medium-line-height: 1.5rem; /* 24px */
+  --md-sys-typescale-title-medium-weight: 600;
+  --md-sys-typescale-title-medium-tracking: 0.15px;
+
+  --md-sys-typescale-title-small-font: var(--md-sys-typescale-font-plain);
+  --md-sys-typescale-title-small-size: 0.875rem; /* 14px */
+  --md-sys-typescale-title-small-line-height: 1.25rem; /* 20px */
+  --md-sys-typescale-title-small-weight: 600;
+  --md-sys-typescale-title-small-tracking: 0.1px;
+
+  /* Body */
+  --md-sys-typescale-body-large-font: var(--md-sys-typescale-font-plain);
+  --md-sys-typescale-body-large-size: 1rem; /* 16px */
+  --md-sys-typescale-body-large-line-height: 1.5rem; /* 24px */
+  --md-sys-typescale-body-large-weight: 400;
+  --md-sys-typescale-body-large-tracking: 0.25px;
+
+  --md-sys-typescale-body-medium-font: var(--md-sys-typescale-font-plain);
+  --md-sys-typescale-body-medium-size: 0.875rem; /* 14px */
+  --md-sys-typescale-body-medium-line-height: 1.25rem; /* 20px */
+  --md-sys-typescale-body-medium-weight: 400;
+  --md-sys-typescale-body-medium-tracking: 0.25px;
+
+  --md-sys-typescale-body-small-font: var(--md-sys-typescale-font-plain);
+  --md-sys-typescale-body-small-size: 0.75rem; /* 12px */
+  --md-sys-typescale-body-small-line-height: 1rem; /* 16px */
+  --md-sys-typescale-body-small-weight: 400;
+  --md-sys-typescale-body-small-tracking: 0.4px;
+
+  /* Label */
+  --md-sys-typescale-label-large-font: var(--md-sys-typescale-font-brand);
+  --md-sys-typescale-label-large-size: 0.875rem; /* 14px */
+  --md-sys-typescale-label-large-line-height: 1.25rem; /* 20px */
+  --md-sys-typescale-label-large-weight: 600;
+  --md-sys-typescale-label-large-tracking: 0.1px;
+
+  --md-sys-typescale-label-medium-font: var(--md-sys-typescale-font-brand);
+  --md-sys-typescale-label-medium-size: 0.75rem; /* 12px */
+  --md-sys-typescale-label-medium-line-height: 1rem; /* 16px */
+  --md-sys-typescale-label-medium-weight: 600;
+  --md-sys-typescale-label-medium-tracking: 0.5px;
+
+  --md-sys-typescale-label-small-font: var(--md-sys-typescale-font-brand);
+  --md-sys-typescale-label-small-size: 0.6875rem; /* 11px */
+  --md-sys-typescale-label-small-line-height: 1rem; /* 16px */
+  --md-sys-typescale-label-small-weight: 600;
+  --md-sys-typescale-label-small-tracking: 0.5px;
+}
+
+/* ==========================================================================
+   2. SYSTEM COLOR TOKENS - DARK THEME
+   Activated via [data-theme="dark"] attribute on <html> or system dark mode
+   ========================================================================== */
+[data-theme="dark"] {
+  --md-sys-color-primary: var(--md-ref-palette-primary80);
+  --md-sys-color-on-primary: var(--md-ref-palette-primary20);
+  --md-sys-color-primary-container: var(--md-ref-palette-primary30);
+  --md-sys-color-on-primary-container: var(--md-ref-palette-primary90);
+  --md-sys-color-inverse-primary: var(--md-ref-palette-primary40);
+
+  --md-sys-color-secondary: var(--md-ref-palette-secondary80);
+  --md-sys-color-on-secondary: var(--md-ref-palette-secondary20);
+  --md-sys-color-secondary-container: var(--md-ref-palette-secondary30);
+  --md-sys-color-on-secondary-container: var(--md-ref-palette-secondary90);
+
+  --md-sys-color-tertiary: var(--md-ref-palette-tertiary80);
+  --md-sys-color-on-tertiary: var(--md-ref-palette-tertiary20);
+  --md-sys-color-tertiary-container: var(--md-ref-palette-tertiary30);
+  --md-sys-color-on-tertiary-container: var(--md-ref-palette-tertiary90);
+
+  --md-sys-color-error: var(--md-ref-palette-error80);
+  --md-sys-color-on-error: var(--md-ref-palette-error20);
+  --md-sys-color-error-container: var(--md-ref-palette-error30);
+  --md-sys-color-on-error-container: var(--md-ref-palette-error90);
+
+  --md-sys-color-background: var(--md-ref-palette-neutral6);
+  --md-sys-color-on-background: var(--md-ref-palette-neutral90);
+
+  --md-sys-color-surface: var(--md-ref-palette-neutral6);
+  --md-sys-color-on-surface: var(--md-ref-palette-neutral90);
+  --md-sys-color-surface-variant: var(--md-ref-palette-neutral-variant30);
+  --md-sys-color-on-surface-variant: var(--md-ref-palette-neutral-variant80);
+
+  /* Surface Container Tiers (Dark) */
+  --md-sys-color-surface-dim: var(--md-ref-palette-neutral6);
+  --md-sys-color-surface-bright: var(--md-ref-palette-neutral24);
+  --md-sys-color-surface-container-lowest: var(--md-ref-palette-neutral4);
+  --md-sys-color-surface-container-low: var(--md-ref-palette-neutral10);
+  --md-sys-color-surface-container: var(--md-ref-palette-neutral12);
+  --md-sys-color-surface-container-high: var(--md-ref-palette-neutral17);
+  --md-sys-color-surface-container-highest: var(--md-ref-palette-neutral22);
+
+  --md-sys-color-outline: var(--md-ref-palette-neutral-variant60);
+  --md-sys-color-outline-variant: var(--md-ref-palette-neutral-variant30);
+  --md-sys-color-shadow: var(--md-ref-palette-neutral0);
+  --md-sys-color-scrim: var(--md-ref-palette-neutral0);
+  --md-sys-color-inverse-surface: var(--md-ref-palette-neutral90);
+  --md-sys-color-inverse-on-surface: var(--md-ref-palette-neutral20);
+
+  --md-sys-elevation-level1: 0px 1px 3px 1px rgba(0, 0, 0, 0.35), 0px 1px 2px 0px rgba(0, 0, 0, 0.45);
+  --md-sys-elevation-level2: 0px 2px 6px 2px rgba(0, 0, 0, 0.35), 0px 1px 2px 0px rgba(0, 0, 0, 0.45);
+  --md-sys-elevation-level3: 0px 4px 8px 3px rgba(0, 0, 0, 0.35), 0px 1px 3px 0px rgba(0, 0, 0, 0.45);
+  --md-sys-elevation-level4: 0px 6px 10px 4px rgba(0, 0, 0, 0.35), 0px 2px 3px 0px rgba(0, 0, 0, 0.45);
+  --md-sys-elevation-level5: 0px 8px 12px 6px rgba(0, 0, 0, 0.35), 0px 4px 4px 0px rgba(0, 0, 0, 0.45);
+
+  --pen-glass-shadow-sm: 0 4px 16px 0 rgba(0, 0, 0, 0.4);
+  --pen-glass-shadow-md: 0 8px 32px 0 rgba(0, 0, 0, 0.55);
+  --pen-glass-shadow-lg: 0 16px 48px 0 rgba(0, 0, 0, 0.7);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --md-sys-color-primary: var(--md-ref-palette-primary80);
+    --md-sys-color-on-primary: var(--md-ref-palette-primary20);
+    --md-sys-color-primary-container: var(--md-ref-palette-primary30);
+    --md-sys-color-on-primary-container: var(--md-ref-palette-primary90);
+    --md-sys-color-inverse-primary: var(--md-ref-palette-primary40);
+
+    --md-sys-color-secondary: var(--md-ref-palette-secondary80);
+    --md-sys-color-on-secondary: var(--md-ref-palette-secondary20);
+    --md-sys-color-secondary-container: var(--md-ref-palette-secondary30);
+    --md-sys-color-on-secondary-container: var(--md-ref-palette-secondary90);
+
+    --md-sys-color-tertiary: var(--md-ref-palette-tertiary80);
+    --md-sys-color-on-tertiary: var(--md-ref-palette-tertiary20);
+    --md-sys-color-tertiary-container: var(--md-ref-palette-tertiary30);
+    --md-sys-color-on-tertiary-container: var(--md-ref-palette-tertiary90);
+
+    --md-sys-color-error: var(--md-ref-palette-error80);
+    --md-sys-color-on-error: var(--md-ref-palette-error20);
+    --md-sys-color-error-container: var(--md-ref-palette-error30);
+    --md-sys-color-on-error-container: var(--md-ref-palette-error90);
+
+    --md-sys-color-background: var(--md-ref-palette-neutral6);
+    --md-sys-color-on-background: var(--md-ref-palette-neutral90);
+
+    --md-sys-color-surface: var(--md-ref-palette-neutral6);
+    --md-sys-color-on-surface: var(--md-ref-palette-neutral90);
+    --md-sys-color-surface-variant: var(--md-ref-palette-neutral-variant30);
+    --md-sys-color-on-surface-variant: var(--md-ref-palette-neutral-variant80);
+
+    --md-sys-color-surface-dim: var(--md-ref-palette-neutral6);
+    --md-sys-color-surface-bright: var(--md-ref-palette-neutral24);
+    --md-sys-color-surface-container-lowest: var(--md-ref-palette-neutral4);
+    --md-sys-color-surface-container-low: var(--md-ref-palette-neutral10);
+    --md-sys-color-surface-container: var(--md-ref-palette-neutral12);
+    --md-sys-color-surface-container-high: var(--md-ref-palette-neutral17);
+    --md-sys-color-surface-container-highest: var(--md-ref-palette-neutral22);
+
+    --md-sys-color-outline: var(--md-ref-palette-neutral-variant60);
+    --md-sys-color-outline-variant: var(--md-ref-palette-neutral-variant30);
+    --md-sys-color-shadow: var(--md-ref-palette-neutral0);
+    --md-sys-color-scrim: var(--md-ref-palette-neutral0);
+    --md-sys-color-inverse-surface: var(--md-ref-palette-neutral90);
+    --md-sys-color-inverse-on-surface: var(--md-ref-palette-neutral20);
+
+    --md-sys-elevation-level1: 0px 1px 3px 1px rgba(0, 0, 0, 0.35), 0px 1px 2px 0px rgba(0, 0, 0, 0.45);
+    --md-sys-elevation-level2: 0px 2px 6px 2px rgba(0, 0, 0, 0.35), 0px 1px 2px 0px rgba(0, 0, 0, 0.45);
+    --md-sys-elevation-level3: 0px 4px 8px 3px rgba(0, 0, 0, 0.35), 0px 1px 3px 0px rgba(0, 0, 0, 0.45);
+    --md-sys-elevation-level4: 0px 6px 10px 4px rgba(0, 0, 0, 0.35), 0px 2px 3px 0px rgba(0, 0, 0, 0.45);
+    --md-sys-elevation-level5: 0px 8px 12px 6px rgba(0, 0, 0, 0.35), 0px 4px 4px 0px rgba(0, 0, 0, 0.45);
+
+    --pen-glass-shadow-sm: 0 4px 16px 0 rgba(0, 0, 0, 0.4);
+    --pen-glass-shadow-md: 0 8px 32px 0 rgba(0, 0, 0, 0.55);
+    --pen-glass-shadow-lg: 0 16px 48px 0 rgba(0, 0, 0, 0.7);
+  }
+}
+
+/* ==========================================================================
+   8. TYPOGRAPHY HELPER CLASSES (15-Tier M3 Typescale)
+   ========================================================================== */
+.m3-display-large {
+  font-family: var(--md-sys-typescale-display-large-font);
+  font-size: var(--md-sys-typescale-display-large-size);
+  line-height: var(--md-sys-typescale-display-large-line-height);
+  font-weight: var(--md-sys-typescale-display-large-weight);
+  letter-spacing: var(--md-sys-typescale-display-large-tracking);
+}
+
+.m3-display-medium {
+  font-family: var(--md-sys-typescale-display-medium-font);
+  font-size: var(--md-sys-typescale-display-medium-size);
+  line-height: var(--md-sys-typescale-display-medium-line-height);
+  font-weight: var(--md-sys-typescale-display-medium-weight);
+  letter-spacing: var(--md-sys-typescale-display-medium-tracking);
+}
+
+.m3-display-small {
+  font-family: var(--md-sys-typescale-display-small-font);
+  font-size: var(--md-sys-typescale-display-small-size);
+  line-height: var(--md-sys-typescale-display-small-line-height);
+  font-weight: var(--md-sys-typescale-display-small-weight);
+  letter-spacing: var(--md-sys-typescale-display-small-tracking);
+}
+
+.m3-headline-large {
+  font-family: var(--md-sys-typescale-headline-large-font);
+  font-size: var(--md-sys-typescale-headline-large-size);
+  line-height: var(--md-sys-typescale-headline-large-line-height);
+  font-weight: var(--md-sys-typescale-headline-large-weight);
+  letter-spacing: var(--md-sys-typescale-headline-large-tracking);
+}
+
+.m3-headline-medium {
+  font-family: var(--md-sys-typescale-headline-medium-font);
+  font-size: var(--md-sys-typescale-headline-medium-size);
+  line-height: var(--md-sys-typescale-headline-medium-line-height);
+  font-weight: var(--md-sys-typescale-headline-medium-weight);
+  letter-spacing: var(--md-sys-typescale-headline-medium-tracking);
+}
+
+.m3-headline-small {
+  font-family: var(--md-sys-typescale-headline-small-font);
+  font-size: var(--md-sys-typescale-headline-small-size);
+  line-height: var(--md-sys-typescale-headline-small-line-height);
+  font-weight: var(--md-sys-typescale-headline-small-weight);
+  letter-spacing: var(--md-sys-typescale-headline-small-tracking);
+}
+
+.m3-title-large {
+  font-family: var(--md-sys-typescale-title-large-font);
+  font-size: var(--md-sys-typescale-title-large-size);
+  line-height: var(--md-sys-typescale-title-large-line-height);
+  font-weight: var(--md-sys-typescale-title-large-weight);
+  letter-spacing: var(--md-sys-typescale-title-large-tracking);
+}
+
+.m3-title-medium {
+  font-family: var(--md-sys-typescale-title-medium-font);
+  font-size: var(--md-sys-typescale-title-medium-size);
+  line-height: var(--md-sys-typescale-title-medium-line-height);
+  font-weight: var(--md-sys-typescale-title-medium-weight);
+  letter-spacing: var(--md-sys-typescale-title-medium-tracking);
+}
+
+.m3-title-small {
+  font-family: var(--md-sys-typescale-title-small-font);
+  font-size: var(--md-sys-typescale-title-small-size);
+  line-height: var(--md-sys-typescale-title-small-line-height);
+  font-weight: var(--md-sys-typescale-title-small-weight);
+  letter-spacing: var(--md-sys-typescale-title-small-tracking);
+}
+
+.m3-body-large {
+  font-family: var(--md-sys-typescale-body-large-font);
+  font-size: var(--md-sys-typescale-body-large-size);
+  line-height: var(--md-sys-typescale-body-large-line-height);
+  font-weight: var(--md-sys-typescale-body-large-weight);
+  letter-spacing: var(--md-sys-typescale-body-large-tracking);
+}
+
+.m3-body-medium {
+  font-family: var(--md-sys-typescale-body-medium-font);
+  font-size: var(--md-sys-typescale-body-medium-size);
+  line-height: var(--md-sys-typescale-body-medium-line-height);
+  font-weight: var(--md-sys-typescale-body-medium-weight);
+  letter-spacing: var(--md-sys-typescale-body-medium-tracking);
+}
+
+.m3-body-small {
+  font-family: var(--md-sys-typescale-body-small-font);
+  font-size: var(--md-sys-typescale-body-small-size);
+  line-height: var(--md-sys-typescale-body-small-line-height);
+  font-weight: var(--md-sys-typescale-body-small-weight);
+  letter-spacing: var(--md-sys-typescale-body-small-tracking);
+}
+
+.m3-label-large {
+  font-family: var(--md-sys-typescale-label-large-font);
+  font-size: var(--md-sys-typescale-label-large-size);
+  line-height: var(--md-sys-typescale-label-large-line-height);
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  letter-spacing: var(--md-sys-typescale-label-large-tracking);
+}
+
+.m3-label-medium {
+  font-family: var(--md-sys-typescale-label-medium-font);
+  font-size: var(--md-sys-typescale-label-medium-size);
+  line-height: var(--md-sys-typescale-label-medium-line-height);
+  font-weight: var(--md-sys-typescale-label-medium-weight);
+  letter-spacing: var(--md-sys-typescale-label-medium-tracking);
+}
+
+.m3-label-small {
+  font-family: var(--md-sys-typescale-label-small-font);
+  font-size: var(--md-sys-typescale-label-small-size);
+  line-height: var(--md-sys-typescale-label-small-line-height);
+  font-weight: var(--md-sys-typescale-label-small-weight);
+  letter-spacing: var(--md-sys-typescale-label-small-tracking);
+}
+
+/* Material Symbols Rounded Standard Styling */
+.material-symbols-rounded {
+  font-family: 'Material Symbols Rounded', sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  display: inline-block;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-rounded.fill {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}

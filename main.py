@@ -115,6 +115,10 @@ class HoldButton(QPushButton):
     def __init__(self, icon, tooltip, parent=None):
         super().__init__(icon, parent)
         self.setToolTip(tooltip)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setMouseTracking(True)
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips, True)
         self.hold_timer = QTimer(self)
         self.hold_timer.setSingleShot(True)
         self.hold_timer.timeout.connect(self._on_hold)
@@ -170,32 +174,114 @@ def create_shape_icon(shape_type, size=32):
     return QIcon(pixmap)
 
 
-class CustomHoverMenu(QWidget):
-    def __init__(self, parent=None):
-        # Must pass no parent (or a dummy) so it can be a top-level tool window
-        super().__init__(None)
+class FloatingPanel(QWidget):
+    """Reusable base for floating toolboxes with smooth windowOpacity fade and drag support."""
+    def __init__(self, signals=None, parent=None):
+        super().__init__(parent)
+        self.signals = signals
+        self._drag_pos = None
+        self.has_been_dragged = False
+        self._fade_state = 0  # 0=hidden, 1=fading_in, 2=visible, 3=fading_out
+
         self.setWindowFlags(Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setStyleSheet(TOOLBAR_STYLESHEET)
+        self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+        self.setMouseTracking(True)
+        self.setCursor(Qt.CursorShape.ArrowCursor)
+
+        self._opacity_anim = QPropertyAnimation(self, b"windowOpacity")
+        self._opacity_anim.setEasingCurve(QEasingCurve.Type.InOutSine)
+        self._opacity_anim.finished.connect(self._on_fade_finished)
+
+    def fade_in(self, duration=180):
+        if self._fade_state in (1, 2):
+            return
         
-        # Setup Fade Animation (Using windowOpacity to prevent Top-Level crashes)
+        start_opacity = 0.0 if self._fade_state == 0 else self.windowOpacity()
+        
+        self._fade_state = 1
+        self._opacity_anim.stop()
+        self.setWindowOpacity(start_opacity)
+        super().show()
+        self.raise_()
+        self._opacity_anim.setDuration(duration)
+        self._opacity_anim.setStartValue(start_opacity)
+        self._opacity_anim.setEndValue(1.0)
+        self._opacity_anim.start()
+
+    def fade_out(self, duration=120):
+        if self._fade_state in (0, 3):
+            return
+        self._fade_state = 3
+        self._opacity_anim.stop()
+        self._opacity_anim.setDuration(duration)
+        self._opacity_anim.setStartValue(self.windowOpacity())
+        self._opacity_anim.setEndValue(0.0)
+        self._opacity_anim.start()
+
+    def instant_hide(self):
+        self._opacity_anim.stop()
+        self._fade_state = 0
         self.setWindowOpacity(1.0)
-        self.fade_anim = QPropertyAnimation(self, b"windowOpacity", self)
-        self.fade_anim.setDuration(150)
-        self.fade_anim.setEasingCurve(QEasingCurve.Type.InOutQuad)
-        self.fade_anim.finished.connect(self._on_fade_finished)
-        
+        super().hide()
+
+    def _on_fade_finished(self):
+        if self._fade_state == 1:
+            self._fade_state = 2
+        elif self._fade_state == 3:
+            self._fade_state = 0
+            self.setWindowOpacity(1.0)
+            super().hide()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._drag_pos = event.globalPosition().toPoint()
+            event.accept()
+        else:
+            super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self._drag_pos is not None:
+            delta = event.globalPosition().toPoint() - self._drag_pos
+            self.move(self.pos() + delta)
+            self._drag_pos = event.globalPosition().toPoint()
+            self.has_been_dragged = True
+            event.accept()
+        else:
+            super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        self._drag_pos = None
+        super().mouseReleaseEvent(event)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        path = QPainterPath()
+        path.addRoundedRect(QRectF(self.rect()), 20, 20)
+        painter.fillPath(path, QColor('#F5E8D5'))
+        painter.setPen(QPen(QColor('#D6C3A1'), 1))
+        painter.drawPath(path)
+
+
+class CustomHoverMenu(FloatingPanel):
+    def __init__(self, parent=None):
+        super().__init__(None, parent)
+        self.setStyleSheet(TOOLBAR_STYLESHEET)
+        self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+        self.setMouseTracking(True)
+        self.setCursor(Qt.CursorShape.ArrowCursor)
         self.layout = QGridLayout(self)
         self.layout.setContentsMargins(15, 15, 15, 15)
-        self.layout.setSpacing(8)
         self.layout.setSpacing(8)
 
     def clear_actions(self):
         while self.layout.count():
             item = self.layout.takeAt(0)
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
+            if item and item.widget():
+                item.widget().deleteLater()
 
     def add_action(self, icon_or_text, tooltip, callback):
         btn = QPushButton()
@@ -207,81 +293,36 @@ class CustomHoverMenu(QWidget):
             
         btn.setFixedSize(36, 36)
         btn.setToolTip(tooltip)
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn.setMouseTracking(True)
+        btn.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+        btn.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips, True)
         btn.clicked.connect(callback)
-        btn.clicked.connect(self.hide_menu)
         
         idx = self.layout.count()
         self.layout.addWidget(btn, idx // 2, idx % 2)
         return btn
 
-    # Removed enterEvent and leaveEvent to prevent accidental closing with pen tablets.
-
     def show_menu(self, anchor_widget):
         self.adjustSize()
-        # Position menu to the left of the anchor button with minimal gap
-        global_pos = anchor_widget.mapToGlobal(QPoint(-self.width() - 5, 0))
-        self.move(global_pos)
-        
-        self.fade_anim.stop()
-        self.setWindowOpacity(0.0)
-        self.show()
-        
-        self.fade_anim.setStartValue(0.0)
-        self.fade_anim.setEndValue(1.0)
-        self.fade_anim.start()
+        if not self.has_been_dragged:
+            global_pos = anchor_widget.mapToGlobal(QPoint(-self.width() - 5, 0))
+            self.move(global_pos)
+        self.raise_()
+        self.fade_in(150)
 
     def hide_menu(self):
-        """Smoothly fade out the menu before hiding it."""
-        self.fade_anim.stop()
-        self.fade_anim.setStartValue(self.windowOpacity())
-        self.fade_anim.setEndValue(0.0)
-        self.fade_anim.start()
+        self.fade_out(120)
 
-    def instant_hide(self):
-        """Immediately hide without animation (used during canvas hide)."""
-        self.fade_anim.stop()
-        self.setWindowOpacity(1.0)
-        self.hide()
 
-    def _on_fade_finished(self):
-        """Called when any fade animation completes. Only hide if we faded OUT."""
-        if self.fade_anim.endValue() == 0.0:
-            self.hide()
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        path = QPainterPath()
-        path.addRoundedRect(QRectF(self.rect()), 20, 20)
-        painter.fillPath(path, QColor('#F5E8D5'))
-        painter.setPen(QPen(QColor('#D6C3A1'), 1))
-        painter.drawPath(path)
-
-class FloatingShapeToolbox(QWidget):
+class FloatingShapeToolbox(FloatingPanel):
     def __init__(self, signals, overlay_window, parent=None):
-        super().__init__(parent)
-        self.signals = signals
+        super().__init__(signals, parent)
         self.overlay_window = overlay_window
-        self._drag_pos = None
-        self.has_been_dragged = False
-        self._fade_state = 0  # 0=hidden, 1=fading_in, 2=visible, 3=fading_out
-
-        self.setWindowFlags(
-            Qt.WindowType.Tool |
-            Qt.WindowType.FramelessWindowHint |
-            Qt.WindowType.WindowStaysOnTopHint
-        )
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
-        # Fade animation — safe on Qt.WindowType.Tool windows
-        self._opacity_anim = QPropertyAnimation(self, b"windowOpacity")
-        self._opacity_anim.setEasingCurve(QEasingCurve.Type.InOutSine)
-        self._opacity_anim.finished.connect(self._on_fade_finished)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(15, 8, 15, 15)
 
-        # Handle
         self.btn_handle = DragHandle(self)
         layout.addWidget(self.btn_handle, alignment=Qt.AlignmentFlag.AlignHCenter)
         layout.addSpacing(5)
@@ -290,12 +331,10 @@ class FloatingShapeToolbox(QWidget):
         title.setStyleSheet("color: #333333; font-weight: bold; border: none; font-size: 14px;")
         layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        # Grid for tools
         self.grid = QGridLayout()
         self.grid.setSpacing(8)
         self.buttons = []
         
-        # Add Select Tool
         self.add_action("↖️", "Select & Transform", lambda: self.signals.switch_select.emit())
         
         shapes = [
@@ -312,49 +351,14 @@ class FloatingShapeToolbox(QWidget):
         layout.addLayout(self.grid)
         self.setLayout(layout)
 
-    def fade_in(self):
-        """Fade the panel in smoothly."""
-        if self._fade_state in (1, 2):  # Already visible or fading in
-            return
-        self._fade_state = 1
-        self._opacity_anim.stop()
-        self.setWindowOpacity(0.0)
-        super().show()
-        self._opacity_anim.setDuration(180)
-        self._opacity_anim.setStartValue(0.0)
-        self._opacity_anim.setEndValue(1.0)
-        self._opacity_anim.start()
-
-    def fade_out(self):
-        """Fade the panel out smoothly, then hide."""
-        if self._fade_state in (0, 3):  # Already hidden or fading out
-            return
-        self._fade_state = 3
-        self._opacity_anim.stop()
-        self._opacity_anim.setDuration(120)
-        self._opacity_anim.setStartValue(self.windowOpacity())
-        self._opacity_anim.setEndValue(0.0)
-        self._opacity_anim.start()
-
-    def instant_hide(self):
-        """Immediately hide without animation (used during canvas hide)."""
-        self._opacity_anim.stop()
-        self._fade_state = 0
-        self.setWindowOpacity(1.0)
-        super().hide()
-
-    def _on_fade_finished(self):
-        if self._fade_state == 1:   # Finished fading in
-            self._fade_state = 2
-        elif self._fade_state == 3: # Finished fading out
-            self._fade_state = 0
-            self.setWindowOpacity(1.0)
-            super().hide()
-
     def add_action(self, icon, tooltip, callback):
         btn = QPushButton(icon)
         btn.setFixedSize(36, 36)
         btn.setToolTip(tooltip)
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn.setMouseTracking(True)
+        btn.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+        btn.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips, True)
         btn.clicked.connect(callback)
         btn.setStyleSheet(TOOLBAR_STYLESHEET)
         
@@ -363,20 +367,15 @@ class FloatingShapeToolbox(QWidget):
         self.buttons.append(btn)
         return btn
 
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        path = QPainterPath()
-        path.addRoundedRect(QRectF(self.rect()), 20, 20)
-        painter.fillPath(path, QColor('#F5E8D5'))
-        painter.setPen(QPen(QColor('#D6C3A1'), 1))
-        painter.drawPath(path)
-
 
 class ClickMenuButton(QPushButton):
     def __init__(self, icon, tooltip, parent=None):
         super().__init__(icon, parent)
         self.setToolTip(tooltip)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setMouseTracking(True)
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips, True)
         self.menu_widget = None
         self.clicked.connect(self._toggle_menu)
 
@@ -390,10 +389,15 @@ class ClickMenuButton(QPushButton):
             return
             
         if self.menu_widget:
-            if self.menu_widget.isVisible():
+            if self.menu_widget.isVisible() and self.menu_widget._fade_state in (1, 2):
                 self.menu_widget.hide_menu()
             else:
+                if hasattr(self.window(), 'shape_menu') and self.window().shape_menu != self.menu_widget and self.window().shape_menu.isVisible():
+                    self.window().shape_menu.hide_menu()
+                if hasattr(self.window(), 'cursor_menu') and self.window().cursor_menu != self.menu_widget and self.window().cursor_menu.isVisible():
+                    self.window().cursor_menu.hide_menu()
                 self.menu_widget.show_menu(self)
+                self.menu_widget.raise_()
 
 
 class DragHandle(QWidget):
@@ -417,8 +421,10 @@ class DragHandle(QWidget):
             self._drag_pos = event.globalPosition().toPoint()
             self.parent().has_been_dragged = True
             
-            if hasattr(self.parent(), 'signals') and hasattr(self.parent().signals, 'toolbar_moved'):
-                self.parent().signals.toolbar_moved.emit(delta)
+            # ONLY the main toolbar emits toolbar_moved to move attached sub-panels
+            if self.parent().__class__.__name__ == 'ToolbarWindow':
+                if hasattr(self.parent(), 'signals') and hasattr(self.parent().signals, 'toolbar_moved'):
+                    self.parent().signals.toolbar_moved.emit(delta)
             event.accept()
 
     def mouseReleaseEvent(self, event):
@@ -450,12 +456,6 @@ class OverlayWindow(QMainWindow):
             Qt.WindowType.Tool
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
-        # Span all monitors
-        virtual_rect = QRect()
-        for screen in QApplication.screens():
-            virtual_rect = virtual_rect.united(screen.geometry())
-        self.setGeometry(virtual_rect)
 
         # Span all monitors
         virtual_rect = QRect()
@@ -518,29 +518,23 @@ class OverlayWindow(QMainWindow):
         self.signals.change_pen_size.connect(self.set_pen_size)
         self.signals.change_highlighter_size.connect(self.set_highlighter_size)
         self.signals.change_eraser_size.connect(self.set_eraser_size)
-        self.signals.increment_size.connect(self._increment_active_tool_size)
-        self.signals.decrement_size.connect(self._decrement_active_tool_size)
+        self.signals.increment_size.connect(lambda: self._step_size(1))
+        self.signals.decrement_size.connect(lambda: self._step_size(-1))
         # Exit app signal is now handled by MainAppCoordinator for clean shutdown
 
         self.set_mode(ToolMode.PEN)
 
     # ── Size adjustments ──
 
-    def _increment_active_tool_size(self):
-        if self.mode == ToolMode.PEN:
-            self.set_pen_size(min(50, self.pen_size + 2))
-        elif self.mode == ToolMode.HIGHLIGHTER:
-            self.set_highlighter_size(min(100, self.highlighter_size + 5))
-        elif self.mode == ToolMode.ERASER:
-            self.set_eraser_size(min(200, self.eraser_size + 10))
-
-    def _decrement_active_tool_size(self):
-        if self.mode == ToolMode.PEN:
-            self.set_pen_size(max(2, self.pen_size - 2))
-        elif self.mode == ToolMode.HIGHLIGHTER:
-            self.set_highlighter_size(max(5, self.highlighter_size - 5))
-        elif self.mode == ToolMode.ERASER:
-            self.set_eraser_size(max(10, self.eraser_size - 10))
+    def _step_size(self, delta):
+        limits = {
+            ToolMode.PEN: (self.pen_size, self.set_pen_size, 2, 2, 50),
+            ToolMode.HIGHLIGHTER: (self.highlighter_size, self.set_highlighter_size, 5, 5, 100),
+            ToolMode.ERASER: (self.eraser_size, self.set_eraser_size, 10, 10, 200),
+        }
+        if self.mode in limits:
+            curr, setter, step, min_v, max_v = limits[self.mode]
+            setter(max(min_v, min(max_v, curr + delta * step)))
 
     def set_pen_size(self, size):
         self.pen_size = size
@@ -1282,30 +1276,13 @@ class OverlayWindow(QMainWindow):
 
 # ── Floating Color Palette ──
 
-class FloatingColorPalette(QWidget):
+class FloatingColorPalette(FloatingPanel):
     def __init__(self, signals, parent=None):
-        super().__init__(parent)
-        self.signals = signals
-        self._drag_pos = None
-        self.has_been_dragged = False
-        self._fade_state = 0  # 0=hidden, 1=fading_in, 2=visible, 3=fading_out
-
-        self.setWindowFlags(
-            Qt.WindowType.Tool |
-            Qt.WindowType.FramelessWindowHint |
-            Qt.WindowType.WindowStaysOnTopHint
-        )
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
-        # Fade animation — safe on Qt.WindowType.Tool windows
-        self._opacity_anim = QPropertyAnimation(self, b"windowOpacity")
-        self._opacity_anim.setEasingCurve(QEasingCurve.Type.InOutSine)
-        self._opacity_anim.finished.connect(self._on_fade_finished)
+        super().__init__(signals, parent)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(15, 8, 15, 15)
 
-        # Handle
         self.btn_handle = DragHandle(self)
         layout.addWidget(self.btn_handle, alignment=Qt.AlignmentFlag.AlignHCenter)
         layout.addSpacing(5)
@@ -1314,7 +1291,6 @@ class FloatingColorPalette(QWidget):
         title.setStyleSheet("color: #333333; font-weight: bold; border: none; font-size: 14px;")
         layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        # Color grid
         self.color_buttons = {}
         palette_grid = QGridLayout()
         palette_grid.setSpacing(8)
@@ -1323,6 +1299,10 @@ class FloatingColorPalette(QWidget):
             btn.setFixedSize(28, 28)
             color_name = COLOR_NAMES.get(color_hex, "Color")
             btn.setToolTip(color_name)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.setMouseTracking(True)
+            btn.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+            btn.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips, True)
             btn.clicked.connect(lambda checked, c=color_hex: self._select_color(c))
             palette_grid.addWidget(btn, i // 4, i % 4)
             self.color_buttons[color_hex] = btn
@@ -1343,77 +1323,15 @@ class FloatingColorPalette(QWidget):
         for c, btn in self.color_buttons.items():
             tooltip_color = "#333333" if c.upper() == "#FFFFFF" else c
             if c.upper() == active_color:
-                btn.setStyleSheet(f"""
-                    QPushButton {{
-                        background-color: {c};
-                        border-radius: 14px;
-                        border: 2px solid {c};
-                    }}
-                    QToolTip {{ background-color: white; color: {tooltip_color}; border: 1px solid {tooltip_color}; }}
-                """)
+                btn.setStyleSheet(f"QPushButton {{ background-color: {c}; border-radius: 14px; border: 2px solid {c}; }} QToolTip {{ background-color: white; color: {tooltip_color}; border: 1px solid {tooltip_color}; }}")
                 shadow = QGraphicsDropShadowEffect(self)
                 shadow.setBlurRadius(15)
                 shadow.setColor(QColor(c))
                 shadow.setOffset(0, 0)
                 btn.setGraphicsEffect(shadow)
             else:
-                btn.setStyleSheet(f"""
-                    QPushButton {{
-                        background-color: {c}; 
-                        border-radius: 14px; 
-                        border: 1px solid #D6C3A1;
-                    }}
-                    QToolTip {{ background-color: white; color: {tooltip_color}; border: 1px solid {tooltip_color}; }}
-                """)
+                btn.setStyleSheet(f"QPushButton {{ background-color: {c}; border-radius: 14px; border: 1px solid #D6C3A1; }} QToolTip {{ background-color: white; color: {tooltip_color}; border: 1px solid {tooltip_color}; }}")
                 btn.setGraphicsEffect(None)
-
-    def fade_in(self):
-        """Fade the panel in smoothly."""
-        if self._fade_state in (1, 2):
-            return
-        self._fade_state = 1
-        self._opacity_anim.stop()
-        self.setWindowOpacity(0.0)
-        super().show()
-        self._opacity_anim.setDuration(180)
-        self._opacity_anim.setStartValue(0.0)
-        self._opacity_anim.setEndValue(1.0)
-        self._opacity_anim.start()
-
-    def fade_out(self):
-        """Fade the panel out smoothly, then hide."""
-        if self._fade_state in (0, 3):
-            return
-        self._fade_state = 3
-        self._opacity_anim.stop()
-        self._opacity_anim.setDuration(120)
-        self._opacity_anim.setStartValue(self.windowOpacity())
-        self._opacity_anim.setEndValue(0.0)
-        self._opacity_anim.start()
-
-    def instant_hide(self):
-        """Immediately hide without animation (used during canvas hide)."""
-        self._opacity_anim.stop()
-        self._fade_state = 0
-        self.setWindowOpacity(1.0)
-        super().hide()
-
-    def _on_fade_finished(self):
-        if self._fade_state == 1:
-            self._fade_state = 2
-        elif self._fade_state == 3:
-            self._fade_state = 0
-            self.setWindowOpacity(1.0)
-            super().hide()
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        path = QPainterPath()
-        path.addRoundedRect(QRectF(self.rect()), 20, 20)
-        painter.fillPath(path, QColor('#F5E8D5'))
-        painter.setPen(QPen(QColor('#D6C3A1'), 1))
-        painter.drawPath(path)
 
 
 # ── Main Toolbar ──
@@ -1452,6 +1370,10 @@ class ToolbarWindow(QWidget):
             Qt.WindowType.WindowStaysOnTopHint
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+        self.setMouseTracking(True)
+        self.setCursor(Qt.CursorShape.ArrowCursor)
         self.setStyleSheet(TOOLBAR_STYLESHEET)
 
         # Collapse/Expand Animation State
@@ -1460,18 +1382,9 @@ class ToolbarWindow(QWidget):
         self._collapsible_widgets = []
         self._collapsible_separators = []
 
-        # Phase 1: Height shrink/expand animation
+        # Height shrink/expand animation
         self._height_anim = QPropertyAnimation(self, b"maximumHeight")
-        self._height_anim.setDuration(300)
-        self._height_anim.setEasingCurve(QEasingCurve.Type.InOutCubic)
         self._height_anim.finished.connect(self._on_height_anim_finished)
-
-        # Phase 2: Opacity fade-in for button reveal (expand only)
-        # Safe: windowOpacity on top-level QWidget — no QGraphicsOpacityEffect
-        self._toolbar_opacity_anim = QPropertyAnimation(self, b"windowOpacity")
-        self._toolbar_opacity_anim.setDuration(200)
-        self._toolbar_opacity_anim.setEasingCurve(QEasingCurve.Type.InOutSine)
-        self._toolbar_opacity_anim.finished.connect(self._on_opacity_anim_finished)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(10, 8, 10, 15)
@@ -1485,7 +1398,7 @@ class ToolbarWindow(QWidget):
         
         layout.addSpacing(2)
 
-        self.btn_cursor = self._create_click_button("🖱️", "Cursor Options (Ctrl+4)")
+        self.btn_cursor = self._create_click_button("🐒", "")
         self.cursor_menu = CustomHoverMenu(self)
         self.btn_cursor.set_menu(self.cursor_menu)
         layout.addWidget(self.btn_cursor, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -1507,7 +1420,7 @@ class ToolbarWindow(QWidget):
         self._setup_size_menu(self.btn_hl, [10, 15, 25, 35, 45], self.signals.change_highlighter_size.emit)
         layout.addWidget(self.btn_hl, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self.btn_shape = self._create_click_button("📐", "Shapes")
+        self.btn_shape = self._create_click_button("📐", "")
         self.shape_menu = CustomHoverMenu(self)
         
         # Use crisp programmatically generated icons for shapes
@@ -1516,7 +1429,7 @@ class ToolbarWindow(QWidget):
         self.shape_menu.add_action(create_shape_icon(ShapeType.RECTANGLE), "Rectangle", lambda: self._select_shape(ShapeType.RECTANGLE))
         self.shape_menu.add_action(create_shape_icon(ShapeType.ROUNDED_RECTANGLE), "Rounded Rectangle", lambda: self._select_shape(ShapeType.ROUNDED_RECTANGLE))
         self.shape_menu.add_action(create_shape_icon(ShapeType.CIRCLE), "Circle", lambda: self._select_shape(ShapeType.CIRCLE))
-        self.shape_menu.add_action(create_shape_icon(ShapeType.TRIANGLE), "Triangle (Shift for Right Angle)", lambda: self._select_shape(ShapeType.TRIANGLE))
+        self.shape_menu.add_action(create_shape_icon(ShapeType.TRIANGLE), "Triangle", lambda: self._select_shape(ShapeType.TRIANGLE))
         
         self.btn_shape.set_menu(self.shape_menu)
         
@@ -1533,7 +1446,7 @@ class ToolbarWindow(QWidget):
         self._add_separator(layout)
 
         # ── Group 3: Colors ──
-        self.btn_palette = self._create_tool_button("🎨", "Toggle Colors (Ctrl+P)", self.signals.toggle_color_palette.emit)
+        self.btn_palette = self._create_tool_button("🎨", "", self.signals.toggle_color_palette.emit)
         layout.addWidget(self.btn_palette, alignment=Qt.AlignmentFlag.AlignCenter)
         self._add_separator(layout)
 
@@ -1575,11 +1488,11 @@ class ToolbarWindow(QWidget):
     def _on_visibility_changed(self, visible):
         self.ink_visible = visible
         
-        # Bug 1: Sync active tool visually if backend reverted cursor to pen on unhide
+        # Sync active tool visually if backend reverted cursor to pen on unhide
         if visible and getattr(self, 'active_tool_btn', None) == self.btn_cursor:
             self._set_active_tool(self.btn_pen, None)
             
-        # Bug 2: Disable irrelevant buttons when hidden
+        # Disable/enable buttons based on visibility
         disable_when_hidden = [
             self.btn_select, self.btn_eraser, self.btn_shape, 
             self.btn_palette, getattr(self, 'btn_undo', None), 
@@ -1589,10 +1502,8 @@ class ToolbarWindow(QWidget):
             if btn:
                 btn.setEnabled(visible)
                 
-        self._update_cursor_button_icon()
-
-        # Trigger collapse/expand animation
         if not visible:
+            self._update_cursor_button_icon()
             self.start_collapse()
         else:
             self.start_expand()
@@ -1604,25 +1515,39 @@ class ToolbarWindow(QWidget):
         from PyQt6.QtCore import QSize
         self.btn_shape.setIconSize(QSize(24, 24))
         self._set_active_tool(self.btn_shape, lambda: self.signals.switch_shape.emit(shape_type))
+        self.shape_menu.hide_menu()
 
     # ── Button factory helpers ──
 
     def _create_tool_button(self, icon, tooltip, callback):
-        btn = QPushButton(icon)
-        btn.setFixedSize(36, 36)
+        btn = QPushButton()
+        btn.setText(icon)
         btn.setToolTip(tooltip)
+        btn.setFixedSize(36, 36)
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn.setMouseTracking(True)
+        btn.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+        btn.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips, True)
         btn.clicked.connect(callback)
         return btn
 
     def _create_hold_button(self, icon, tooltip, callback):
         btn = HoldButton(icon, tooltip)
         btn.setFixedSize(36, 36)
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn.setMouseTracking(True)
+        btn.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+        btn.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips, True)
         btn.clicked.connect(callback)
         return btn
 
     def _create_click_button(self, icon, tooltip):
         btn = ClickMenuButton(icon, tooltip)
         btn.setFixedSize(36, 36)
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn.setMouseTracking(True)
+        btn.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+        btn.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips, True)
         return btn
 
     def _setup_size_menu(self, btn, sizes, signal_emitter):
@@ -1632,11 +1557,6 @@ class ToolbarWindow(QWidget):
         btn.hold_triggered.connect(lambda: menu.exec(btn.mapToGlobal(QPoint(btn.width() + 5, 0))))
 
     def _set_active_tool(self, btn, callback):
-        if hasattr(self, 'shape_menu') and self.shape_menu.isVisible() and btn != self.btn_shape:
-            self.shape_menu.hide_menu()
-        if hasattr(self, 'cursor_menu') and self.cursor_menu.isVisible() and btn != self.btn_cursor:
-            self.cursor_menu.hide_menu()
-            
         if hasattr(self, 'active_tool_btn') and self.active_tool_btn:
             self.active_tool_btn.setObjectName("")
             self.active_tool_btn.style().unpolish(self.active_tool_btn)
@@ -1649,6 +1569,18 @@ class ToolbarWindow(QWidget):
         if callback:
             callback()
 
+    def _on_cursor_action_pen(self):
+        self._set_active_tool(self.btn_pen, self.signals.switch_pen.emit)
+        self.cursor_menu.hide_menu()
+
+    def _on_cursor_action_cursor(self):
+        self._set_active_tool(self.btn_cursor, self.signals.switch_cursor.emit)
+        self.cursor_menu.hide_menu()
+
+    def _on_cursor_action_visibility(self):
+        self.signals.toggle_visibility.emit()
+        self.cursor_menu.hide_menu()
+
     def _update_cursor_button_icon(self):
         ink_vis = getattr(self, 'ink_visible', True)
         is_cursor_active = getattr(self, 'active_tool_btn', None) == self.btn_cursor
@@ -1660,26 +1592,27 @@ class ToolbarWindow(QWidget):
             self.btn_cursor.setToolTip("Click to Unhide")
             self.btn_cursor.setStyleSheet("")
         elif is_cursor_active:
-            self.btn_cursor.setText("🖱️")
-            self.btn_cursor.setToolTip("Drawing Options")
+            self.btn_cursor.setText("🐒")
+            self.btn_cursor.setToolTip("")
             self.btn_cursor.setStyleSheet("")
-            self.cursor_menu.add_action("🐵", "Drawing Mode", 
-                                        lambda: self._set_active_tool(self.btn_pen, self.signals.switch_pen.emit))
-            self.cursor_menu.add_action("🙈", "Hide Canvas (Ctrl+5)", 
-                                        self.signals.toggle_visibility.emit)
+            self.cursor_menu.add_action("🐵", "active(canvas)", self._on_cursor_action_pen)
+            self.cursor_menu.add_action("🙈", "disable(canvas)", self._on_cursor_action_visibility)
         else:
             self.btn_cursor.setText("🐵")
-            self.btn_cursor.setToolTip("Cursor Options")
+            self.btn_cursor.setToolTip("")
             self.btn_cursor.setStyleSheet("")
-            self.cursor_menu.add_action("🖱️", "Cursor Mode (Keep Ink) (Ctrl+4)", 
-                                        lambda: self._set_active_tool(self.btn_cursor, self.signals.switch_cursor.emit))
-            self.cursor_menu.add_action("🙈", "Hide Canvas (Ctrl+5)", 
-                                        self.signals.toggle_visibility.emit)
+            self.cursor_menu.add_action("🐒", "cursor", self._on_cursor_action_cursor)
+            self.cursor_menu.add_action("🙈", "disable(canvas)", self._on_cursor_action_visibility)
 
     def _add_button(self, layout, icon, tooltip, callback):
-        btn = QPushButton(icon)
-        btn.setFixedSize(36, 36)
+        btn = QPushButton()
+        btn.setText(icon)
         btn.setToolTip(tooltip)
+        btn.setFixedSize(36, 36)
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn.setMouseTracking(True)
+        btn.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+        btn.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips, True)
         btn.clicked.connect(callback)
         layout.addWidget(btn, alignment=Qt.AlignmentFlag.AlignCenter)
         return btn
@@ -1693,60 +1626,59 @@ class ToolbarWindow(QWidget):
     # ── Collapse / Expand Animation ──
 
     def start_collapse(self):
-        """Smoothly shrink toolbar to pill (handle + cursor button only)."""
+        """Smoothly shrink toolbar to clean pill (handle + unhide button only)."""
         if self._collapse_state == 2:  # Already collapsed
             return
         if self._collapse_state == 3:  # Currently expanding — reverse it
             self._height_anim.stop()
 
-        # Stop any ongoing opacity animation and reset opacity
-        self._toolbar_opacity_anim.stop()
-        self.setWindowOpacity(1.0)
-
         self._collapse_state = 1  # COLLAPSING
-        self._full_height = self.height()
+        self._full_height = self.height() if self.height() > 100 else (self._full_height or 557)
 
         # Lock current height so hiding buttons doesn't cause visual jump
         self.setFixedHeight(self._full_height)
 
-        # Hide all collapsible buttons and separators
+        # Hide all collapsible buttons and separators so layout does not squeeze
         for w in self._collapsible_widgets:
             w.hide()
         for s in self._collapsible_separators:
             s.hide()
 
-        # Release the fixed height lock and set up animation constraints
+        # Release fixed height lock and set up animation constraints
         self.setMinimumHeight(0)
         self.setMaximumHeight(self._full_height)
 
-        # Target: pill handle (12) + spacing (2) + cursor btn (36) + margins (8+15) = ~73
+        # Target: pill handle (12) + spacing (2) + cursor btn (36) + margins (8+15) = ~73 -> 80
         target_height = 80
 
+        self._height_anim.setDuration(240)
         self._height_anim.setStartValue(self._full_height)
         self._height_anim.setEndValue(target_height)
         self._height_anim.setEasingCurve(QEasingCurve.Type.InOutCubic)
         self._height_anim.start()
 
     def start_expand(self):
-        """Reverse of collapse: expand toolbar back to full size."""
+        """Smoothly expand toolbar from pill back to full size."""
         if self._collapse_state == 0:  # Already expanded
             return
         if self._collapse_state == 1:  # Currently collapsing — reverse it
             self._height_anim.stop()
 
-        # Stop any ongoing opacity animation, keep toolbar visible during height animation
-        self._toolbar_opacity_anim.stop()
-        self.setWindowOpacity(1.0)
-
         self._collapse_state = 3  # EXPANDING
 
         current_h = self.height()
-        target_h = self._full_height or 400
+        target_h = self._full_height or 557
 
-        # Buttons stay HIDDEN during height animation (avoids layout fight + circles bug)
+        # Ensure collapsible widgets remain hidden during the height transition
+        for w in self._collapsible_widgets:
+            w.hide()
+        for s in self._collapsible_separators:
+            s.hide()
+
         self.setMinimumHeight(0)
         self.setMaximumHeight(current_h)
 
+        self._height_anim.setDuration(240)
         self._height_anim.setStartValue(current_h)
         self._height_anim.setEndValue(target_h)
         self._height_anim.setEasingCurve(QEasingCurve.Type.InOutCubic)
@@ -1756,34 +1688,49 @@ class ToolbarWindow(QWidget):
         """Handle animation completion for both collapse and expand."""
         if self._collapse_state == 1:  # Was collapsing → now collapsed
             self._collapse_state = 2
-            self.setFixedHeight(self.height())
+            self.setFixedHeight(80)
 
-        elif self._collapse_state == 3:  # Height done → now start button fade-in
-            # Reset height constraints
+        elif self._collapse_state == 3:  # Was expanding → now expanded
             self.setMinimumHeight(0)
             self.setMaximumHeight(16777215)  # QWIDGETSIZE_MAX
             if self._full_height:
                 self.setFixedHeight(self._full_height)
 
-            # Show buttons while toolbar is invisible, then fade in
-            self.setWindowOpacity(0.0)
+            # Show all buttons and separators now that toolbar is full size
             for w in self._collapsible_widgets:
                 w.show()
             for s in self._collapsible_separators:
                 s.show()
 
-            # Phase 2: Fade toolbar from 0 → 1 so buttons appear to fade in
-            self._toolbar_opacity_anim.setStartValue(0.0)
-            self._toolbar_opacity_anim.setEndValue(1.0)
-            self._toolbar_opacity_anim.start()
-            # NOTE: _collapse_state stays at 3 until opacity finishes
+            # Switch icon to drawing mode / cursor mode at the moment of completion
+            self._update_cursor_button_icon()
 
-    def _on_opacity_anim_finished(self):
-        """Called after the button fade-in completes. Toolbar is now fully expanded."""
-        if self._collapse_state == 3:
             self._collapse_state = 0
-            # Signal coordinators: toolbar is fully expanded AND visible
+            # Signal coordinators: toolbar is fully expanded and visible
             self.signals.toolbar_expanded.emit()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._drag_pos = event.globalPosition().toPoint()
+            event.accept()
+        else:
+            super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if getattr(self, '_drag_pos', None) is not None:
+            delta = event.globalPosition().toPoint() - self._drag_pos
+            self.move(self.pos() + delta)
+            self._drag_pos = event.globalPosition().toPoint()
+            self.has_been_dragged = True
+            if hasattr(self, 'signals') and hasattr(self.signals, 'toolbar_moved'):
+                self.signals.toolbar_moved.emit(delta)
+            event.accept()
+        else:
+            super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        self._drag_pos = None
+        super().mouseReleaseEvent(event)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -1796,10 +1743,14 @@ class ToolbarWindow(QWidget):
 
     def moveEvent(self, event):
         super().moveEvent(event)
-        if hasattr(self, 'shape_menu') and self.shape_menu and self.shape_menu.isVisible():
-            self.shape_menu.show_menu(self.btn_shape)
-        if hasattr(self, 'cursor_menu') and self.cursor_menu and self.cursor_menu.isVisible():
-            self.cursor_menu.show_menu(self.btn_cursor)
+        if hasattr(self, 'shape_menu') and self.shape_menu and self.shape_menu.isVisible() and self.shape_menu._fade_state in (1, 2):
+            if not self.shape_menu.has_been_dragged:
+                global_pos = self.btn_shape.mapToGlobal(QPoint(-self.shape_menu.width() - 5, 0))
+                self.shape_menu.move(global_pos)
+        if hasattr(self, 'cursor_menu') and self.cursor_menu and self.cursor_menu.isVisible() and self.cursor_menu._fade_state in (1, 2):
+            if not self.cursor_menu.has_been_dragged:
+                global_pos = self.btn_cursor.mapToGlobal(QPoint(-self.cursor_menu.width() - 5, 0))
+                self.cursor_menu.move(global_pos)
 
 
 # ── System Tray ──
@@ -2010,19 +1961,8 @@ class MainAppCoordinator(QObject):
             self.toolbar.shape_menu.hide_menu()
 
     def _on_tool_switched(self, tool_name):
-        """Handle tool switch: close popup menus, save/restore palette for cursor mode."""
+        """Handle tool switch: close popup menus while keeping color palette open."""
         self._hide_popup_menus()
-
-        if tool_name == 'cursor':
-            # Entering cursor mode — save palette state and fade it out
-            self._palette_was_visible = self.color_palette._fade_state in (1, 2)
-            if self.color_palette._fade_state in (1, 2):
-                self.color_palette.fade_out()
-        else:
-            # Exiting cursor mode — fade palette back in if it was open
-            if self._palette_was_visible:
-                self._palette_was_visible = False
-                self.color_palette.fade_in()
 
     def _on_canvas_visibility_changed(self, visible):
         """Save sub-panel states when canvas is hidden. Restore is deferred."""
