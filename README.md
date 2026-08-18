@@ -47,6 +47,36 @@ A high-performance, lightweight, and completely free screen annotation tool buil
 
 ---
 
+## 🔧 Bug Fixes, Optimizations & Windows 11 Hardening (Latest Update)
+
+### 🐛 Bug Fixes
+* **Pill Handle Off-Screen Drag Fixed:** The top drag pill handle is now clamped to the virtual desktop boundary across all connected monitors. Dragging it to the very edge of any screen keeps it recoverable — it can never be lost off-screen. Sub-toolbar buttons and panels are not restricted and can still extend past the border.
+* **Garbage Collector Permanently Disabled Bug Fixed:** A critical memory bug where using the Eraser tool would permanently disable Python's garbage collector (`gc`) for the entire session has been resolved. `gc` is now correctly re-enabled after every mouse release regardless of which tool is active.
+* **Toolbar State Initialization Fixed:** `ink_visible` state was missing from `ToolbarWindow.__init__`, meaning the toolbar could have an undefined state before the first canvas visibility signal fired. This has been initialized correctly at startup.
+* **Fragile Emoji State Comparison Replaced:** Internal button state logic previously used `btn.text() == "🙈"` as a proxy for hidden-canvas mode, which could silently break on emoji encoding issues. Replaced with an explicit `_is_unhide_mode` boolean flag.
+
+### ⚡ Performance Optimizations
+* **Cursor Pixmap Cache:** The custom drawing cursor (a 128×128 ARGB32 pixmap painted with antialiasing) was rebuilt from scratch on every tool switch, size change, and signal — even when nothing visual changed. A lightweight cache key `(mode, size, color)` now skips the rebuild entirely when the cursor appearance is unchanged.
+* **Pre-Allocated Color Button Shadow Effects:** `QGraphicsDropShadowEffect` objects were being freshly allocated and destroyed on every single color click (12 button repaints per selection). All 12 effects are now pre-allocated at startup and simply toggled `enabled/disabled` on color change — zero allocations at runtime.
+* **Size Setter Double-Mode-Switch Eliminated:** `set_pen_size()`, `set_highlighter_size()`, and `set_eraser_size()` previously called `set_mode()` which in turn called `_update_cursor()` — redundantly switching mode when it was already correct and rebuilding the cursor twice. Each setter now directly updates the size and calls `_update_cursor()` once.
+* **Toolbar Drag `moveEvent` Early-Return:** `ToolbarWindow.moveEvent` previously ran `mapToGlobal()` calculations on every single pixel of toolbar drag motion, even when no sub-menus were visible. An early-return guard now skips all calculations when both `shape_menu` and `cursor_menu` are hidden.
+
+### 🪟 Windows 11 / 11 Pro System Hardening
+* **1ms Multimedia Timer Resolution (`timeBeginPeriod(1)`):** Windows default timer resolution is `15.6ms` (≈64fps ceiling). Pen 11 now sets the Windows multimedia timer to `1ms` at startup using `winmm.timeBeginPeriod(1)`. This makes `QPropertyAnimation` (toolbar collapse/expand, panel fades) fire at exact `1ms` intervals for true smooth `60fps` — eliminating the frame-timing jitter that caused stutter in animations on stock Windows 11.
+* **Clean Timer Restore on Exit (`timeEndPeriod(1)`):** The 1ms timer resolution is correctly restored to Windows defaults when the app exits via `winmm.timeEndPeriod(1)` — no system-wide side effects after closing Pen 11.
+* **Dead Code Removal (~70 lines):** The unused `FloatingShapeToolbox` class and all its associated signal connections, sync references, and toggle methods have been removed. The class was fully instantiated but could never be shown because its trigger signal was never emitted.
+
+### 🪟 Full Windows 11 Optimization Stack
+| Layer | API / Setting | Effect |
+| :--- | :--- | :--- |
+| GPU | `QSG_RHI_BACKEND=d3d11` | Hardware D3D11 compositing — no software fallback |
+| Display | `SetProcessDpiAwareness(2)` — Per-Monitor V2 | Crisp UI on 4K, HiDPI, and multi-monitor |
+| CPU | `SetPriorityClass(HIGH_PRIORITY_CLASS)` | Prevents OS scheduler lag during drawing |
+| Timer | `timeBeginPeriod(1)` — 1ms resolution | True 60fps animation timing (default is 15.6ms) |
+| Memory | `gc.disable()` on press / `gc.enable()` on release | Zero GC pauses during active stroke rendering |
+
+---
+
 ## 💻 System Requirements
 
 * **OS:** Windows 10 or Windows 11 (Heavily optimized for Windows 11 Desktop Window Manager & Per-Monitor V2 DPI).
