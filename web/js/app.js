@@ -190,44 +190,70 @@ class App {
     dragHandle.addEventListener('pointerup', onPointerUp);
     dragHandle.addEventListener('pointercancel', onPointerUp);
 
-    // ── Monkey Button & Cursor Flyout Handler ──
+    // ── Monkey Button & Cursor Flyout Handler (1:1 with main.py) ──
     const monkeyBtn = document.getElementById('tb-btn-monkey');
     const monkeyFlyout = document.getElementById('tb-monkey-flyout');
     const monkeyIcon = document.getElementById('tb-monkey-icon');
 
+    const updateMonkeyMenu = () => {
+      if (!monkeyFlyout) return;
+      if (this.monkeyState === 'cursor') {
+        monkeyFlyout.innerHTML = `
+          <button class="toolbar-tool-btn" data-monkey="active" title="Active Ink Mode" aria-label="Active Ink">
+            <span>🐵</span>
+          </button>
+          <button class="toolbar-tool-btn" data-monkey="hidden" title="Hide Canvas (Ctrl+5)" aria-label="Hide Canvas">
+            <span>🙈</span>
+          </button>
+        `;
+      } else {
+        monkeyFlyout.innerHTML = `
+          <button class="toolbar-tool-btn" data-monkey="cursor" title="Cursor Mode (Click-through)" aria-label="Cursor Mode">
+            <span>🐒</span>
+          </button>
+          <button class="toolbar-tool-btn" data-monkey="hidden" title="Hide Canvas (Ctrl+5)" aria-label="Hide Canvas">
+            <span>🙈</span>
+          </button>
+        `;
+      }
+
+      monkeyFlyout.querySelectorAll('[data-monkey]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const action = btn.getAttribute('data-monkey');
+          this._closeAllPopovers();
+
+          if (action === 'active') {
+            this.setCanvasVisibility(true);
+            this.selectTool('pen');
+          } else if (action === 'cursor') {
+            this.setCanvasVisibility(true);
+            this.selectTool('cursor');
+          } else if (action === 'hidden') {
+            this.setCanvasVisibility(false);
+          }
+        });
+      });
+    };
+
     if (monkeyBtn && monkeyFlyout) {
       monkeyBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (!this.isCanvasVisible && toolbar.classList.contains('collapsed')) {
+        if (!this.isCanvasVisible || toolbar.classList.contains('collapsed')) {
           this.setCanvasVisibility(true);
           this.selectTool('pen');
           return;
         }
 
-        const isOpen = monkeyFlyout.style.display === 'flex';
+        const isCurrentlyOpen = monkeyFlyout.classList.contains('active');
         this._closeAllPopovers();
-        monkeyFlyout.style.display = isOpen ? 'none' : 'flex';
-      });
 
-      monkeyFlyout.querySelectorAll('[data-monkey]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this._closeAllPopovers();
-          const action = btn.getAttribute('data-monkey');
-          
-          if (action === 'active') {
-            this.setCanvasVisibility(true);
-            this.selectTool('pen');
-            monkeyIcon.textContent = '🐵';
-          } else if (action === 'cursor') {
-            this.setCanvasVisibility(true);
-            this.selectTool('cursor');
-            monkeyIcon.textContent = '🐒';
-          } else if (action === 'hidden') {
-            this.setCanvasVisibility(false);
-            monkeyIcon.textContent = '🙈';
-          }
-        });
+        if (!isCurrentlyOpen) {
+          updateMonkeyMenu();
+          monkeyFlyout.style.display = 'flex';
+          void monkeyFlyout.offsetWidth; // Force reflow
+          monkeyFlyout.classList.add('active');
+        }
       });
     }
 
@@ -319,7 +345,10 @@ class App {
 
   _closeAllPopovers() {
     const popovers = document.querySelectorAll('.toolbar-palette-popover, .toolbar-shape-flyout, .toolbar-monkey-flyout');
-    popovers.forEach(p => p.style.display = 'none');
+    popovers.forEach(p => {
+      p.style.display = 'none';
+      p.classList.remove('active');
+    });
   }
 
   selectTool(toolName) {
@@ -345,21 +374,18 @@ class App {
 
     // Update Monkey Button State
     const monkeyBtn = document.getElementById('tb-btn-monkey');
+    const monkeyIcon = document.getElementById('tb-monkey-icon') || (monkeyBtn ? monkeyBtn.querySelector('span') : null);
     if (toolName === 'select' || toolName === 'cursor') {
       this.monkeyState = 'cursor';
-      if (monkeyBtn) {
-        monkeyBtn.querySelector('span').textContent = '🐒';
-        monkeyBtn.title = 'Cursor Mode Active (Click to switch to Pen)';
-      }
+      if (monkeyIcon) monkeyIcon.textContent = '🐒';
+      if (monkeyBtn) monkeyBtn.title = 'Cursor Mode Active (Click to switch to Pen)';
       if (canvasContainer) {
         canvasContainer.style.pointerEvents = 'none';
       }
     } else {
       this.monkeyState = 'active';
-      if (monkeyBtn) {
-        monkeyBtn.querySelector('span').textContent = '🐵';
-        monkeyBtn.title = 'Active Ink Mode (Click to switch to Cursor)';
-      }
+      if (monkeyIcon) monkeyIcon.textContent = '🐵';
+      if (monkeyBtn) monkeyBtn.title = 'Active Ink Mode (Click to switch to Cursor)';
       if (canvasContainer) {
         canvasContainer.style.pointerEvents = 'auto';
       }
@@ -384,14 +410,19 @@ class App {
       }
     }
 
-    // Update canvas cursor
+    // Update canvas cursor matching main.py
     const stage = document.getElementById('canvas-stage-wrapper');
     if (stage) {
-      stage.className = stage.className.replace(/\bcursor-\S+/g, '');
-      if (toolName === 'pen') stage.classList.add('cursor-pen');
-      else if (toolName === 'highlighter') stage.classList.add('cursor-highlighter');
-      else if (toolName === 'eraser') stage.classList.add('cursor-eraser');
-      else stage.classList.add('cursor-pointer');
+      stage.classList.remove('cursor-pen', 'cursor-highlighter', 'cursor-eraser', 'cursor-pointer');
+      if (toolName === 'pen') {
+        stage.classList.add('cursor-pen');
+      } else if (toolName === 'highlighter') {
+        stage.classList.add('cursor-highlighter');
+      } else if (toolName === 'eraser') {
+        stage.classList.add('cursor-eraser');
+      } else {
+        stage.classList.add('cursor-pointer');
+      }
     }
   }
 
@@ -420,26 +451,26 @@ class App {
     this.isCanvasVisible = visible;
     const toolbar = document.getElementById('pen-live-toolbar');
     const monkeyBtn = document.getElementById('tb-btn-monkey');
+    const monkeyIcon = document.getElementById('tb-monkey-icon') || (monkeyBtn ? monkeyBtn.querySelector('span') : null);
     const canvasContainer = document.getElementById('pen-hero-canvas-container');
+    const stage = document.getElementById('canvas-stage-wrapper');
 
     if (visible) {
       if (toolbar) toolbar.classList.remove('collapsed');
       if (canvasContainer) canvasContainer.style.display = 'block';
+      if (stage) stage.classList.remove('canvas-hidden');
       this.monkeyState = 'active';
-      if (monkeyBtn) {
-        monkeyBtn.querySelector('span').textContent = '🐵';
-        monkeyBtn.title = 'Active Ink Mode (Click to switch to Cursor)';
-      }
+      if (monkeyIcon) monkeyIcon.textContent = '🐵';
+      if (monkeyBtn) monkeyBtn.title = 'Active Ink Mode (Click to switch to Cursor)';
       this.showToast('Canvas Visible (Ctrl+5)', 'visibility');
     } else {
       if (toolbar) toolbar.classList.add('collapsed');
       if (canvasContainer) canvasContainer.style.display = 'none';
+      if (stage) stage.classList.add('canvas-hidden');
       this._closeAllPopovers();
       this.monkeyState = 'hidden';
-      if (monkeyBtn) {
-        monkeyBtn.querySelector('span').textContent = '🙈';
-        monkeyBtn.title = 'Canvas Hidden (Click to unhide)';
-      }
+      if (monkeyIcon) monkeyIcon.textContent = '🙈';
+      if (monkeyBtn) monkeyBtn.title = 'Canvas Hidden (Click to unhide)';
       this.showToast('Canvas Hidden & Toolbar Collapsed (Ctrl+5)', 'visibility_off');
     }
   }
