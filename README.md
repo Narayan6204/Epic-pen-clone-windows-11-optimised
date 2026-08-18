@@ -88,7 +88,7 @@ A high-performance, lightweight, and completely free screen annotation tool buil
 
 ## 🚀 Installation & Usage
 
-1. **Download:** Grab the latest `main.exe` / `Pen 11.exe` from the [Releases](https://github.com/Narayan6204/Epic-pen-clone-windows-11-optimised/releases/latest) page.
+1. **Download:** Grab the latest `Pen 11.exe` from the [Releases](https://github.com/Narayan6204/Epic-pen-clone-windows-11-optimised/releases/latest) page.
 2. **Run Portable:** No installer required! Simply launch the executable.
 
 ### 📚 How to Use
@@ -142,7 +142,7 @@ python main.py
 ```bash
 python -m PyInstaller main.spec --noconfirm
 ```
-*The compiled binary will be placed directly in the `dist/` directory as `main.exe` and `Pen 11.exe`.*
+*The compiled binary will be placed directly in the `dist/` directory as `Pen 11.exe`.*
 
 ---
 

@@ -12,16 +12,16 @@ const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 // Tier 4: Hardcoded Resilience Fallback (Guarantees UI never breaks offline or during rate-limits)
 const STATIC_FALLBACK = {
-  tagName: 'v2.4.0',
-  version: '2.4.0',
-  name: 'Pen 11 v2.4.0 (Windows 11 Direct3D Update)',
-  publishedAt: '2026-08-14T00:00:00Z',
+  tagName: 'v2.0.0',
+  version: '2.0.0',
+  name: 'Pen 11 v2.0.0 (Windows 11 Fluid Engine & 1ms Timer)',
+  publishedAt: '2026-08-18T00:00:00Z',
   downloadUrl: `https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/latest`,
-  directDownloadUrl: `https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/latest/download/main.exe`,
-  assetName: 'main.exe',
-  assetSize: 19398656, // ~18.5 MB
-  sizeFormatted: '18.5 MB',
-  body: 'High-performance screen annotation with Direct3D 11 hardware acceleration, Smart Objects, and Circle-to-Select Lasso.',
+  directDownloadUrl: `https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/latest/download/Pen%2011.exe`,
+  assetName: 'Pen 11.exe',
+  assetSize: 38649432, // ~38.6 MB
+  sizeFormatted: '38.6 MB',
+  body: 'High-performance screen annotation with 60 FPS animations, Direct3D 11 hardware acceleration, 1ms multimedia timer, Smart Objects, and Circle-to-Select Lasso.',
   source: 'static_fallback'
 };
 
