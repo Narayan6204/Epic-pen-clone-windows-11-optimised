@@ -190,8 +190,6 @@ export class ThemeEngine {
       const savedMode = localStorage.getItem('pen11_theme_mode');
       if (savedMode && ['light', 'dark', 'system'].includes(savedMode)) {
         this.currentMode = savedMode;
-      } else {
-        this.currentMode = 'light';
       }
       const savedSeed = localStorage.getItem('pen11_theme_seed');
       if (savedSeed && THEME_SEEDS[savedSeed] && savedSeed !== 'win11-blue') {
@@ -253,9 +251,14 @@ export class ThemeEngine {
     const root = document.documentElement;
     const isDarkMode = this.isDark;
 
-    // 1. Set HTML data-theme and data-theme-resolved attributes
-    root.setAttribute('data-theme', this.currentMode);
-    root.setAttribute('data-theme-resolved', isDarkMode ? 'dark' : 'light');
+    // 1. Set HTML data-theme attribute
+    if (this.currentMode === 'system') {
+      root.removeAttribute('data-theme');
+      root.setAttribute('data-theme-resolved', isDarkMode ? 'dark' : 'light');
+    } else {
+      root.setAttribute('data-theme', this.currentMode);
+      root.setAttribute('data-theme-resolved', this.currentMode);
+    }
 
     // 2. Compute dynamic HCT palettes
     const seed = THEME_SEEDS[this.currentSeedKey] || {
@@ -334,24 +337,8 @@ export class ThemeEngine {
       document.head.appendChild(metaTheme);
     }
     metaTheme.setAttribute('content', isDarkMode ? '#111318' : primary);
-
-    // 6. Sync UI mode buttons (active & aria-pressed)
-    if (typeof document !== 'undefined') {
-      document.querySelectorAll('[data-theme-mode]').forEach(btn => {
-        if (btn.getAttribute('data-theme-mode') === this.currentMode) {
-          btn.classList.add('active');
-          btn.setAttribute('aria-pressed', 'true');
-        } else {
-          btn.classList.remove('active');
-          btn.setAttribute('aria-pressed', 'false');
-        }
-      });
-    }
   }
 }
 
 // Global Singleton
 export const themeEngine = new ThemeEngine();
-if (typeof window !== 'undefined') {
-  window.themeEngine = themeEngine;
-}

@@ -356,8 +356,7 @@
    2. SYSTEM COLOR TOKENS - DARK THEME
    Activated via [data-theme="dark"] attribute on <html> or system dark mode
    ========================================================================== */
-[data-theme="dark"],
-[data-theme-resolved="dark"] {
+[data-theme="dark"] {
   --md-sys-color-primary: var(--md-ref-palette-primary80);
   --md-sys-color-on-primary: var(--md-ref-palette-primary20);
   --md-sys-color-primary-container: var(--md-ref-palette-primary30);
@@ -415,8 +414,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="dark"],
-  :root[data-theme-resolved="dark"] {
+  :root:not([data-theme="light"]) {
     --md-sys-color-primary: var(--md-ref-palette-primary80);
     --md-sys-color-on-primary: var(--md-ref-palette-primary20);
     --md-sys-color-primary-container: var(--md-ref-palette-primary30);
