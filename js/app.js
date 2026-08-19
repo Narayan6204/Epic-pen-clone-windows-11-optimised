@@ -251,10 +251,6 @@ class App {
     toolbar.querySelectorAll('[data-tool]').forEach(btn => {
       btn.addEventListener('click', () => {
         const tool = btn.dataset.tool;
-        if (tool === 'select') {
-          this.showRestrictedToast();
-          return;
-        }
         this.selectTool(tool);
       });
     });
@@ -271,7 +267,10 @@ class App {
 
       shapesFlyout.querySelectorAll('[data-shape]').forEach(shapeItem => {
         shapeItem.addEventListener('click', () => {
-          this.showRestrictedToast();
+          const shape = shapeItem.dataset.shape;
+          this.selectTool(shape);
+          this._closeAllPopovers();
+          this.showToast(`Shape: ${shapeItem.title || shape}`, 'shapes');
         });
       });
     }
@@ -288,10 +287,6 @@ class App {
 
       palettePopover.querySelectorAll('.palette-color-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          if (btn.dataset.locked === 'true') {
-            this.showRestrictedToast();
-            return;
-          }
           const hex = btn.dataset.hex;
           this.selectColor(hex);
           this.showToast(`Color: ${btn.title || hex}`, 'palette');
@@ -321,7 +316,8 @@ class App {
     const backdropBtn = document.getElementById('tb-btn-bg');
     if (backdropBtn) {
       backdropBtn.addEventListener('click', () => {
-        this.showRestrictedToast();
+        const mode = this.cycleBackdrop();
+        this.showToast(`Canvas Backdrop: ${mode.toUpperCase()}`, 'palette');
       });
     }
 
@@ -559,14 +555,20 @@ class App {
   cycleBackdrop() {
     this.currentBackdropIndex = (this.currentBackdropIndex + 1) % this.backdropModes.length;
     const mode = this.backdropModes[this.currentBackdropIndex];
+    const stage = document.getElementById('canvas-stage-wrapper');
+    if (stage) {
+      stage.classList.remove('canvas-backdrop-transparent', 'canvas-backdrop-whiteboard', 'canvas-backdrop-blackboard');
+      stage.classList.add(`canvas-backdrop-${mode}`);
+    }
     if (this.canvasEngine) {
       if (mode === 'transparent') {
         this.canvasEngine.options.backgroundColor = 'rgba(0,0,0,0.008)';
       } else if (mode === 'whiteboard') {
         this.canvasEngine.options.backgroundColor = '#FFFFFF';
       } else if (mode === 'blackboard') {
-        this.canvasEngine.options.backgroundColor = '#222222';
+        this.canvasEngine.options.backgroundColor = '#1a1e24';
       }
+      this.canvasEngine.renderBackground?.();
       this.canvasEngine.invalidate();
     }
     return mode;
