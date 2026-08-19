@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="system">
+<html lang="en" data-theme="light" data-theme-resolved="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -58,7 +58,7 @@
   <script>
   (function() {
     try {
-      var savedMode = localStorage.getItem('pen11_theme_mode') || 'system';
+      var savedMode = localStorage.getItem('pen11_theme_mode') || 'light';
       var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
       var isDark = savedMode === 'dark' || (savedMode === 'system' && prefersDark);
       if (savedMode === 'system') {
@@ -198,13 +198,13 @@
         <div class="m3-top-app-bar-actions">
           <!-- Theme Mode Switcher (Segmented Toggle) -->
           <div class="m3-theme-segmented-group" id="theme-mode-switcher" role="group" aria-label="Theme mode switcher">
-            <button class="m3-icon-btn" data-theme-mode="light" title="Light Mode" aria-label="Switch to light mode">
+            <button class="m3-icon-btn active" data-theme-mode="light" title="Light Mode" aria-label="Switch to light mode" aria-pressed="true">
               <span class="material-symbols-rounded">light_mode</span>
             </button>
-            <button class="m3-icon-btn" data-theme-mode="dark" title="Dark Mode" aria-label="Switch to dark mode">
+            <button class="m3-icon-btn" data-theme-mode="dark" title="Dark Mode" aria-label="Switch to dark mode" aria-pressed="false">
               <span class="material-symbols-rounded">dark_mode</span>
             </button>
-            <button class="m3-icon-btn" data-theme-mode="system" title="System Preference" aria-label="Switch to system theme">
+            <button class="m3-icon-btn" data-theme-mode="system" title="System Preference" aria-label="Switch to system theme" aria-pressed="false">
               <span class="material-symbols-rounded">desktop_windows</span>
             </button>
           </div>
