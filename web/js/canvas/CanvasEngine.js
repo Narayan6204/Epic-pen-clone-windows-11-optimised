@@ -118,6 +118,13 @@ export class CanvasEngine {
   }
 
   /**
+   * Alias for updateDimensions to maintain API compatibility
+   */
+  resize() {
+    this.updateDimensions();
+  }
+
+  /**
    * Recalculates canvas pixel buffers with Hi-DPI DPR compensation without losing drawing objects.
    */
   updateDimensions() {
