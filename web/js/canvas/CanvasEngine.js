@@ -81,7 +81,10 @@ export class CanvasEngine {
   // ==========================================
 
   _initDOM() {
-    this.container.style.position = 'relative';
+    this.container.style.position = 'absolute';
+    this.container.style.inset = '0';
+    this.container.style.width = '100%';
+    this.container.style.height = '100%';
     this.container.style.overflow = 'hidden';
     this.container.style.touchAction = 'none';
     this.container.style.userSelect = 'none';
