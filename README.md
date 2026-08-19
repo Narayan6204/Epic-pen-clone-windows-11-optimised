@@ -69,7 +69,7 @@ Pen 11 is ultra-lightweight, uses almost **0% CPU when idle**, and takes **less 
 
 ## 🚀 Installation & Usage
 
-1. **Download:** Grab the latest **`Pen 11.exe`** from the [Releases](https://github.com/Narayan6204/Epic-pen-clone-windows-11-optimised/releases/latest) page.
+1. **Download:** Grab the latest **`Pen 11.exe`** from the [Releases](https://github.com/Narayan6204/Pen-11/releases/latest) page.
 2. **Run Portable:** No installer required! Simply double-click to launch.
 
 ### 📚 How to Use
@@ -109,8 +109,8 @@ Pen 11 is ultra-lightweight, uses almost **0% CPU when idle**, and takes **less 
 ### Running from Source
 ```bash
 # 1. Clone the repository
-git clone https://github.com/Narayan6204/Epic-pen-clone-windows-11-optimised.git
-cd "Epic-pen-clone-windows-11-optimised"
+git clone https://github.com/Narayan6204/Pen-11.git
+cd "Pen-11"
 
 # 2. Install dependencies
 pip install -r requirements.txt

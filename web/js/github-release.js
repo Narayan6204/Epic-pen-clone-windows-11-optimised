@@ -5,7 +5,7 @@
  */
 
 const REPO_OWNER = 'Narayan6204';
-const REPO_NAME = 'Epic-pen-clone-windows-11-optimised';
+const REPO_NAME = 'Pen-11';
 const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest`;
 const CACHE_KEY = 'pen11_github_release_cache';
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour

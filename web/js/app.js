@@ -595,7 +595,7 @@ class App {
     this.showToast(
       '🔒 Download Pen 11 to use all features',
       'lock',
-      '<a href="https://github.com/Narayan6204/Epic-pen-clone-windows-11-optimised/releases/latest" class="m3-btn m3-btn-filled" style="height: 32px; font-size: 13px; padding: 0 12px; text-decoration: none; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">Download</a>'
+      '<a href="https://github.com/Narayan6204/Pen-11/releases/latest" class="m3-btn m3-btn-filled" style="height: 32px; font-size: 13px; padding: 0 12px; text-decoration: none; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">Download</a>'
     );
   }
 

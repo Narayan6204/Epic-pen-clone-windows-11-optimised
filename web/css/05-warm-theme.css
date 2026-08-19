@@ -997,3 +997,49 @@ footer .m3-btn {
   background-color: #2E2212 !important;
   color: #FFF7ED !important;
 }
+
+/* --------------------------------------------------------------------------
+   Showcase Gallery: Warm Parchment Container Styling
+   -------------------------------------------------------------------------- */
+#gallery {
+  background-color: #FAF2E3;
+  border-top: 1px solid #D6C4A6;
+  border-bottom: 1px solid #D6C4A6;
+}
+
+.gallery-card {
+  background-color: #FAF6EC;
+  border: 1px solid #D6C4A6;
+}
+
+.gallery-card:hover {
+  background-color: #F5EAD8;
+}
+
+.gallery-img-wrapper {
+  background-color: #F0DFC0;
+  border-bottom: 1px solid #D6C4A6;
+}
+
+[data-theme="dark"] #gallery,
+[data-theme-resolved="dark"] #gallery {
+  background-color: #1E150A !important;
+  border-color: #392B18 !important;
+}
+
+[data-theme="dark"] .gallery-card,
+[data-theme-resolved="dark"] .gallery-card {
+  background-color: #261B0F !important;
+  border-color: #392B18 !important;
+}
+
+[data-theme="dark"] .gallery-card:hover,
+[data-theme-resolved="dark"] .gallery-card:hover {
+  background-color: #2E2212 !important;
+}
+
+[data-theme="dark"] .gallery-img-wrapper,
+[data-theme-resolved="dark"] .gallery-img-wrapper {
+  background-color: #1A1108 !important;
+  border-color: #392B18 !important;
+}
