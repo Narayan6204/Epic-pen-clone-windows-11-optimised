@@ -934,4 +934,23 @@ kbd:active, .m3-kbd:active {
   margin-top: 2px;
 }
 
+/* --------------------------------------------------------------------------
+   14. Material Design 3 FAQ Accordion (<details>/<summary>)
+   -------------------------------------------------------------------------- */
+details.m3-card summary::-webkit-details-marker {
+  display: none;
+}
 
+details.m3-card[open] summary .material-symbols-rounded {
+  transform: rotate(180deg);
+}
+
+details.m3-card:hover {
+  background-color: var(--md-sys-color-surface-container-high) !important;
+  border-color: var(--md-sys-color-primary) !important;
+}
+
+details.m3-card:focus-within {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
