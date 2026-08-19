@@ -818,3 +818,120 @@ kbd:active, .m3-kbd:active {
   font-size: 0.92rem;
 }
 
+/* ==========================================================================
+   Material Design 3 Download Preference Popup Modal
+   ========================================================================== */
+.m3-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(26, 15, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s cubic-bezier(0.2, 0, 0, 1), visibility 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.m3-modal-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.m3-download-dialog {
+  background-color: var(--md-sys-color-surface-container-high, #FAF6EC);
+  border: 1px solid var(--md-sys-color-outline-variant, #E2D2B8);
+  border-radius: var(--md-sys-shape-corner-extra-large, 28px);
+  width: 100%;
+  max-width: 480px;
+  padding: 28px;
+  box-shadow: 0 20px 48px rgba(74, 44, 0, 0.2);
+  transform: scale(0.92) translateY(12px);
+  transition: transform 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.m3-modal-backdrop.active .m3-download-dialog {
+  transform: scale(1) translateY(0);
+}
+
+.download-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.download-dialog-title {
+  margin: 0 0 4px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface, #1A0F00);
+}
+
+.download-dialog-subtitle {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--md-sys-color-on-surface-variant, #5C4830);
+}
+
+.download-option-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1.5px solid var(--md-sys-color-outline-variant, #E2D2B8);
+  background-color: var(--md-sys-color-surface, #FDFBF7);
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 12px;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  cursor: pointer;
+}
+
+.download-option-card:hover {
+  border-color: var(--md-sys-color-primary, #8C4E00);
+  background-color: var(--md-sys-color-surface-container-highest, #F3E5CC);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(74, 44, 0, 0.08);
+}
+
+.download-option-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.download-option-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background-color: var(--md-sys-color-secondary-container, #F3DEB8);
+  color: var(--md-sys-color-primary, #8C4E00);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.download-option-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--md-sys-color-on-surface, #1A0F00);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.download-option-desc {
+  font-size: 0.82rem;
+  color: var(--md-sys-color-on-surface-variant, #6B553D);
+  margin-top: 2px;
+}
+
+

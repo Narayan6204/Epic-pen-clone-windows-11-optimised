@@ -29,12 +29,12 @@
   <link rel="apple-touch-icon" href="assets/logo.svg">
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/00-tokens.css?v=4.2.0">
-  <link rel="stylesheet" href="css/01-layout.css?v=4.2.0">
-  <link rel="stylesheet" href="css/02-components.css?v=4.2.0">
-  <link rel="stylesheet" href="css/03-motion.css?v=4.2.0">
-  <link rel="stylesheet" href="css/04-canvas.css?v=4.2.0">
-  <link rel="stylesheet" href="css/05-warm-theme.css?v=4.2.0">
+  <link rel="stylesheet" href="css/00-tokens.css?v=4.3.0">
+  <link rel="stylesheet" href="css/01-layout.css?v=4.3.0">
+  <link rel="stylesheet" href="css/02-components.css?v=4.3.0">
+  <link rel="stylesheet" href="css/03-motion.css?v=4.3.0">
+  <link rel="stylesheet" href="css/04-canvas.css?v=4.3.0">
+  <link rel="stylesheet" href="css/05-warm-theme.css?v=4.3.0">
 
   <!-- Schema.org JSON-LD Structured Data -->
   <script type="application/ld+json">
@@ -106,10 +106,10 @@
           </a>
 
           <!-- Download Action -->
-          <a href="https://github.com/Narayan6204/Pen-11/releases/latest" data-gh-download-url class="m3-btn m3-btn-filled" aria-label="Download Pen 11">
+          <button type="button" class="m3-btn m3-btn-filled btn-download-popup-trigger" aria-haspopup="dialog" aria-expanded="false" aria-label="Download Pen 11" style="cursor: pointer;">
             <span class="material-symbols-rounded">download</span>
             <span>Download</span>
-          </a>
+          </button>
         </div>
       </header>
 
@@ -133,19 +133,16 @@
             </p>
 
             <div class="m3-flex-row m3-gap-md" style="flex-wrap: wrap; justify-content: center;">
-              <a href="https://github.com/Narayan6204/Pen-11/releases/download/v2.0.0/Pen.11.exe" data-gh-download-url class="m3-btn m3-btn-filled" style="height: 48px; padding: 0 28px; font-size: 1rem; display: inline-flex; align-items: center; gap: 8px;" aria-label="Download Pen 11 Portable .EXE">
+              <button type="button" class="m3-btn m3-btn-filled btn-download-popup-trigger" style="height: 48px; padding: 0 28px; font-size: 1rem; display: inline-flex; align-items: center; gap: 10px; cursor: pointer;" aria-haspopup="dialog" aria-expanded="false" aria-label="Download Pen 11 for Windows">
                 <svg width="18" height="18" viewBox="0 0 88 88" fill="currentColor" aria-hidden="true" style="flex-shrink: 0;">
                   <path d="M0 0h41.6v41.6H0V0zm46.4 0H88v41.6H46.4V0zM0 46.4h41.6V88H0V46.4zm46.4 0H88V88H46.4V46.4z"/>
                 </svg>
-                <span>Download .EXE (<span data-gh-size>38.6 MB</span>)</span>
-              </a>
-              <a href="https://github.com/Narayan6204/Pen-11/releases/download/v2.0.0/Pen-11-v2.0.0-Windows.zip" data-gh-zip-url class="m3-btn m3-btn-outlined" style="height: 48px; padding: 0 24px; font-size: 1rem; display: inline-flex; align-items: center; gap: 8px;" aria-label="Download Pen 11 .ZIP Archive">
-                <span class="material-symbols-rounded">folder_zip</span>
-                <span>Download .ZIP (<span data-gh-zip-size>38.3 MB</span>)</span>
-              </a>
-              <a href="#features" class="m3-btn m3-btn-text" style="height: 48px; padding: 0 18px; font-size: 1rem;">
+                <span>Download Pen 11 (<span data-gh-size>38.6 MB</span>)</span>
+                <span class="material-symbols-rounded" style="font-size: 20px;">expand_more</span>
+              </button>
+              <a href="#features" class="m3-btn m3-btn-outlined" style="height: 48px; padding: 0 24px; font-size: 1rem;">
                 <span class="material-symbols-rounded">explore</span>
-                <span>Features</span>
+                <span>Explore Features</span>
               </a>
             </div>
 
@@ -580,18 +577,13 @@
 
           <!-- Bottom Benchmarks Download CTA with System Specs -->
           <div class="m3-flex-col m3-align-center" style="margin-top: 36px; text-align: center;">
-            <div class="m3-flex-row m3-gap-md" style="flex-wrap: wrap; justify-content: center;">
-              <a href="https://github.com/Narayan6204/Pen-11/releases/download/v2.0.0/Pen.11.exe" data-gh-download-url class="m3-btn m3-btn-filled" style="height: 48px; padding: 0 28px; font-size: 1rem; display: inline-flex; align-items: center; gap: 8px;" aria-label="Download Pen 11 Portable .EXE">
-                <svg width="18" height="18" viewBox="0 0 88 88" fill="currentColor" aria-hidden="true" style="flex-shrink: 0;">
-                  <path d="M0 0h41.6v41.6H0V0zm46.4 0H88v41.6H46.4V0zM0 46.4h41.6V88H0V46.4zm46.4 0H88V88H46.4V46.4z"/>
-                </svg>
-                <span>Download .EXE (<span data-gh-size>38.6 MB</span>)</span>
-              </a>
-              <a href="https://github.com/Narayan6204/Pen-11/releases/download/v2.0.0/Pen-11-v2.0.0-Windows.zip" data-gh-zip-url class="m3-btn m3-btn-outlined" style="height: 48px; padding: 0 24px; font-size: 1rem; display: inline-flex; align-items: center; gap: 8px;" aria-label="Download Pen 11 .ZIP Archive">
-                <span class="material-symbols-rounded">folder_zip</span>
-                <span>Download .ZIP (<span data-gh-zip-size>38.3 MB</span>)</span>
-              </a>
-            </div>
+            <button type="button" class="m3-btn m3-btn-filled btn-download-popup-trigger" style="height: 48px; padding: 0 32px; font-size: 1rem; display: inline-flex; align-items: center; gap: 10px; cursor: pointer;" aria-haspopup="dialog" aria-expanded="false" aria-label="Download Pen 11 for Windows">
+              <svg width="18" height="18" viewBox="0 0 88 88" fill="currentColor" aria-hidden="true" style="flex-shrink: 0;">
+                <path d="M0 0h41.6v41.6H0V0zm46.4 0H88v41.6H46.4V0zM0 46.4h41.6V88H0V46.4zm46.4 0H88V88H46.4V46.4z"/>
+              </svg>
+              <span>Download Pen 11 Free (<span data-gh-size>38.6 MB</span>)</span>
+              <span class="material-symbols-rounded" style="font-size: 20px;">expand_more</span>
+            </button>
             <span class="m3-label-small" style="margin-top: 12px; color: var(--md-sys-color-on-surface-variant); display: inline-flex; align-items: center; gap: 6px;">
               <span class="material-symbols-rounded" style="font-size: 14px; color: var(--md-sys-color-primary);">check_circle</span>
               <span>Windows 11 / 10 (64-bit) • Min 50 MB RAM • Direct3D 11 • Portable Standalone</span>
@@ -859,7 +851,7 @@ python -m PyInstaller main.spec --noconfirm</code></pre>
         </div>
         <span class="m3-nav-label">Hotkeys</span>
       </a>
-      <a href="https://github.com/Narayan6204/Pen-11/releases/latest" data-gh-download-url class="m3-nav-item">
+      <a href="#download-preference-modal" class="m3-nav-item btn-download-popup-trigger" aria-label="Open Download Options">
         <div class="m3-nav-pill">
           <span class="material-symbols-rounded">download</span>
         </div>
@@ -867,6 +859,76 @@ python -m PyInstaller main.spec --noconfirm</code></pre>
       </a>
     </nav>
 
+  </div>
+
+  <!-- Material Design 3 Download Preference Modal -->
+  <div id="download-preference-modal" class="m3-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="download-modal-title" aria-hidden="true">
+    <div class="m3-download-dialog">
+      
+      <div class="download-dialog-header">
+        <div>
+          <div class="m3-flex-row m3-align-center m3-gap-xs" style="margin-bottom: 4px;">
+            <span class="m3-badge-pill" style="font-size: 11px; padding: 2px 8px;" data-gh-version>v2.0.0</span>
+            <span class="m3-label-small" style="color: var(--md-sys-color-primary); font-weight: 600;">OFFICIAL RELEASE</span>
+          </div>
+          <h3 id="download-modal-title" class="download-dialog-title">Download Pen 11</h3>
+          <p class="download-dialog-subtitle">Choose your preferred download format for Windows 11 / 10</p>
+        </div>
+        <button type="button" id="close-download-modal" class="m3-icon-btn" aria-label="Close download modal" style="width: 36px; height: 36px; cursor: pointer;">
+          <span class="material-symbols-rounded" style="font-size: 20px;">close</span>
+        </button>
+      </div>
+
+      <!-- Option 1: Standalone .EXE (Recommended) -->
+      <a href="https://github.com/Narayan6204/Pen-11/releases/download/v2.0.0/Pen.11.exe" data-gh-download-url class="download-option-card">
+        <div class="download-option-info">
+          <div class="download-option-icon">
+            <svg width="22" height="22" viewBox="0 0 88 88" fill="currentColor" aria-hidden="true">
+              <path d="M0 0h41.6v41.6H0V0zm46.4 0H88v41.6H46.4V0zM0 46.4h41.6V88H0V46.4zm46.4 0H88V88H46.4V46.4z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="download-option-title">
+              <span>Standalone .EXE</span>
+              <span class="m3-badge-pill" style="font-size: 10px; padding: 2px 6px; background: var(--md-sys-color-primary); color: #FAF6EC;">Recommended</span>
+            </div>
+            <div class="download-option-desc">Direct launch • Zero installation required</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <span class="m3-label-small" style="font-weight: 700; color: var(--md-sys-color-primary);" data-gh-size>38.6 MB</span>
+          <span class="material-symbols-rounded" style="display: block; font-size: 18px; color: var(--md-sys-color-primary); margin-top: 2px;">download</span>
+        </div>
+      </a>
+
+      <!-- Option 2: .ZIP Archive (Firewall / School Friendly) -->
+      <a href="https://github.com/Narayan6204/Pen-11/releases/download/v2.0.0/Pen-11-v2.0.0-Windows.zip" data-gh-zip-url class="download-option-card">
+        <div class="download-option-info">
+          <div class="download-option-icon">
+            <span class="material-symbols-rounded">folder_zip</span>
+          </div>
+          <div>
+            <div class="download-option-title">
+              <span>Compressed .ZIP</span>
+            </div>
+            <div class="download-option-desc">Safe for school & office restricted networks</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <span class="m3-label-small" style="font-weight: 700; color: var(--md-sys-color-primary);" data-gh-zip-size>38.3 MB</span>
+          <span class="material-symbols-rounded" style="display: block; font-size: 18px; color: var(--md-sys-color-primary); margin-top: 2px;">download</span>
+        </div>
+      </a>
+
+      <!-- Footer Source / Releases Link -->
+      <div style="margin-top: 16px; text-align: center; border-top: 1px solid var(--md-sys-color-outline-variant); padding-top: 14px;">
+        <a href="https://github.com/Narayan6204/Pen-11/releases" target="_blank" rel="noopener noreferrer" style="font-size: 12px; color: var(--md-sys-color-primary); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-weight: 600;">
+          <span>View all releases & assets on GitHub</span>
+          <span class="material-symbols-rounded" style="font-size: 14px;">open_in_new</span>
+        </a>
+      </div>
+
+    </div>
   </div>
 
   <!-- Fallback: Populate shortcuts table only if ES module fails to load -->
@@ -907,6 +969,6 @@ python -m PyInstaller main.spec --noconfirm</code></pre>
   </script>
 
   <!-- Application Entry Point ES Module -->
-  <script type="module" src="js/app.js?v=4.2.0"></script>
+  <script type="module" src="js/app.js?v=4.3.0"></script>
 </body>
 </html>
