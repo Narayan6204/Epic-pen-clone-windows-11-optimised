@@ -742,11 +742,12 @@ class App {
     this.showToast(
       'Download Pen 11 to use all features',
       'lock',
-      '<a href="https://github.com/Narayan6204/Pen-11/releases/latest" class="m3-btn m3-btn-filled" style="height: 32px; font-size: 13px; padding: 0 12px; text-decoration: none; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">Download</a>'
+      '<a href="https://github.com/Narayan6204/Pen-11/releases/latest" class="m3-btn m3-btn-filled" style="height: 32px; font-size: 13px; padding: 0 12px; text-decoration: none; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">Download</a>',
+      2000
     );
   }
 
-  showToast(message, icon = 'info', actionHtml = '') {
+  showToast(message, icon = 'info', actionHtml = '', durationMs = null) {
     let snackbar = document.getElementById('m3-global-snackbar');
     if (!snackbar) {
       snackbar = document.createElement('aside');
@@ -782,10 +783,12 @@ class App {
 
     snackbar.classList.add('active');
 
+    const timeout = durationMs || (actionHtml ? 2400 : 1800);
+
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => {
       snackbar.classList.remove('active');
-    }, actionHtml ? 5000 : 3200);
+    }, timeout);
   }
 }
 
