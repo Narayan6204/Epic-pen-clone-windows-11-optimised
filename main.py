@@ -601,6 +601,8 @@ class OverlayWindow(QMainWindow):
     # ── Mode / state ──
 
     def set_mode(self, new_mode):
+        while QApplication.overrideCursor() is not None:
+            QApplication.restoreOverrideCursor()
         # Rule 5: Only PEN and HIGHLIGHTER shortcuts can activate a hidden canvas
         if not self.ink_visible and new_mode in (ToolMode.PEN, ToolMode.HIGHLIGHTER):
             self.toggle_visibility()
@@ -931,6 +933,10 @@ class OverlayWindow(QMainWindow):
                 self.update()
                 return
 
+            if self.mode in (ToolMode.PEN, ToolMode.HIGHLIGHTER, ToolMode.ERASER):
+                if QApplication.overrideCursor() is None:
+                    QApplication.setOverrideCursor(QCursor(Qt.CursorShape.BlankCursor))
+
             self.shape_detected = False
             
             # Disable GC during active drawing to prevent micro-stutters
@@ -1070,6 +1076,8 @@ class OverlayWindow(QMainWindow):
                 return
 
             self.shape_timer.stop()
+            while QApplication.overrideCursor() is not None:
+                QApplication.restoreOverrideCursor()
             self._update_cursor()
             if self.drawing and self.current_path:
                 if self.mode != ToolMode.SHAPE and not self.shape_detected:
