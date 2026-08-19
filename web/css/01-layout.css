@@ -68,6 +68,17 @@ button, input, select, textarea {
   padding-bottom: 96px; /* Space for mobile nav bar on compact */
 }
 
+@media (max-width: 599px) {
+  .m3-display-medium {
+    font-size: 1.85rem !important;
+    line-height: 1.22 !important;
+  }
+  .m3-headline-large {
+    font-size: 1.5rem !important;
+    line-height: 1.25 !important;
+  }
+}
+
 @media (min-width: 600px) {
   .m3-main-content {
     padding-bottom: 0;
@@ -187,6 +198,24 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+@media (max-width: 599px) {
+  .m3-top-app-bar {
+    padding: 0 12px;
+  }
+  .m3-top-app-bar-brand {
+    gap: 8px;
+    font-size: 1.1rem;
+  }
+  .m3-top-app-bar-actions .m3-btn span:not(.material-symbols-rounded) {
+    display: none;
+  }
+  .m3-top-app-bar-actions .m3-btn {
+    padding: 0 10px;
+    min-width: 40px;
+    height: 38px;
+  }
 }
 
 /* --- B. NAVIGATION BAR (Mobile Bottom Nav - Compact <600px) --- */
