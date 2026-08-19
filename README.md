@@ -8,11 +8,11 @@
 A high-performance, lightweight, and completely free screen annotation tool built specifically and optimized for Windows 11. 
 
 <p align="center">
-  <img src="assets/screenshot_palette.png" alt="Pen 11 Toolbar & Color Palette" width="31%">
-  &nbsp;
-  <img src="assets/screenshot_shapes.png" alt="Pen 11 Shapes Menu" width="31%">
-  &nbsp;
-  <img src="assets/screenshot_cursor.png" alt="Pen 11 Cursor Flyout" width="31%">
+  <img src="assets/screenshot_palette.png" alt="Pen 11 Toolbar & Color Palette" height="400">
+  &nbsp;&nbsp;
+  <img src="assets/screenshot_shapes.png" alt="Pen 11 Shapes Menu" height="400">
+  &nbsp;&nbsp;
+  <img src="assets/screenshot_cursor.png" alt="Pen 11 Cursor Flyout" height="400">
 </p>
 
 ---
