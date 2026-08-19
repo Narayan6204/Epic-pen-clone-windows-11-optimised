@@ -195,14 +195,14 @@ button, input, select, textarea {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 80px;
+  height: calc(72px + env(safe-area-inset-bottom, 0px));
   z-index: 90;
   background-color: var(--md-sys-color-surface-container);
   border-top: 1px solid var(--md-sys-color-outline-variant);
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 0 8px;
+  padding: 0 8px env(safe-area-inset-bottom, 0px) 8px;
 }
 
 @media (min-width: 600px) {
