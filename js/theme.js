@@ -198,7 +198,7 @@ export class ThemeEngine {
       if (savedMode && ['light', 'dark', 'system'].includes(savedMode)) {
         this.currentMode = savedMode;
       } else {
-        this.currentMode = 'system';
+        this.currentMode = 'light';
       }
       const savedSeed = localStorage.getItem('pen11_theme_seed');
       if (savedSeed && THEME_SEEDS[savedSeed] && savedSeed !== 'win11-blue') {
