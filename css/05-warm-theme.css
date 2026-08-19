@@ -1043,3 +1043,31 @@ footer .m3-btn {
   background-color: #1A1108 !important;
   border-color: #392B18 !important;
 }
+
+/* --------------------------------------------------------------------------
+   Download Preference Dialog: Warm Parchment Styling
+   -------------------------------------------------------------------------- */
+[data-theme="dark"] .m3-download-dialog,
+[data-theme-resolved="dark"] .m3-download-dialog {
+  background-color: #261B0F !important;
+  border-color: #392B18 !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6) !important;
+}
+
+[data-theme="dark"] .download-option-card,
+[data-theme-resolved="dark"] .download-option-card {
+  background-color: #1E150A !important;
+  border-color: #392B18 !important;
+}
+
+[data-theme="dark"] .download-option-card:hover,
+[data-theme-resolved="dark"] .download-option-card:hover {
+  background-color: #2E2212 !important;
+  border-color: #D4A373 !important;
+}
+
+[data-theme="dark"] .download-option-icon,
+[data-theme-resolved="dark"] .download-option-icon {
+  background-color: #392B18 !important;
+  color: #F3DEB8 !important;
+}

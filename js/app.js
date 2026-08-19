@@ -79,6 +79,9 @@ class App {
     // 6. Fetch Latest Release Data from GitHub
     this._initGitHubReleases();
 
+    // 7. Initialize Download Preference Modal
+    this._initDownloadModal();
+
     console.log('Pen 11 Web Experience Initialized with Exact Desktop UI & Shortcuts.');
   }
 
@@ -586,6 +589,50 @@ class App {
     } catch (e) {
       console.warn('[App] GitHub release update DOM failed:', e);
     }
+  }
+
+  // ==========================================
+  // 7. Download Preference Modal
+  // ==========================================
+  _initDownloadModal() {
+    const modal = document.getElementById('download-preference-modal');
+    const closeBtn = document.getElementById('close-download-modal');
+    if (!modal) return;
+
+    const openModal = (e) => {
+      if (e) e.preventDefault();
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    };
+
+    const closeModal = () => {
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    };
+
+    document.querySelectorAll('.btn-download-popup-trigger').forEach(btn => {
+      btn.addEventListener('click', openModal);
+    });
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('active')) {
+        closeModal();
+      }
+    });
+
+    modal.querySelectorAll('.download-option-card').forEach(card => {
+      card.addEventListener('click', () => {
+        setTimeout(closeModal, 600);
+      });
+    });
   }
 
   // ==========================================
