@@ -102,6 +102,7 @@ class App {
     this.lassoSelector = new LassoSelector(this.canvasEngine, this.toolManager, this.historyManager);
 
     // Initial tool & color settings
+    this.selectTool('pen');
     this.toolManager.setColor(this.penColor);
     this.toolManager.setSize(this.penSize);
 
