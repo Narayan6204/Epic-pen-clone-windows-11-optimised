@@ -17,8 +17,8 @@ const STATIC_FALLBACK = {
   name: 'Pen 11 v2.0.0 (Direct3D 11 Hardware Inking Update)',
   publishedAt: '2026-08-19T00:00:00Z',
   downloadUrl: `https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/latest`,
-  directDownloadUrl: `https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/v2.0.0/Pen.11.exe`,
-  assetName: 'Pen.11.exe',
+  directDownloadUrl: `https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/latest/download/Pen%2011.exe`,
+  assetName: 'Pen 11.exe',
   assetSize: 38649432, // 38.6 MB
   sizeFormatted: '38.6 MB',
   body: 'High-performance screen annotation with Direct3D 11 hardware acceleration, Smart Objects, and Circle-to-Select Lasso.',
