@@ -656,8 +656,16 @@ div[style*="background-color: var(--md-sys-color-primary)"] {
 
 /* Icon button active state */
 .m3-icon-btn[data-theme-mode].active {
-  background-color: #F0DFC0;
-  color: #7C5C35;
+  background-color: #E2CEAA !important;
+  color: #5C3D18 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="dark"] .m3-icon-btn[data-theme-mode].active,
+[data-theme-resolved="dark"] .m3-icon-btn[data-theme-mode].active {
+  background-color: #4A3520 !important;
+  color: #F3DEB8 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 /* ==========================================================================
