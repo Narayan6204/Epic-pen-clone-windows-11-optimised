@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C2904F"/>
+      <stop offset="100%" stop-color="#734B22"/>
+    </linearGradient>
+    <linearGradient id="nibGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F2E6D5"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E2B16B"/>
+      <stop offset="100%" stop-color="#A26B33"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  
+  <!-- App Icon Background squircle -->
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#bgGrad)" filter="url(#shadow)"/>
+  
+  <!-- Subtle inner glass glow -->
+  <rect x="9" y="9" width="110" height="110" rx="27" stroke="rgba(255,255,255,0.3)" stroke-width="2" fill="none"/>
+  
+  <!-- Stylized Pen Nib -->
+  <g transform="translate(64,64) rotate(45) translate(-64,-64)">
+    <!-- Pen Body -->
+    <path d="M52 28 L76 28 L80 68 L48 68 Z" fill="url(#nibGrad)"/>
+    <!-- Pen Tip / Nib -->
+    <path d="M48 68 L80 68 L64 100 Z" fill="url(#nibGrad)"/>
+    <!-- Nib Slit -->
+    <path d="M64 74 L64 96" stroke="#734B22" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="64" cy="74" r="3" fill="#734B22"/>
+    <!-- Accent Ring -->
+    <rect x="48" y="44" width="32" height="6" rx="2" fill="url(#accentGrad)"/>
+  </g>
+  
+  <!-- Dynamic Drawing Sparkle / Line 11 Accent -->
+  <path d="M26 94 Q40 82 50 88 T74 80" stroke="#E2B16B" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <circle cx="98" cy="30" r="4" fill="#E2B16B"/>
+</svg>

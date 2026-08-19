@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="system">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pen 11 — High-Performance Screen Annotation Engine for Windows 11</title>
+  
+  <!-- SEO & OpenGraph Metadata -->
+  <meta name="description" content="Pen 11 is an ultra-lightweight, Direct3D 11 hardware-accelerated screen annotation and marker tool optimized for Windows 11. Free, open-source, and zero idle CPU footprint.">
+  <meta name="keywords" content="Pen 11, screen annotation, screen marker, Windows 11 tool, PyQt6 drawing, direct3d 11 ink, smart objects, lasso select, open source annotation">
+  <meta name="author" content="Narayan Dev">
+  <meta name="theme-color" content="#0061A4">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://narayan6204.github.io/Pen-11/">
+  <meta property="og:title" content="Pen 11 — High-Performance Screen Annotation for Windows 11">
+  <meta property="og:description" content="Direct3D 11 hardware-accelerated ink, Smart Objects, Circle-to-Select Lasso, and zero idle CPU usage. 100% Free & Open Source.">
+  <meta property="og:image" content="assets/screenshot.png">
+
+  <!-- Twitter Card -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:title" content="Pen 11 — High-Performance Screen Annotation for Windows 11">
+  <meta property="twitter:description" content="Direct3D 11 hardware-accelerated ink, Smart Objects, and zero idle CPU footprint.">
+  <meta property="twitter:image" content="assets/screenshot.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="apple-touch-icon" href="assets/logo.svg">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/00-tokens.css?v=4.1.0">
+  <link rel="stylesheet" href="css/01-layout.css?v=4.1.0">
+  <link rel="stylesheet" href="css/02-components.css?v=4.1.0">
+  <link rel="stylesheet" href="css/03-motion.css?v=4.1.0">
+  <link rel="stylesheet" href="css/04-canvas.css?v=4.1.0">
+  <link rel="stylesheet" href="css/05-warm-theme.css?v=4.1.0">
+
+  <!-- Schema.org JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Pen 11",
+    "operatingSystem": "Windows 10, Windows 11",
+    "applicationCategory": "UtilitiesApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "High-performance, lightweight screen annotation tool optimized for Windows 11 with Direct3D 11 acceleration and Smart Objects.",
+    "author": {
+      "@type": "Person",
+      "name": "Narayan Dev"
+    },
+    "downloadUrl": "https://github.com/Narayan6204/Pen-11/releases/latest",
+    "softwareVersion": "2.0.0",
+    "license": "https://opensource.org/licenses/MIT"
+  }
+  </script>
+</head>
+<body>
+  <div class="m3-layout-root">
+    
+    <!-- Main Content Area -->
+    <main class="m3-main-content">
+      
+      <!-- 1. Top App Bar -->
+      <header class="m3-top-app-bar" role="banner">
+        <a href="#hero" class="m3-top-app-bar-brand" aria-label="Pen 11 Home">
+          <img src="assets/logo.svg" alt="Pen 11 Logo" width="32" height="32">
+          <span>Pen 11</span>
+        </a>
+
+        <!-- Desktop Navigation Links -->
+        <nav class="m3-top-app-bar-nav" role="navigation" aria-label="Primary Navigation">
+          <a href="#hero" class="m3-btn m3-btn-text">Sandbox</a>
+          <a href="#gallery" class="m3-btn m3-btn-text">Gallery</a>
+          <a href="#features" class="m3-btn m3-btn-text">Features</a>
+          <a href="#benchmarks" class="m3-btn m3-btn-text">Benchmarks</a>
+          <a href="#hotkeys" class="m3-btn m3-btn-text">Shortcuts</a>
+          <a href="#developers" class="m3-btn m3-btn-text">Developers</a>
+          <a href="#story" class="m3-btn m3-btn-text">Story & Donate</a>
+        </nav>
+
+        <!-- Right App Bar Actions -->
+        <div class="m3-top-app-bar-actions">
+          <!-- Theme Mode Switcher -->
+          <div class="m3-flex-row m3-gap-xs" role="group" aria-label="Theme mode switcher">
+            <button class="m3-icon-btn" data-theme-mode="light" title="Light Mode" aria-label="Switch to light mode">
+              <span class="material-symbols-rounded">light_mode</span>
+            </button>
+            <button class="m3-icon-btn" data-theme-mode="dark" title="Dark Mode" aria-label="Switch to dark mode">
+              <span class="material-symbols-rounded">dark_mode</span>
+            </button>
+            <button class="m3-icon-btn active" data-theme-mode="system" title="System Preference" aria-label="Switch to system theme">
+              <span class="material-symbols-rounded">desktop_windows</span>
+            </button>
+          </div>
+
+          <!-- GitHub Repo Link -->
+          <a href="https://github.com/Narayan6204/Pen-11" target="_blank" rel="noopener noreferrer" class="m3-btn m3-btn-tonal" aria-label="GitHub Repository">
+            <span class="material-symbols-rounded">code</span>
+            <span>GitHub</span>
+          </a>
+
+          <!-- Download Action -->
+          <a href="https://github.com/Narayan6204/Pen-11/releases/latest" data-gh-download-url class="m3-btn m3-btn-filled" aria-label="Download Pen 11">
+            <span class="material-symbols-rounded">download</span>
+            <span>Download</span>
+          </a>
+        </div>
+      </header>
+
+      <!-- 2. Hero Section with Live Interactive Canvas Sandbox -->
+      <section id="hero" class="m3-section" style="padding-top: 32px;" aria-labelledby="hero-title">
+        <div class="m3-container">
+          
+          <!-- Hero Header Info -->
+          <div class="m3-flex-col m3-align-center" style="text-align: center; max-width: 900px; margin: 0 auto 36px;">
+            <div class="m3-badge-pill" style="margin-bottom: 16px;">
+              <span class="material-symbols-rounded" style="font-size: 16px;">bolt</span>
+              <span>Direct3D 11 GPU Pipeline • 60 FPS Fluid Animations • <span data-gh-version>v2.0.0</span></span>
+            </div>
+
+            <h1 id="hero-title" class="m3-display-medium" style="margin-bottom: 16px; font-weight: 800;">
+              The Lightest, Most Responsive Screen Marker for Windows 11.
+            </h1>
+
+            <p class="m3-body-large" style="max-width: 720px; margin-bottom: 28px;">
+              Hardware-accelerated Direct3D 11 inking, 60 FPS fluid animation engine, Smart Vector Objects with OBB rotation, persistent settings storage, and near 0% idle CPU usage. Completely free and open-source.
+            </p>
+
+            <div class="m3-flex-row m3-gap-md" style="flex-wrap: wrap; justify-content: center;">
+              <a href="https://github.com/Narayan6204/Pen-11/releases/latest" data-gh-download-url class="m3-btn m3-btn-filled" style="height: 48px; padding: 0 32px; font-size: 1rem; display: inline-flex; align-items: center; gap: 8px;" aria-label="Pen 11 for Windows">
+                <svg width="18" height="18" viewBox="0 0 88 88" fill="currentColor" aria-hidden="true" style="flex-shrink: 0;">
+                  <path d="M0 0h41.6v41.6H0V0zm46.4 0H88v41.6H46.4V0zM0 46.4h41.6V88H0V46.4zm46.4 0H88V88H46.4V46.4z"/>
+                </svg>
+                <span>Pen 11 for Windows (<span data-gh-size>38.6 MB</span>)</span>
+              </a>
+              <a href="#features" class="m3-btn m3-btn-outlined" style="height: 48px; padding: 0 24px; font-size: 1rem;">
+                <span class="material-symbols-rounded">explore</span>
+                <span>Explore Features</span>
+              </a>
+            </div>
+
+            <!-- System Requirements Detail Callout Card -->
+            <div class="m3-sys-req-card" aria-label="Pen 11 System Requirements & Compatibility">
+              <div class="sys-req-header">
+                <div class="sys-req-title-wrap">
+                  <span class="material-symbols-rounded">verified</span>
+                  <span class="m3-title-small" style="font-weight: 700; color: var(--md-sys-color-on-surface);">System Requirements & Compatibility</span>
+                </div>
+                <span class="m3-badge-pill" style="font-size: 11px; padding: 4px 10px;">Zero Install • 100% Local</span>
+              </div>
+              
+              <div class="sys-req-grid">
+                <div class="sys-req-item">
+                  <span class="material-symbols-rounded sys-req-icon">desktop_windows</span>
+                  <div class="sys-req-text">
+                    <span class="sys-req-label">Operating System</span>
+                    <span class="sys-req-val">Windows 11 / 10 <span style="font-size: 11px; font-weight: normal; opacity: 0.85;">(64-bit)</span></span>
+                  </div>
+                </div>
+
+                <div class="sys-req-item">
+                  <span class="material-symbols-rounded sys-req-icon">memory</span>
+                  <div class="sys-req-text">
+                    <span class="sys-req-label">Memory (RAM)</span>
+                    <span class="sys-req-val">50 MB Minimum <span style="font-size: 11px; font-weight: normal; opacity: 0.85;">(&lt;0.1% usage)</span></span>
+                  </div>
+                </div>
+
+                <div class="sys-req-item">
+                  <span class="material-symbols-rounded sys-req-icon">speed</span>
+                  <div class="sys-req-text">
+                    <span class="sys-req-label">Graphics (GPU)</span>
+                    <span class="sys-req-val">Direct3D 11 <span style="font-size: 11px; font-weight: normal; opacity: 0.85;">(Hardware DWM)</span></span>
+                  </div>
+                </div>
+
+                <div class="sys-req-item">
+                  <span class="material-symbols-rounded sys-req-icon">folder_zip</span>
+                  <div class="sys-req-text">
+                    <span class="sys-req-label">Disk Storage</span>
+                    <span class="sys-req-val"><span data-gh-size>38.6 MB</span> <span style="font-size: 11px; font-weight: normal; opacity: 0.85;">(Portable EXE)</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Interactive Sandbox Stage -->
+          <div id="canvas-stage-wrapper" class="canvas-stage-wrapper canvas-backdrop-whiteboard cursor-pen" aria-label="Interactive Pen 11 Drawing Sandbox">
+            
+            <!-- Active Canvas Layers Container -->
+            <div id="pen-hero-canvas-container" class="pen-interactive-canvas"></div>
+
+            <!-- Draggable Floating Pen 11 Warm Sand Toolbar Mockup -->
+            <aside id="pen-live-toolbar" class="pen-toolbar-container" style="top: 24px; right: 24px;" aria-label="Pen 11 Floating Toolbar">
+              
+              <!-- 1. Drag Grip Handle -->
+              <div id="pen-toolbar-drag" class="toolbar-drag-handle" title="Drag Toolbar anywhere" aria-label="Drag toolbar">
+                <div class="toolbar-drag-pill"></div>
+              </div>
+
+              <!-- 2. Monkey Icon State Button (🐵 Active Ink / 🐒 Cursor Click-Through / 🙈 Hidden Canvas) -->
+              <div style="position: relative; display: flex; justify-content: center;">
+                <button id="tb-btn-monkey" class="toolbar-tool-btn" title="Monkey Menu" aria-label="Monkey State Button">
+                  <span id="tb-monkey-icon">🐵</span>
+                </button>
+                
+                <!-- Monkey Flyout -->
+                <div id="tb-monkey-flyout" class="toolbar-monkey-flyout" style="display: none;">
+                  <button class="toolbar-tool-btn active" data-monkey="active" title="Active Ink Mode" aria-label="Active Ink">
+                    <span>🐵</span>
+                  </button>
+                  <button class="toolbar-tool-btn" data-monkey="cursor" title="Cursor Mode (Click-through)" aria-label="Cursor Mode">
+                    <span>🐒</span>
+                  </button>
+                  <button class="toolbar-tool-btn" data-monkey="hidden" title="Hide Canvas" aria-label="Hide Canvas">
+                    <span>🙈</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="toolbar-divider toolbar-collapsible"></div>
+
+              <!-- 3. Select / Transform Tool (↖️) -->
+              <button class="toolbar-tool-btn toolbar-collapsible" data-tool="select" title="Select / Transform (Ctrl+4)" aria-label="Selection tool">
+                <span>↖️</span>
+              </button>
+
+              <!-- 4. Pen Tool (🖊️) -->
+              <button class="toolbar-tool-btn active toolbar-collapsible" data-tool="pen" title="Pen (Ctrl+1)" aria-label="Pen tool">
+                <span>🖊️</span>
+              </button>
+
+              <!-- 5. Highlighter Tool (🖍️) -->
+              <button class="toolbar-tool-btn toolbar-collapsible" data-tool="highlighter" title="Highlighter (Ctrl+2)" aria-label="Highlighter tool">
+                <span>🖍️</span>
+              </button>
+
+              <!-- 6. Shape Menu Button (📐) & Flyout -->
+              <div class="toolbar-collapsible" style="position: relative;">
+                <button id="tb-btn-shapes" class="toolbar-tool-btn" title="Shapes (Line, Arrow, Rect, RoundRect, Circle, Triangle)" aria-label="Shapes selection">
+                  <span>📐</span>
+                </button>
+
+                <!-- Shapes Popover Grid (6 Shapes) -->
+                <div id="tb-shapes-flyout" class="toolbar-shape-flyout" style="display: none;">
+                  <div class="shape-flyout-title">Shapes</div>
+                  <div class="shape-flyout-grid">
+                    <button class="toolbar-tool-btn" data-shape="line" title="Line (Shift for 45°)" aria-label="Line shape">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"></line></svg>
+                    </button>
+                    <button class="toolbar-tool-btn" data-shape="arrow" title="Arrow (Shift for 45°)" aria-label="Arrow shape">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"></line><polyline points="10 5 19 5 19 14"></polyline></svg>
+                    </button>
+                    <button class="toolbar-tool-btn" data-shape="rectangle" title="Rectangle (Shift for 1:1 Square)" aria-label="Rectangle shape">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="0"></rect></svg>
+                    </button>
+                    <button class="toolbar-tool-btn" data-shape="rounded_rectangle" title="Rounded Rectangle (Shift for 1:1 Square)" aria-label="Rounded rectangle shape">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="3.5"></rect></svg>
+                    </button>
+                    <button class="toolbar-tool-btn" data-shape="circle" title="Circle (Shift for 1:1 Circle)" aria-label="Circle shape">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle></svg>
+                    </button>
+                    <button class="toolbar-tool-btn" data-shape="triangle" title="Triangle (Shift for 90° Right Angle)" aria-label="Triangle shape">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 L21 19 L3 19 Z"></path></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 7. Eraser Tool (🧽) -->
+              <button class="toolbar-tool-btn toolbar-collapsible" data-tool="eraser" title="Eraser (Ctrl+3)" aria-label="Eraser tool">
+                <span>🧽</span>
+              </button>
+
+              <div class="toolbar-divider toolbar-collapsible"></div>
+
+              <!-- 8. Floating Color Palette Button (🎨) & Popover (12 Curated Colors) -->
+              <div class="toolbar-collapsible" style="position: relative;">
+                <button id="tb-btn-palette" class="toolbar-tool-btn" title="Color Palette (Ctrl+P)" aria-label="Color Palette">
+                  <span>🎨</span>
+                </button>
+
+                <!-- 12-Color Grid Popover -->
+                <div id="tb-palette-popover" class="toolbar-palette-popover" style="display: none;">
+                  <div class="toolbar-drag-pill" style="margin-bottom: 4px;"></div>
+                  <div class="palette-title">Colors</div>
+                  <div class="palette-grid">
+                    <button class="palette-color-btn active" data-hex="#000000" style="background-color: #000000; color: #000000;" title="Black" aria-label="Black"></button>
+                    <button class="palette-color-btn" data-hex="#FFFFFF" style="background-color: #FFFFFF; color: #FFFFFF;" title="White" aria-label="White"></button>
+                    <button class="palette-color-btn" data-hex="#717171" style="background-color: #717171; color: #717171;" title="Gray" aria-label="Gray"></button>
+                    <button class="palette-color-btn" data-hex="#FF3B30" style="background-color: #FF3B30; color: #FF3B30;" title="Red" aria-label="Red"></button>
+                    <button class="palette-color-btn" data-hex="#FF9500" style="background-color: #FF9500; color: #FF9500;" title="Orange" aria-label="Orange"></button>
+                    <button class="palette-color-btn" data-hex="#FFCC00" style="background-color: #FFCC00; color: #FFCC00;" title="Yellow" aria-label="Yellow"></button>
+                    <button class="palette-color-btn" data-hex="#4CD964" style="background-color: #4CD964; color: #4CD964;" title="Green" aria-label="Green"></button>
+                    <button class="palette-color-btn" data-hex="#5AC8FA" style="background-color: #5AC8FA; color: #5AC8FA;" title="Light Blue" aria-label="Light Blue"></button>
+                    <button class="palette-color-btn" data-hex="#007AFF" style="background-color: #007AFF; color: #007AFF;" title="Blue" aria-label="Blue"></button>
+                    <button class="palette-color-btn" data-hex="#5856D6" style="background-color: #5856D6; color: #5856D6;" title="Purple" aria-label="Purple"></button>
+                    <button class="palette-color-btn" data-hex="#FF2D55" style="background-color: #FF2D55; color: #FF2D55;" title="Pink" aria-label="Pink"></button>
+                    <button class="palette-color-btn" data-hex="#A2845E" style="background-color: #A2845E; color: #A2845E;" title="Brown" aria-label="Brown"></button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="toolbar-divider toolbar-collapsible"></div>
+
+              <!-- 9. Undo Action (↩️) -->
+              <button id="tb-btn-undo" class="toolbar-tool-btn toolbar-collapsible" title="Undo (Ctrl+Z)" aria-label="Undo stroke" disabled>
+                <span>↩️</span>
+              </button>
+
+              <!-- 10. Board Toggle (⬜) -->
+              <button id="tb-btn-bg" class="toolbar-tool-btn toolbar-collapsible" title="Toggle Whiteboard/Blackboard (Ctrl+B)" aria-label="Toggle canvas backdrop">
+                <span>⬜</span>
+              </button>
+
+              <!-- 11. Clear Screen Action (🗑️) -->
+              <button id="tb-btn-clear" class="toolbar-tool-btn toolbar-collapsible" title="Clear Screen (Ctrl+Shift+C)" aria-label="Clear screen">
+                <span>🗑️</span>
+              </button>
+            </aside>
+
+            <!-- Bottom Left HUD Metric -->
+            <div class="canvas-hud-bottom-left">
+              <div class="hud-pill">
+                <div class="hud-pill-dot"></div>
+                <span>Direct3D 11 • 60 FPS • Smart Objects</span>
+              </div>
+            </div>
+
+            <!-- Top Right HUD Backdrop Indicator -->
+            <div class="canvas-hud-top-right">
+              <div class="hud-pill" style="font-size: 11px;">
+                <span>Click & drag on canvas to test drawing!</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 3. Native Desktop UI Showcase Gallery -->
+      <section id="gallery" class="m3-section" aria-labelledby="gallery-title">
+        <div class="m3-container">
+          
+          <div style="text-align: center; max-width: 760px; margin: 0 auto 44px;">
+            <span class="m3-badge-pill" style="margin-bottom: 12px;">LIVE APP SHOWCASE</span>
+            <h2 id="gallery-title" class="m3-headline-large" style="color: var(--md-sys-color-on-surface); margin-bottom: 12px;">
+              Crafted for Windows 11 Flow
+            </h2>
+            <p class="m3-body-large" style="color: var(--md-sys-color-on-surface-variant);">
+              Modular, floating translucent UI panels that adapt to your screen without stealing window focus or cluttering presentations.
+            </p>
+          </div>
+
+          <!-- 3-Card Showcase Grid -->
+          <div class="gallery-grid">
+            
+            <!-- Card 1: 12-Color Floating Palette -->
+            <article class="gallery-card">
+              <div class="gallery-img-wrapper">
+                <img src="assets/screenshot_palette.png" alt="Pen 11 Toolbar and 12-Color Palette Flyout with custom size selector" loading="lazy" width="280" height="400">
+              </div>
+              <div class="gallery-card-content">
+                <div class="m3-badge-pill" style="align-self: flex-start; font-size: 11px;">12-Color Palette</div>
+                <h3 class="m3-title-medium">Palette & Precision Sizer</h3>
+                <p class="m3-body-medium">
+                  12 high-contrast curated swatches with instant stroke-width adjustments, non-blocking opacity fades, and auto-persistence to disk.
+                </p>
+              </div>
+            </article>
+
+            <!-- Card 2: Smart Vector Shapes -->
+            <article class="gallery-card">
+              <div class="gallery-img-wrapper">
+                <img src="assets/screenshot_shapes.png" alt="Pen 11 Smart Shapes Menu Flyout with geometric tools" loading="lazy" width="280" height="400">
+              </div>
+              <div class="gallery-card-content">
+                <div class="m3-badge-pill" style="align-self: flex-start; font-size: 11px;">Geometric Toolbox</div>
+                <h3 class="m3-title-medium">Smart Vector Shapes</h3>
+                <p class="m3-body-medium">
+                  Lines, Arrows, Rectangles, Rounded Rectangles, Ellipses, and Triangles with 45° angle snapping and 400ms gesture recognition.
+                </p>
+              </div>
+            </article>
+
+            <!-- Card 3: Monkey & Cursor State Machine -->
+            <article class="gallery-card">
+              <div class="gallery-img-wrapper">
+                <img src="assets/screenshot_cursor.png" alt="Pen 11 Cursor and Monkey State Sub-Toolbar options" loading="lazy" width="280" height="400">
+              </div>
+              <div class="gallery-card-content">
+                <div class="m3-badge-pill" style="align-self: flex-start; font-size: 11px;">State Machine Flyout</div>
+                <h3 class="m3-title-medium">Monkey Mode & Minimal Pill</h3>
+                <p class="m3-body-medium">
+                  Instantly switch between Active Ink (🐵), Cursor Pass-Through (🐒), and smooth 240ms cubic-bezier minimal pill collapse (🙈).
+                </p>
+              </div>
+            </article>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 4. Features Bento Grid Section -->
+      <section id="features" class="m3-section" aria-labelledby="features-title">
+        <div class="m3-container">
+          
+          <div style="text-align: center; max-width: 720px; margin: 0 auto 48px;">
+            <span class="m3-badge-pill" style="margin-bottom: 12px;">ENGINEERING EXCELLENCE</span>
+            <h2 id="features-title" class="m3-headline-large" style="color: var(--md-sys-color-on-surface); margin-bottom: 12px;">
+              Engineered for Speed, Precision & Zero Bloat
+            </h2>
+            <p class="m3-body-large" style="">
+              Every component in Pen 11 is built from the ground up to respect your hardware and streamline screen annotations.
+            </p>
+          </div>
+
+          <!-- Bento Grid Container -->
+          <div class="bento-grid">
+            
+            <!-- Bento Item 1: 60 FPS Fluid Animation Suite -->
+            <article class="bento-card bento-col-8">
+              <div class="bento-card-header">
+                <div class="bento-card-icon">
+                  <span class="material-symbols-rounded">animation</span>
+                </div>
+                <span class="m3-badge-pill">60 FPS Fluid Suite</span>
+              </div>
+              <h3 class="bento-card-title">60 FPS Fluid Animation Engine</h3>
+              <p class="bento-card-description">
+                Direct3D 11 native swapchain combined with <code>QPropertyAnimation</code> (<code>InOutCubic</code> 240ms) delivers seamless toolbar collapse/expand morphing and non-blocking <code>InOutSine</code> opacity fades with zero visual stutter or layout fighting.
+              </p>
+              <div style="background: var(--md-sys-color-surface); border-radius: var(--md-sys-shape-corner-medium); padding: 16px; border: 1px solid var(--md-sys-color-outline-variant);">
+                <div class="m3-flex-row m3-justify-between m3-align-center" style="margin-bottom: 8px;">
+                  <span class="m3-label-medium">Frame Dispatch & Jitter</span>
+                  <span class="m3-label-small" style="color: #22c55e; font-weight: 700;">&lt; 1.2ms (Zero Tearing)</span>
+                </div>
+                <div style="width: 100%; height: 8px; background-color: var(--md-sys-color-surface-container-highest); border-radius: 99px; overflow: hidden;">
+                  <div style="width: 12%; height: 100%; background-color: var(--md-sys-color-primary); border-radius: 99px;"></div>
+                </div>
+              </div>
+            </article>
+
+            <!-- Bento Item 2: Modular Floating Panels & Drag Sync -->
+            <article class="bento-card bento-col-4">
+              <div class="bento-card-header">
+                <div class="bento-card-icon">
+                  <span class="material-symbols-rounded">dashboard_customize</span>
+                </div>
+                <span class="m3-badge-pill">Modular UI</span>
+              </div>
+              <h3 class="bento-card-title">Independent Floating Panels</h3>
+              <p class="bento-card-description">
+                Color Palette, Shapes Menu, and Cursor Toolbars function as modular floating panels. Attached panels glide seamlessly during drag, and remember customized screen coordinates independently.
+              </p>
+            </article>
+
+            <!-- Bento Item 3: Zero-Latency Native Hover & Cursor Engine -->
+            <article class="bento-card bento-col-4">
+              <div class="bento-card-header">
+                <div class="bento-card-icon">
+                  <span class="material-symbols-rounded">mouse</span>
+                </div>
+                <span class="m3-badge-pill">Zero Focus Steal</span>
+              </div>
+              <h3 class="bento-card-title">Zero-Latency Hover Engine</h3>
+              <p class="bento-card-description">
+                Procedural high-DPI tool cursors and instant button tooltips update at 120Hz without stealing OS window focus from Word, web browsers, or presentation slide decks.
+              </p>
+            </article>
+
+            <!-- Bento Item 4: Smart Vector Objects & OBB Rotation -->
+            <article class="bento-card bento-col-4">
+              <div class="bento-card-header">
+                <div class="bento-card-icon">
+                  <span class="material-symbols-rounded">crop_rotate</span>
+                </div>
+                <span class="m3-badge-pill">OBB Matrix</span>
+              </div>
+              <h3 class="bento-card-title">Smart Vector Objects & OBB</h3>
+              <p class="bento-card-description">
+                Pure vector strokes track their Oriented Bounding Box geometry during centroid rotation, scaling, and dragging. Hold for 400ms to auto-snap strokes into perfect geometric shapes.
+              </p>
+            </article>
+
+            <!-- Bento Item 5: Persistent State & Single-Instance Guard -->
+            <article class="bento-card bento-col-4">
+              <div class="bento-card-header">
+                <div class="bento-card-icon">
+                  <span class="material-symbols-rounded">save</span>
+                </div>
+                <span class="m3-badge-pill">IPC & Storage</span>
+              </div>
+              <h3 class="bento-card-title">Persistent State & IPC Guard</h3>
+              <p class="bento-card-description">
+                StorageManager auto-saves custom tool sizes, active swatches, and coordinates to disk. Local IPC socket locks ensure a single instance runs with zero hotkey conflicts.
+              </p>
+            </article>
+
+            <!-- Bento Item 6: 50,000-Stroke Memory-Safe Undo Stack -->
+            <article class="bento-card bento-col-12">
+              <div class="m3-flex-row m3-justify-between m3-align-center" style="flex-wrap: wrap; gap: 16px;">
+                <div style="max-width: 680px;">
+                  <div class="m3-flex-row m3-gap-sm m3-align-center" style="margin-bottom: 8px;">
+                    <span class="material-symbols-rounded" style="color: var(--md-sys-color-primary);">shield</span>
+                    <h3 class="bento-card-title" style="margin: 0;">50,000-Stroke Vector Pipeline & 5,000-Step Undo Stack</h3>
+                  </div>
+                  <p class="bento-card-description" style="margin: 0;">
+                    Draw infinitely with confidence. Pen 11 handles up to 50,000 simultaneous on-screen strokes with a massive 5,000-step memory-capped Undo history, zero raster degradation, and 0.0% background idle CPU usage.
+                  </p>
+                </div>
+                <div class="m3-flex-row m3-gap-sm">
+                  <span class="m3-badge-pill" style="font-size: 14px; padding: 6px 16px;">50,000+ Strokes</span>
+                  <span class="m3-badge-pill" style="font-size: 14px; padding: 6px 16px;">5,000 Undo Steps</span>
+                  <span class="m3-badge-pill" style="font-size: 14px; padding: 6px 16px;">0.0% Idle CPU</span>
+                </div>
+              </div>
+            </article>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 4. Hardware Benchmarks & Performance Metrics -->
+      <section id="benchmarks" class="m3-section" style="background-color: #EDE0C8;" aria-labelledby="benchmarks-title">
+        <div class="m3-container">
+          
+          <div style="text-align: center; max-width: 720px; margin: 0 auto 48px;">
+            <span class="m3-badge-pill" style="margin-bottom: 12px;">EMPIRICAL BENCHMARKS</span>
+            <h2 id="benchmarks-title" class="m3-headline-large" style="color: var(--md-sys-color-on-surface); margin-bottom: 12px;">
+              Unmatched Hardware Efficiency
+            </h2>
+            <p class="m3-body-large" style="">
+              Side-by-side performance analysis on Windows 11 Desktop Window Manager (DWM).
+            </p>
+          </div>
+
+          <div class="bento-grid">
+            
+            <div class="bento-card bento-col-3">
+              <span class="m3-title-small" style="">RAM CONSUMPTION</span>
+              <div class="m3-display-small" style="color: var(--md-sys-color-primary); margin: 8px 0 4px;">48 MB</div>
+              <p class="m3-body-small" style="">vs ~380 MB on Electron tools (87% less RAM)</p>
+            </div>
+
+            <div class="bento-card bento-col-3">
+              <span class="m3-title-small" style="">IDLE CPU USAGE</span>
+              <div class="m3-display-small" style="color: #22c55e; margin: 8px 0 4px;">0.0%</div>
+              <p class="m3-body-small" style="">Event loop fully paused when not drawing</p>
+            </div>
+
+            <div class="bento-card bento-col-3">
+              <span class="m3-title-small" style="">FRAME DISPATCH</span>
+              <div class="m3-display-small" style="color: var(--md-sys-color-primary); margin: 8px 0 4px;">&lt; 1.2ms</div>
+              <p class="m3-body-small" style="">Direct3D 11 sub-millisecond dirty-rect blit</p>
+            </div>
+
+            <div class="bento-card bento-col-3">
+              <span class="m3-title-small" style="">BINARY SIZE</span>
+              <div class="m3-display-small" style="color: var(--md-sys-color-primary); margin: 8px 0 4px;" data-gh-size>38.6 MB</div>
+              <p class="m3-body-small" style="">Standalone portable executable. Zero install.</p>
+            </div>
+
+          </div>
+
+          <!-- Bottom Benchmarks Download CTA with System Specs -->
+          <div class="m3-flex-col m3-align-center" style="margin-top: 36px; text-align: center;">
+            <a href="https://github.com/Narayan6204/Pen-11/releases/latest" data-gh-download-url class="m3-btn m3-btn-filled" style="height: 48px; padding: 0 32px; font-size: 1rem; display: inline-flex; align-items: center; gap: 8px;" aria-label="Download Pen 11 for Windows">
+              <svg width="18" height="18" viewBox="0 0 88 88" fill="currentColor" aria-hidden="true" style="flex-shrink: 0;">
+                <path d="M0 0h41.6v41.6H0V0zm46.4 0H88v41.6H46.4V0zM0 46.4h41.6V88H0V46.4zm46.4 0H88V88H46.4V46.4z"/>
+              </svg>
+              <span>Download Pen 11 Free (<span data-gh-size>38.6 MB</span>)</span>
+            </a>
+            <span class="m3-label-small" style="margin-top: 10px; color: var(--md-sys-color-on-surface-variant); display: inline-flex; align-items: center; gap: 6px;">
+              <span class="material-symbols-rounded" style="font-size: 14px; color: var(--md-sys-color-primary);">check_circle</span>
+              <span>Windows 11 / 10 (64-bit) • Min 50 MB RAM • Direct3D 11 • Portable Standalone</span>
+            </span>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 5. Interactive Hotkey Matrix Section -->
+      <section id="hotkeys" class="m3-section" aria-labelledby="hotkeys-title">
+        <div class="m3-container">
+          
+          <div style="text-align: center; max-width: 720px; margin: 0 auto 36px;">
+            <span class="m3-badge-pill" style="margin-bottom: 12px;">WORKFLOW ACCELERATION</span>
+            <h2 id="hotkeys-title" class="m3-headline-large" style="color: var(--md-sys-color-on-surface); margin-bottom: 12px;">
+              Global Hotkey Matrix
+            </h2>
+            <p class="m3-body-large" style="">
+              System-wide keyboard shortcuts that operate anywhere across Windows 11. Test them in real-time or search below.
+            </p>
+          </div>
+
+          <!-- Search & Filter Controls -->
+          <div class="m3-flex-col m3-gap-md" style="margin-bottom: 24px;">
+            
+            <!-- Search Bar -->
+            <div style="position: relative; width: 100%; max-width: 480px; margin: 0 auto;">
+              <span class="material-symbols-rounded" style="position: absolute; left: 16px; top: 12px; color: var(--md-sys-color-outline);">search</span>
+              <input id="hotkey-search-input" type="text" placeholder="Search shortcuts (e.g., Pen, Undo, Ctrl+1)..." 
+                style="width: 100%; height: 48px; padding: 0 16px 0 48px; border-radius: var(--md-sys-shape-corner-full); border: 1px solid var(--md-sys-color-outline); background-color: var(--md-sys-color-surface-container); color: var(--md-sys-color-on-surface);"
+                aria-label="Search keyboard shortcuts">
+            </div>
+
+            <!-- Category Filter Chips -->
+            <div id="hotkey-category-chips" class="m3-flex-row m3-justify-center m3-gap-xs" style="flex-wrap: wrap;" role="tablist" aria-label="Shortcut category filter">
+              <button class="m3-chip active" data-category="all" role="tab" aria-selected="true">All Shortcuts</button>
+              <button class="m3-chip" data-category="Drawing Tools" role="tab" aria-selected="false">Drawing Tools</button>
+              <button class="m3-chip" data-category="Selection & Smart Objects" role="tab" aria-selected="false">Selection & Lasso</button>
+              <button class="m3-chip" data-category="Styling & Sizing" role="tab" aria-selected="false">Styling & Sizing</button>
+              <button class="m3-chip" data-category="Canvas Controls" role="tab" aria-selected="false">Canvas Controls</button>
+            </div>
+
+          </div>
+
+          <!-- Hotkey Data Table -->
+          <div class="m3-table-container">
+            <table class="m3-table" aria-label="Pen 11 Keyboard Shortcuts Table">
+              <thead>
+                <tr>
+                  <th style="width: 25%;">Action</th>
+                  <th style="width: 25%;">Key Combination</th>
+                  <th style="width: 50%;">Description</th>
+                </tr>
+              </thead>
+              <tbody id="hotkey-table-body">
+                <!-- Dynamically populated by shortcuts.js -->
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 6. Developer Hub Section -->
+      <section id="developers" class="m3-section" aria-labelledby="dev-title">
+        <div class="m3-container">
+          
+          <div style="text-align: center; max-width: 720px; margin: 0 auto 48px;">
+            <span class="m3-badge-pill" style="margin-bottom: 12px;">OPEN SOURCE ARCHITECTURE</span>
+            <h2 id="dev-title" class="m3-headline-large" style="color: var(--md-sys-color-on-surface); margin-bottom: 12px;">
+              Built with Python & PyQt6
+            </h2>
+            <p class="m3-body-large" style="">
+              Completely open source and modular. Safe to inspect, modify, and compile on your own machine.
+            </p>
+          </div>
+
+          <div class="bento-grid">
+            
+            <!-- Terminal Clone & Run Card -->
+            <div class="bento-card bento-col-7" style="background-color: #1A1108; color: #ffffff; font-family: var(--md-sys-typescale-font-mono);">
+              <div class="m3-flex-row m3-justify-between m3-align-center" style="margin-bottom: 16px;">
+                <div class="m3-flex-row m3-gap-xs">
+                  <span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f56;"></span>
+                  <span style="width: 12px; height: 12px; border-radius: 50%; background: #ffbd2e;"></span>
+                  <span style="width: 12px; height: 12px; border-radius: 50%; background: #27c93f;"></span>
+                </div>
+                <span class="m3-label-small" style="color: #8f9099;">PowerShell / Command Prompt</span>
+              </div>
+              <pre style="margin: 0; font-size: 13px; line-height: 1.6; overflow-x: auto;"><code><span style="color: #60cdff;"># 1. Clone repository</span>
+git clone https://github.com/Narayan6204/Pen-11.git
+cd "Pen-11"
+
+<span style="color: #60cdff;"># 2. Install dependencies</span>
+pip install -r requirements.txt
+
+<span style="color: #60cdff;"># 3. Launch live Python application</span>
+python main.py
+
+<span style="color: #60cdff;"># 4. Compile optimized standalone executable</span>
+python -m PyInstaller main.spec --noconfirm</code></pre>
+            </div>
+
+            <!-- Architecture Breakdown -->
+            <div class="bento-card bento-col-5">
+              <h3 class="bento-card-title">Core Module Layout</h3>
+              <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px;">
+                <li class="m3-flex-row m3-gap-sm m3-align-center">
+                  <span class="material-symbols-rounded" style="color: var(--md-sys-color-primary);">description</span>
+                  <div>
+                    <strong style="color: var(--md-sys-color-on-surface);">main.py</strong>
+                    <p class="m3-body-small" style="">Frameless Direct3D overlay, 60 FPS animations & event dispatcher.</p>
+                  </div>
+                </li>
+                <li class="m3-flex-row m3-gap-sm m3-align-center">
+                  <span class="material-symbols-rounded" style="color: var(--md-sys-color-primary);">crop_rotate</span>
+                  <div>
+                    <strong style="color: var(--md-sys-color-on-surface);">OBB Vector Engine</strong>
+                    <p class="m3-body-small" style="">Oriented Bounding Box geometry, rotation matrix & handle physics.</p>
+                  </div>
+                </li>
+                <li class="m3-flex-row m3-gap-sm m3-align-center">
+                  <span class="material-symbols-rounded" style="color: var(--md-sys-color-primary);">dashboard_customize</span>
+                  <div>
+                    <strong style="color: var(--md-sys-color-on-surface);">CustomHoverMenu</strong>
+                    <p class="m3-body-small" style="">Modular floating panels with non-blocking InOutSine opacity fades.</p>
+                  </div>
+                </li>
+                <li class="m3-flex-row m3-gap-sm m3-align-center">
+                  <span class="material-symbols-rounded" style="color: var(--md-sys-color-primary);">lock</span>
+                  <div>
+                    <strong style="color: var(--md-sys-color-on-surface);">SingleInstanceManager</strong>
+                    <p class="m3-body-small" style="">Local IPC socket mutex guard preventing duplicate instances.</p>
+                  </div>
+                </li>
+                <li class="m3-flex-row m3-gap-sm m3-align-center">
+                  <span class="material-symbols-rounded" style="color: var(--md-sys-color-primary);">save</span>
+                  <div>
+                    <strong style="color: var(--md-sys-color-on-surface);">StorageManager</strong>
+                    <p class="m3-body-small" style="">Atomic JSON persistence for tool sizes, swatches & coordinates.</p>
+                  </div>
+                </li>
+                <li class="m3-flex-row m3-gap-sm m3-align-center">
+                  <span class="material-symbols-rounded" style="color: var(--md-sys-color-primary);">history</span>
+                  <div>
+                    <strong style="color: var(--md-sys-color-on-surface);">HistoryManager</strong>
+                    <p class="m3-body-small" style="">50,000-stroke vector pipeline & 5,000-step memory-safe command stack.</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 7. Story & Motivation + UPI Donation Card -->
+      <section id="story" class="m3-section" aria-labelledby="story-title">
+        <div class="m3-container">
+          
+          <div class="bento-grid" style="align-items: center;">
+            
+            <!-- Story Text Card -->
+            <div class="bento-card bento-col-7">
+              <span class="m3-badge-pill" style="margin-bottom: 12px; align-self: flex-start;">BEHIND THE CODE</span>
+              <h2 id="story-title" class="m3-headline-large" style="color: #2C1F0E; font-weight: 800; margin-bottom: 16px;">
+                The Pen 11 Story
+              </h2>
+              <blockquote style="border-left: 3px solid #7C5C35; padding-left: 16px; margin: 0 0 20px; font-style: italic; color: #3A2810; line-height: 1.75;">
+                "While taking my NIELIT 'O Level' course, I found myself in need of a good screen annotation tool. However, I quickly realized that most existing options were either locked behind paywalls, bloated with unnecessary features, or suffered from laggy, outdated user interfaces.<br><br>
+                Frustrated by these limitations, I decided to build my own solution using AI. The result is <strong>Pen 11</strong>—a blazing-fast, highly responsive, and meticulously optimized screen marker that respects your system's resources."
+              </blockquote>
+              <p class="m3-label-large" style="color: #7C5C35; font-weight: 700;">
+                — Narayan Dev (Creator & Maintainer)
+              </p>
+            </div>
+
+            <!-- UPI Donation QR Card -->
+            <div class="bento-card bento-col-5" style="text-align: center; align-items: center;">
+              <span class="material-symbols-rounded" style="font-size: 36px; color: #e91e63; margin-bottom: 8px;">favorite</span>
+              <h3 class="bento-card-title" style="margin-bottom: 8px;">Support Continued Development</h3>
+              <p class="bento-card-description" style="margin-bottom: 16px;">
+                If Pen 11 helped you in your studies or teaching, buy me a coffee by scanning with any UPI app!
+              </p>
+              
+              <div style="background: #ffffff; padding: 12px; border-radius: var(--md-sys-shape-corner-medium); box-shadow: var(--md-sys-elevation-level2); margin-bottom: 12px; max-width: 240px; width: 100%;">
+                <img src="assets/donate_qr.jpg" alt="UPI Donation QR Code - narayanadev@ptyes" style="border-radius: 8px; display: block; width: 100%; height: auto;">
+              </div>
+
+              <span class="m3-label-small" style="font-family: var(--md-sys-typescale-font-mono); font-weight: 700; color: #7C5C35;">
+                UPI ID: narayanadev@ptyes
+              </span>
+              <span class="m3-label-small" style="font-family: var(--md-sys-typescale-font-mono); margin-top: 4px;">
+                Scan with Paytm, GPay, PhonePe, or BHIM
+              </span>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 8. M3 Footer -->
+      <footer style="background-color: var(--md-sys-color-surface-container); border-top: 1px solid var(--md-sys-color-outline-variant); padding: 48px 0 32px;" role="contentinfo">
+        <div class="m3-container">
+          <div class="m3-flex-row m3-justify-between m3-align-center" style="flex-wrap: wrap; gap: 24px; margin-bottom: 32px;">
+            
+            <div class="m3-flex-row m3-align-center m3-gap-md">
+              <img src="assets/logo.svg" alt="Pen 11 Logo" width="36" height="36">
+              <div>
+                <strong style="color: var(--md-sys-color-on-surface); font-size: 1.1rem;">Pen 11</strong>
+                <p class="m3-body-small" style="">Open Source Windows 11 Screen Annotation Tool</p>
+              </div>
+            </div>
+
+            <div class="m3-flex-row m3-gap-sm" style="flex-wrap: wrap;">
+              <a href="https://github.com/Narayan6204/Pen-11" target="_blank" rel="noopener noreferrer" class="m3-btn m3-btn-outlined">
+                <span class="material-symbols-rounded">star</span>
+                <span>Star on GitHub</span>
+              </a>
+              <a href="https://github.com/Narayan6204/Pen-11/issues" target="_blank" rel="noopener noreferrer" class="m3-btn m3-btn-text">
+                <span>Report Issue</span>
+              </a>
+              <a href="https://github.com/Narayan6204/Pen-11/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" class="m3-btn m3-btn-text">
+                <span>MIT License</span>
+              </a>
+            </div>
+
+          </div>
+
+          <div class="m3-flex-row m3-justify-between m3-align-center" style="border-top: 1px solid var(--md-sys-color-outline-variant); padding-top: 24px; font-size: 13px; flex-wrap: wrap; gap: 12px;">
+            <span>Released under the MIT License • Developed with ♥ by Narayan Dev.</span>
+            <span>Optimized for Windows 11 Desktop Window Manager (DWM).</span>
+          </div>
+        </div>
+      </footer>
+
+    </main>
+
+    <!-- Mobile Bottom Navigation Bar (<600px) -->
+    <nav class="m3-nav-bar" role="navigation" aria-label="Mobile Navigation">
+      <a href="#hero" class="m3-nav-item active">
+        <div class="m3-nav-pill">
+          <span class="material-symbols-rounded">edit_note</span>
+        </div>
+        <span class="m3-nav-label">Sandbox</span>
+      </a>
+      <a href="#gallery" class="m3-nav-item">
+        <div class="m3-nav-pill">
+          <span class="material-symbols-rounded">photo_library</span>
+        </div>
+        <span class="m3-nav-label">Gallery</span>
+      </a>
+      <a href="#features" class="m3-nav-item">
+        <div class="m3-nav-pill">
+          <span class="material-symbols-rounded">grid_view</span>
+        </div>
+        <span class="m3-nav-label">Features</span>
+      </a>
+      <a href="#hotkeys" class="m3-nav-item">
+        <div class="m3-nav-pill">
+          <span class="material-symbols-rounded">keyboard</span>
+        </div>
+        <span class="m3-nav-label">Hotkeys</span>
+      </a>
+      <a href="https://github.com/Narayan6204/Pen-11/releases/latest" data-gh-download-url class="m3-nav-item">
+        <div class="m3-nav-pill">
+          <span class="material-symbols-rounded">download</span>
+        </div>
+        <span class="m3-nav-label">Download</span>
+      </a>
+    </nav>
+
+  </div>
+
+  <!-- Fallback: Populate shortcuts table only if ES module fails to load -->
+  <script>
+  (function() {
+    var SHORTCUTS = [
+      { action: 'Select Pen Tool', keys: ['Ctrl', '1'], desc: 'Activates smooth, pressure-sensitive vector pen nib for writing and sketching.' },
+      { action: 'Select Highlighter', keys: ['Ctrl', '2'], desc: 'Switches to semi-transparent chisel marker with multiply blend mode.' },
+      { action: 'Select Eraser', keys: ['Ctrl', '3'], desc: 'Erases strokes point-by-point or smart objects by proximity.' },
+      { action: 'Select / Cursor Mode', keys: ['Ctrl', '4'], desc: 'Enables cursor click-through, lasso circle-to-select, and OBB transformation.' },
+      { action: 'Toggle Canvas Visibility', keys: ['Ctrl', '5'], desc: 'Collapses toolbar to minimal pill (🙈) and temporarily hides ink without clearing.' },
+      { action: 'Undo Last Action', keys: ['Ctrl', 'Z'], desc: 'Steps backward in the 5,000-step memory-safe undo stack.' },
+      { action: 'Clear Screen', keys: ['Ctrl', 'Shift', 'C'], desc: 'Instantly wipes all drawings and strokes from the screen.' },
+      { action: 'Toggle Color Palette', keys: ['Ctrl', 'P'], desc: 'Opens or closes the floating 12-color curated swatch toolbox.' },
+      { action: 'Toggle Background Mode', keys: ['Ctrl', 'B'], desc: 'Cycles between Transparent Desktop, Whiteboard, and Blackboard.' },
+      { action: 'Increase Nib Size', keys: ['Ctrl', ']'], desc: 'Increments active stroke nib thickness by +2px.' },
+      { action: 'Decrease Nib Size', keys: ['Ctrl', '['], desc: 'Decrements active stroke nib thickness by -2px.' },
+      { action: 'Exit Application', keys: ['Ctrl', 'Q'], desc: 'Instantly closes and exits the Pen 11 application.' },
+      { action: 'Delete Selected Objects', keys: ['Delete', 'Backspace'], desc: 'Removes all currently highlighted lasso selections from the screen.' },
+      { action: 'Constrain Shapes & Angles', keys: ['Shift', 'Drag'], desc: 'Snaps angles to 45°, rectangle/ellipse to 1:1, triangle to 90° right angle.' }
+    ];
+
+    function populateFallback() {
+      if (window.__PEN11_APP_LOADED__) return;
+      var tbody = document.getElementById('hotkey-table-body');
+      if (!tbody || tbody.children.length > 0) return;
+      tbody.innerHTML = SHORTCUTS.map(function(s) {
+        var kbds = s.keys.map(function(k) {
+          return '<kbd>' + k + '</kbd>';
+        }).join(' <span style="color: var(--md-sys-color-outline); margin: 0 2px;">+</span> ');
+        return '<tr><td class="shortcut-col-action" style="font-weight:700; color: #1A0F00;">' + s.action + '</td><td><div class="m3-kbd-group">' + kbds + '</div></td><td class="shortcut-col-desc" style="color: #3A2810; font-weight: 500;">' + s.desc + '</td></tr>';
+      }).join('');
+    }
+
+    // Attempt fallback population only if ES module hasn't loaded after 1.5s
+    setTimeout(populateFallback, 1500);
+  })();
+  </script>
+
+  <!-- Application Entry Point ES Module -->
+  <script type="module" src="js/app.js?v=4.1.0"></script>
+</body>
+</html>
