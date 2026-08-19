@@ -112,7 +112,7 @@ python main.py
 ```bash
 python -m PyInstaller main.spec --noconfirm
 ```
-*The compiled binary will be placed directly in the `dist/` directory as `main.exe` and `Pen 11.exe`.*
+*The compiled binary will be placed directly in the `dist/` directory as `Pen 11.exe`.*
 
 ---
 
@@ -120,8 +120,10 @@ python -m PyInstaller main.spec --noconfirm
 
 If you find Pen 11 helpful for your studies, teaching, or daily workflow and want to support its continued development, you can buy me a coffee by scanning the UPI QR code below!
 
+**UPI ID:** `narayanadev@ptyes`
+
 <p align="center">
-  <img src="assets/donate_qr.jpg" alt="UPI QR Code" width="280">
+  <img src="assets/donate_qr.jpg" alt="UPI QR Code - narayanadev@ptyes" width="280">
 </p>
 
 ---
