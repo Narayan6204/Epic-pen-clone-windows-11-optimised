@@ -7,7 +7,7 @@
 const REPO_OWNER = 'Narayan6204';
 const REPO_NAME = 'Pen-11';
 const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest`;
-const CACHE_KEY = 'pen11_github_release_cache_v2';
+const CACHE_KEY = 'pen11_github_release_cache_v3';
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
 // Tier 4: Hardcoded Resilience Fallback (Guarantees UI never breaks offline or during rate-limits)
@@ -17,10 +17,12 @@ const STATIC_FALLBACK = {
   name: 'Pen 11 v2.0.0 (Direct3D 11 Hardware Inking Update)',
   publishedAt: '2026-08-19T00:00:00Z',
   downloadUrl: `https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/latest`,
-  directDownloadUrl: `https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/latest/download/Pen%2011.exe`,
-  assetName: 'Pen 11.exe',
-  assetSize: 38649432, // 38.6 MB
+  directDownloadUrl: `https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/v2.0.0/Pen.11.exe`,
+  zipDownloadUrl: `https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/v2.0.0/Pen-11-v2.0.0-Windows.zip`,
+  assetName: 'Pen.11.exe',
+  assetSize: 38649414,
   sizeFormatted: '38.6 MB',
+  zipSizeFormatted: '38.3 MB',
   body: 'High-performance screen annotation with Direct3D 11 hardware acceleration, Smart Objects, and Circle-to-Select Lasso.',
   source: 'static_fallback'
 };
@@ -31,7 +33,7 @@ const STATIC_FALLBACK = {
  * @returns {string}
  */
 export function formatBytes(bytes) {
-  if (!bytes || isNaN(bytes)) return '18.5 MB';
+  if (!bytes || isNaN(bytes)) return '38.6 MB';
   const units = ['B', 'KB', 'MB', 'GB'];
   let i = 0;
   let size = bytes;
@@ -99,17 +101,20 @@ export class GitHubReleaseManager {
   _parseReleaseJson(json) {
     const assets = json.assets || [];
     const exeAsset = assets.find(a => a.name.endsWith('.exe')) || assets[0];
+    const zipAsset = assets.find(a => a.name.endsWith('.zip'));
 
     return {
-      tagName: json.tag_name || 'v2.4.0',
-      version: (json.tag_name || 'v2.4.0').replace(/^v/, ''),
+      tagName: json.tag_name || 'v2.0.0',
+      version: (json.tag_name || 'v2.0.0').replace(/^v/, ''),
       name: json.name || 'Pen 11 Release',
       publishedAt: json.published_at,
       downloadUrl: json.html_url || STATIC_FALLBACK.downloadUrl,
       directDownloadUrl: exeAsset ? exeAsset.browser_download_url : STATIC_FALLBACK.directDownloadUrl,
+      zipDownloadUrl: zipAsset ? zipAsset.browser_download_url : STATIC_FALLBACK.zipDownloadUrl,
       assetName: exeAsset ? exeAsset.name : STATIC_FALLBACK.assetName,
       assetSize: exeAsset ? exeAsset.size : STATIC_FALLBACK.assetSize,
       sizeFormatted: exeAsset ? formatBytes(exeAsset.size) : STATIC_FALLBACK.sizeFormatted,
+      zipSizeFormatted: zipAsset ? formatBytes(zipAsset.size) : STATIC_FALLBACK.zipSizeFormatted,
       body: json.body || STATIC_FALLBACK.body
     };
   }
@@ -146,14 +151,24 @@ export class GitHubReleaseManager {
       el.textContent = release.tagName;
     });
 
-    // Update Download Links
+    // Update .EXE Download Links
     document.querySelectorAll('[data-gh-download-url]').forEach(el => {
       el.setAttribute('href', release.directDownloadUrl || release.downloadUrl);
+    });
+
+    // Update .ZIP Download Links
+    document.querySelectorAll('[data-gh-zip-url]').forEach(el => {
+      el.setAttribute('href', release.zipDownloadUrl || release.downloadUrl);
     });
 
     // Update File Size Badges
     document.querySelectorAll('[data-gh-size]').forEach(el => {
       el.textContent = release.sizeFormatted;
+    });
+
+    // Update ZIP File Size Badges
+    document.querySelectorAll('[data-gh-zip-size]').forEach(el => {
+      el.textContent = release.zipSizeFormatted;
     });
 
     // Update Release Notes / Date
