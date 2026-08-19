@@ -334,6 +334,19 @@ export class ThemeEngine {
       document.head.appendChild(metaTheme);
     }
     metaTheme.setAttribute('content', isDarkMode ? '#111318' : primary);
+
+    // 6. Sync UI mode buttons (active & aria-pressed)
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll('[data-theme-mode]').forEach(btn => {
+        if (btn.getAttribute('data-theme-mode') === this.currentMode) {
+          btn.classList.add('active');
+          btn.setAttribute('aria-pressed', 'true');
+        } else {
+          btn.classList.remove('active');
+          btn.setAttribute('aria-pressed', 'false');
+        }
+      });
+    }
   }
 }
 

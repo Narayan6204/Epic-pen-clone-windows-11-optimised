@@ -28,22 +28,24 @@
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="apple-touch-icon" href="assets/logo.svg">
 
-  <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/00-tokens.css?v=4.7.0">
-  <link rel="stylesheet" href="css/01-layout.css?v=4.7.0">
-  <link rel="stylesheet" href="css/02-components.css?v=4.7.0">
-  <link rel="stylesheet" href="css/03-motion.css?v=4.7.0">
-  <link rel="stylesheet" href="css/04-canvas.css?v=4.7.0">
-  <link rel="stylesheet" href="css/05-warm-theme.css?v=4.7.0">
-
-  <!-- Instant Theme Initializer (Pre-render execution) -->
+  <!-- Instant Theme Initializer (Executed BEFORE stylesheets to prevent any FOUC) -->
   <script>
     (function() {
       try {
-        var mode = localStorage.getItem('pen11_theme_mode') || 'light';
-        var isDark = mode === 'dark' || (mode === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        var mode = localStorage.getItem('pen11_theme_mode') || 'system';
+        var mediaQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+        var isDark = mode === 'dark' || (mode === 'system' && mediaQuery && mediaQuery.matches);
         document.documentElement.setAttribute('data-theme', mode);
         document.documentElement.setAttribute('data-theme-resolved', isDark ? 'dark' : 'light');
+
+        if (mediaQuery && mediaQuery.addEventListener) {
+          mediaQuery.addEventListener('change', function(e) {
+            var currentMode = localStorage.getItem('pen11_theme_mode') || 'system';
+            if (currentMode === 'system') {
+              document.documentElement.setAttribute('data-theme-resolved', e.matches ? 'dark' : 'light');
+            }
+          });
+        }
       } catch(e) {}
     })();
 
@@ -53,7 +55,8 @@
           window.themeEngine.setMode(mode);
         } else {
           localStorage.setItem('pen11_theme_mode', mode);
-          var isDark = mode === 'dark' || (mode === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var mediaQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+          var isDark = mode === 'dark' || (mode === 'system' && mediaQuery && mediaQuery.matches);
           document.documentElement.setAttribute('data-theme', mode);
           document.documentElement.setAttribute('data-theme-resolved', isDark ? 'dark' : 'light');
         }
@@ -71,6 +74,14 @@
       }
     };
   </script>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/00-tokens.css?v=4.8.0">
+  <link rel="stylesheet" href="css/01-layout.css?v=4.8.0">
+  <link rel="stylesheet" href="css/02-components.css?v=4.8.0">
+  <link rel="stylesheet" href="css/03-motion.css?v=4.8.0">
+  <link rel="stylesheet" href="css/04-canvas.css?v=4.8.0">
+  <link rel="stylesheet" href="css/05-warm-theme.css?v=4.8.0">
 
   <!-- Schema.org JSON-LD Structured Data -->
   <script type="application/ld+json">
@@ -570,7 +581,7 @@
       </section>
 
       <!-- 4. Hardware Benchmarks & Performance Metrics -->
-      <section id="benchmarks" class="m3-section" style="background-color: #EDE0C8;" aria-labelledby="benchmarks-title">
+      <section id="benchmarks" class="m3-section" aria-labelledby="benchmarks-title">
         <div class="m3-container">
           
           <div style="text-align: center; max-width: 720px; margin: 0 auto 48px;">
@@ -787,14 +798,14 @@ python -m PyInstaller main.spec --noconfirm</code></pre>
             <!-- Story Text Card -->
             <div class="bento-card bento-col-7">
               <span class="m3-badge-pill" style="margin-bottom: 12px; align-self: flex-start;">BEHIND THE CODE</span>
-              <h2 id="story-title" class="m3-headline-large" style="color: #2C1F0E; font-weight: 800; margin-bottom: 16px;">
+              <h2 id="story-title" class="m3-headline-large" style="font-weight: 800; margin-bottom: 16px;">
                 The Pen 11 Story
               </h2>
-              <blockquote style="border-left: 3px solid #7C5C35; padding-left: 16px; margin: 0 0 20px; font-style: italic; color: #3A2810; line-height: 1.75;">
+              <blockquote style="border-left: 3px solid var(--md-sys-color-primary); padding-left: 16px; margin: 0 0 20px; font-style: italic; line-height: 1.75;">
                 "While taking my NIELIT 'O Level' course, I found myself in need of a good screen annotation tool. However, I quickly realized that most existing options were either locked behind paywalls, bloated with unnecessary features, or suffered from laggy, outdated user interfaces.<br><br>
                 Frustrated by these limitations, I decided to build my own solution using AI. The result is <strong>Pen 11</strong>—a blazing-fast, highly responsive, and meticulously optimized screen marker that respects your system's resources."
               </blockquote>
-              <p class="m3-label-large" style="color: #7C5C35; font-weight: 700;">
+              <p class="m3-label-large" style="color: var(--md-sys-color-primary); font-weight: 700;">
                 — Narayan Dev (Creator & Maintainer)
               </p>
             </div>
