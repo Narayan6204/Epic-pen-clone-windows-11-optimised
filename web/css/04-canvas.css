@@ -374,8 +374,8 @@
 .canvas-stage-wrapper {
   position: relative;
   width: 100%;
-  min-height: 720px;
-  height: clamp(680px, 80vh, 850px);
+  min-height: 420px;
+  height: 440px;
   border-radius: var(--md-sys-shape-corner-extra-large);
   overflow: hidden;
   isolation: isolate;
@@ -384,6 +384,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+@media (min-width: 600px) {
+  .canvas-stage-wrapper {
+    min-height: 540px;
+    height: 580px;
+  }
+}
+
+@media (min-width: 840px) {
+  .canvas-stage-wrapper {
+    min-height: 720px;
+    height: clamp(680px, 80vh, 850px);
+  }
 }
 
 /* Whiteboard Canvas Backdrop */
@@ -535,4 +549,77 @@
   height: 8px;
   border-radius: 50%;
   background-color: #22c55e;
+}
+
+/* --------------------------------------------------------------------------
+   5. Mobile Smartphone Responsive Rules (<600px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 599px) {
+  .pen-toolbar-container {
+    top: 12px !important;
+    right: 12px !important;
+    padding: 6px 6px 10px 6px;
+    gap: 6px;
+    border-radius: 16px;
+    transform: scale(0.88);
+    transform-origin: top right;
+  }
+
+  .toolbar-tool-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+
+  .toolbar-palette-popover {
+    top: 0 !important;
+    right: calc(100% + 8px) !important;
+    padding: 10px 10px 12px 10px;
+    max-width: calc(100vw - 70px);
+    border-radius: 16px;
+  }
+
+  .palette-grid {
+    grid-template-columns: repeat(4, 24px);
+    grid-template-rows: repeat(3, 24px);
+    gap: 6px;
+  }
+
+  .palette-color-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+  }
+
+  .toolbar-shape-flyout {
+    top: 0 !important;
+    right: calc(100% + 8px) !important;
+    padding: 10px 10px 12px 10px;
+    border-radius: 16px;
+  }
+
+  .shape-flyout-grid {
+    grid-template-columns: repeat(2, 30px);
+    gap: 6px;
+  }
+
+  .shape-flyout-grid .toolbar-tool-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .canvas-hud-top-right {
+    display: none !important;
+  }
+
+  .canvas-hud-bottom-left {
+    bottom: 10px;
+    left: 10px;
+  }
+
+  .canvas-hud-bottom-left .hud-pill {
+    font-size: 10px;
+    padding: 4px 10px;
+  }
 }
