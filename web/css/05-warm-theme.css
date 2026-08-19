@@ -137,8 +137,14 @@ body {
   .m3-top-app-bar {
     padding: 0 10px;
   }
+  .m3-top-app-bar-brand {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
   .m3-top-app-bar-brand span {
     font-size: 1.1rem;
+    white-space: nowrap !important;
+    display: inline-block !important;
   }
   .m3-top-app-bar-actions .m3-btn-tonal {
     display: none;
