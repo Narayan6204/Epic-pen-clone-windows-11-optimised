@@ -47,33 +47,24 @@ A high-performance, lightweight, and completely free screen annotation tool buil
 
 ---
 
-## 💻 System Requirements & Hardware Guidelines
+## 💻 System Requirements
 
-Pen 11 is engineered for near-zero hardware overhead, consuming **87% less RAM than Electron-based tools** and **0.0% CPU when idle**.
+Pen 11 is ultra-lightweight, uses almost **0% CPU when idle**, and takes **less than 50 MB RAM**.
 
-| Component | Minimum (Basic Drawing) | Recommended (Ultra-Smooth 60/120 FPS Experience) |
-| :--- | :--- | :--- |
-| **Operating System** | Windows 10 (64-bit, version 1809+) | **Windows 11 / Windows 11 Pro** (all versions) *(Enables native 1ms multimedia timer & DWM rounded corners)* |
-| **Graphics (GPU)** | Any GPU supporting DirectX 11 Feature Level 10.0+ | Intel UHD / Iris Xe, AMD Radeon, or NVIDIA GeForce supporting **Direct3D 11 hardware swapchains** |
-| **Memory (RAM)** | 50 MB available RAM | **100 MB available RAM** *(Supports 50,000+ continuous strokes on screen without memory degradation)* |
-| **Processor (CPU)** | 1.0 GHz Dual-Core x86-64 CPU | **1.6 GHz+ Quad-Core CPU** *(Processes high-priority stroke threads without OS scheduler lag)* |
-| **Display & DPI** | 1280 × 720 (Standard HD) | **1920 × 1080 (FHD) to 3840 × 2160 (4K UHD)** *(Native Per-Monitor V2 DPI crisp scaling)* |
-| **Refresh Rate** | 60 Hz | **60 Hz / 120 Hz / 144 Hz / 240 Hz** high-refresh rate displays supported |
-| **Disk Space** | 40 MB free storage | **40 MB** *(Single standalone portable `Pen 11.exe` — zero installation required)* |
-| **Runtime (Source)** | Python 3.10+ & PyQt6 | Python 3.10+ to 3.14+ *(Not needed if using standalone `Pen 11.exe`)* |
+* **OS:** Windows 10 or Windows 11 (Best experience on Windows 11 / 11 Pro)
+* **RAM:** 50 MB to 100 MB free memory
+* **Graphics:** Any basic GPU supporting DirectX 11 (Intel, AMD, NVIDIA)
+* **Storage:** 40 MB free disk space (Portable `.exe` — no installation needed)
+* **Display:** Works on all screen resolutions (720p, 1080p, 2K, 4K) & high refresh rates (60Hz, 120Hz, 144Hz+)
 
-### ⚡ Built-in Zero-Lag Optimizations:
-1. **Windows 11 Native 1ms Timer:** Pen 11 automatically sets Windows multimedia timer resolution to `1ms` (`winmm.timeBeginPeriod(1)`), eliminating the standard 15.6ms OS clock ceiling for buttery-smooth 60 FPS animations.
-2. **Direct3D 11 RHI Acceleration:** Enforced by default via `QSG_RHI_BACKEND=d3d11` to offload rasterization to GPU hardware swapchains.
-3. **High Process Priority:** Pen 11 automatically elevates process execution to `HIGH_PRIORITY_CLASS` on Windows to prevent background tasks from stealing CPU cycles during active drawing.
-4. **Dynamic GC Throttling:** Pauses Python garbage collection during active mouse strokes and executes atomic collection on mouse release to eliminate micro-stutters.
+> 💡 **Why it runs so smoothly:** Pen 11 uses GPU acceleration (Direct3D 11), high process priority, and 1ms timer precision to deliver a 100% lag-free drawing experience on Windows.
 
 ---
 
 ## 🚀 Installation & Usage
 
-1. **Download:** Grab the latest `main.exe` / `Pen 11.exe` from the [Releases](https://github.com/Narayan6204/Epic-pen-clone-windows-11-optimised/releases/latest) page.
-2. **Run Portable:** No installer required! Simply launch the executable.
+1. **Download:** Grab the latest **`Pen 11.exe`** from the [Releases](https://github.com/Narayan6204/Epic-pen-clone-windows-11-optimised/releases/latest) page.
+2. **Run Portable:** No installer required! Simply double-click to launch.
 
 ### 📚 How to Use
 
