@@ -654,38 +654,10 @@ div[style*="background-color: var(--md-sys-color-primary)"] {
   color: #7C5C35;
 }
 
-/* Theme Mode Switcher: High Contrast Active Pill */
-.m3-theme-mode-segmented .m3-icon-btn.active,
+/* Icon button active state */
 .m3-icon-btn[data-theme-mode].active {
-  background-color: #8C4E00 !important;
-  color: #FFFFFF !important;
-  box-shadow: 0 2px 8px rgba(140, 78, 0, 0.35) !important;
-}
-
-[data-theme="dark"] .m3-theme-mode-segmented,
-[data-theme-resolved="dark"] .m3-theme-mode-segmented {
-  background-color: #2E2011 !important;
-  border-color: #4A3520 !important;
-}
-
-[data-theme="dark"] .m3-theme-mode-segmented .m3-icon-btn,
-[data-theme-resolved="dark"] .m3-theme-mode-segmented .m3-icon-btn {
-  color: #CBB69D !important;
-}
-
-[data-theme="dark"] .m3-theme-mode-segmented .m3-icon-btn:hover,
-[data-theme-resolved="dark"] .m3-theme-mode-segmented .m3-icon-btn:hover {
-  background-color: rgba(255, 255, 255, 0.08) !important;
-  color: #FFFFFF !important;
-}
-
-[data-theme="dark"] .m3-theme-mode-segmented .m3-icon-btn.active,
-[data-theme-resolved="dark"] .m3-theme-mode-segmented .m3-icon-btn.active,
-[data-theme="dark"] .m3-icon-btn[data-theme-mode].active,
-[data-theme-resolved="dark"] .m3-icon-btn[data-theme-mode].active {
-  background-color: #F5BE75 !important;
-  color: #241604 !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+  background-color: #F0DFC0;
+  color: #7C5C35;
 }
 
 /* ==========================================================================

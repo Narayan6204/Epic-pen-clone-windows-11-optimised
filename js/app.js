@@ -486,13 +486,7 @@ class App {
         const mode = btn.dataset.themeMode;
         themeEngine.setMode(mode);
         this._updateThemeModeUI(mode);
-        const feedback = {
-          light: { text: '☀️ Light Theme Activated', icon: 'light_mode' },
-          dark: { text: '🌙 Dark Theme Activated', icon: 'dark_mode' },
-          system: { text: '🖥️ System Auto Theme Synced', icon: 'desktop_windows' }
-        };
-        const fb = feedback[mode] || { text: `Theme Mode: ${mode.toUpperCase()}`, icon: 'palette' };
-        this.showToast(fb.text, fb.icon);
+        this.showToast(`Theme Mode: ${mode.toUpperCase()}`, 'palette');
       });
     });
 
