@@ -283,19 +283,8 @@ export class VectorShape {
       case 'rounded-rectangle': {
         const radius = Math.min(16, Math.min(w, h) / 4);
         ctx.beginPath();
-        if (ctx.roundRect) {
-          ctx.roundRect(x, y, w, h, radius);
-        } else {
-          ctx.moveTo(x + radius, y);
-          ctx.lineTo(x + w - radius, y);
-          ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
-          ctx.lineTo(x + w, y + h - radius);
-          ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
-          ctx.lineTo(x + radius, y + h);
-          ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
-          ctx.lineTo(x, y + radius);
-          ctx.quadraticCurveTo(x, y, x + radius, y);
-        }
+        if (ctx.roundRect) ctx.roundRect(x, y, w, h, radius);
+        else ctx.rect(x, y, w, h);
         if (this.isFilled && this.fillColor !== 'transparent') {
           ctx.fill();
         }

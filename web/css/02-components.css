@@ -648,3 +648,99 @@ kbd:active, .m3-kbd:active {
   align-items: center;
   gap: 4px;
 }
+
+/* ==========================================================================
+   SYSTEM REQUIREMENTS CALLOUT CARD
+   ========================================================================== */
+.m3-sys-req-card {
+  background-color: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-large);
+  padding: 20px 24px;
+  max-width: 860px;
+  margin: 28px auto 0 auto;
+  box-shadow: var(--md-sys-elevation-level1);
+  transition: box-shadow var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+}
+
+.m3-sys-req-card:hover {
+  box-shadow: var(--md-sys-elevation-level2);
+}
+
+.sys-req-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  flex-wrap: wrap;
+}
+
+.sys-req-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sys-req-title-wrap .material-symbols-rounded {
+  color: var(--md-sys-color-primary);
+  font-size: 22px;
+}
+
+.sys-req-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 820px) {
+  .sys-req-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .sys-req-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sys-req-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.sys-req-icon {
+  color: var(--md-sys-color-primary);
+  background-color: var(--md-sys-color-surface-container-highest);
+  padding: 8px;
+  border-radius: var(--md-sys-shape-corner-small);
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.sys-req-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.sys-req-label {
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sys-req-val {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.35;
+}
+

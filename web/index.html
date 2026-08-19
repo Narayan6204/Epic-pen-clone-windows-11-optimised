@@ -29,12 +29,12 @@
   <link rel="apple-touch-icon" href="assets/logo.svg">
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/00-tokens.css?v=3.4.0">
-  <link rel="stylesheet" href="css/01-layout.css?v=3.4.0">
-  <link rel="stylesheet" href="css/02-components.css?v=3.4.0">
-  <link rel="stylesheet" href="css/03-motion.css?v=3.4.0">
-  <link rel="stylesheet" href="css/04-canvas.css?v=3.4.0">
-  <link rel="stylesheet" href="css/05-warm-theme.css?v=3.4.0">
+  <link rel="stylesheet" href="css/00-tokens.css?v=3.5.0">
+  <link rel="stylesheet" href="css/01-layout.css?v=3.5.0">
+  <link rel="stylesheet" href="css/02-components.css?v=3.5.0">
+  <link rel="stylesheet" href="css/03-motion.css?v=3.5.0">
+  <link rel="stylesheet" href="css/04-canvas.css?v=3.5.0">
+  <link rel="stylesheet" href="css/05-warm-theme.css?v=3.5.0">
 
   <!-- Schema.org JSON-LD Structured Data -->
   <script type="application/ld+json">
@@ -143,6 +143,52 @@
                 <span>Explore Features</span>
               </a>
             </div>
+
+            <!-- System Requirements Detail Callout Card -->
+            <div class="m3-sys-req-card" aria-label="Pen 11 System Requirements & Compatibility">
+              <div class="sys-req-header">
+                <div class="sys-req-title-wrap">
+                  <span class="material-symbols-rounded">verified</span>
+                  <span class="m3-title-small" style="font-weight: 700; color: var(--md-sys-color-on-surface);">System Requirements & Compatibility</span>
+                </div>
+                <span class="m3-badge-pill" style="font-size: 11px; padding: 4px 10px;">Zero Install • 100% Local</span>
+              </div>
+              
+              <div class="sys-req-grid">
+                <div class="sys-req-item">
+                  <span class="material-symbols-rounded sys-req-icon">desktop_windows</span>
+                  <div class="sys-req-text">
+                    <span class="sys-req-label">Operating System</span>
+                    <span class="sys-req-val">Windows 11 / 10 <span style="font-size: 11px; font-weight: normal; opacity: 0.85;">(64-bit)</span></span>
+                  </div>
+                </div>
+
+                <div class="sys-req-item">
+                  <span class="material-symbols-rounded sys-req-icon">memory</span>
+                  <div class="sys-req-text">
+                    <span class="sys-req-label">Memory (RAM)</span>
+                    <span class="sys-req-val">50 MB Minimum <span style="font-size: 11px; font-weight: normal; opacity: 0.85;">(&lt;0.1% usage)</span></span>
+                  </div>
+                </div>
+
+                <div class="sys-req-item">
+                  <span class="material-symbols-rounded sys-req-icon">speed</span>
+                  <div class="sys-req-text">
+                    <span class="sys-req-label">Graphics (GPU)</span>
+                    <span class="sys-req-val">Direct3D 11 <span style="font-size: 11px; font-weight: normal; opacity: 0.85;">(Hardware DWM)</span></span>
+                  </div>
+                </div>
+
+                <div class="sys-req-item">
+                  <span class="material-symbols-rounded sys-req-icon">folder_zip</span>
+                  <div class="sys-req-text">
+                    <span class="sys-req-label">Disk Storage</span>
+                    <span class="sys-req-val"><span data-gh-size>38.6 MB</span> <span style="font-size: 11px; font-weight: normal; opacity: 0.85;">(Portable EXE)</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
           <!-- Interactive Sandbox Stage -->
@@ -494,6 +540,20 @@
 
           </div>
 
+          <!-- Bottom Benchmarks Download CTA with System Specs -->
+          <div class="m3-flex-col m3-align-center" style="margin-top: 36px; text-align: center;">
+            <a href="https://github.com/Narayan6204/Epic-pen-clone-windows-11-optimised/releases/latest" data-gh-download-url class="m3-btn m3-btn-filled" style="height: 48px; padding: 0 32px; font-size: 1rem; display: inline-flex; align-items: center; gap: 8px;" aria-label="Download Pen 11 for Windows">
+              <svg width="18" height="18" viewBox="0 0 88 88" fill="currentColor" aria-hidden="true" style="flex-shrink: 0;">
+                <path d="M0 0h41.6v41.6H0V0zm46.4 0H88v41.6H46.4V0zM0 46.4h41.6V88H0V46.4zm46.4 0H88V88H46.4V46.4z"/>
+              </svg>
+              <span>Download Pen 11 Free (<span data-gh-size>38.6 MB</span>)</span>
+            </a>
+            <span class="m3-label-small" style="margin-top: 10px; color: var(--md-sys-color-on-surface-variant); display: inline-flex; align-items: center; gap: 6px;">
+              <span class="material-symbols-rounded" style="font-size: 14px; color: var(--md-sys-color-primary);">check_circle</span>
+              <span>Windows 11 / 10 (64-bit) • Min 50 MB RAM • Direct3D 11 • Portable Standalone</span>
+            </span>
+          </div>
+
         </div>
       </section>
 
@@ -797,6 +857,6 @@ python -m PyInstaller main.spec --noconfirm</code></pre>
   </script>
 
   <!-- Application Entry Point ES Module -->
-  <script type="module" src="js/app.js?v=3.4.0"></script>
+  <script type="module" src="js/app.js?v=3.5.0"></script>
 </body>
 </html>

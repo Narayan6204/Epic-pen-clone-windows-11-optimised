@@ -88,8 +88,8 @@ export class TransformObjectsAction extends HistoryAction {
     super('Transform Objects');
     this.engine = engine;
     this.objects = [...objects];
-    this.oldStates = JSON.parse(JSON.stringify(oldStates));
-    this.newStates = JSON.parse(JSON.stringify(newStates));
+    this.oldStates = typeof structuredClone === 'function' ? structuredClone(oldStates) : JSON.parse(JSON.stringify(oldStates));
+    this.newStates = typeof structuredClone === 'function' ? structuredClone(newStates) : JSON.parse(JSON.stringify(newStates));
   }
 
   _applyState(states) {

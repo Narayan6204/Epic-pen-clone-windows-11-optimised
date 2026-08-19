@@ -188,16 +188,30 @@ footer strong {
   color: #3A2810 !important;
 }
 
-/* --- Dark Mode Overrides --- */
-[data-theme="dark"] .bento-card-title {
+/* Dark Mode System Requirements Card */
+[data-theme="dark"] .m3-sys-req-card,
+[data-theme-resolved="dark"] .m3-sys-req-card {
+  background-color: #2E2212 !important;
+  border-color: #4A3520 !important;
+}
+
+[data-theme="dark"] .sys-req-val,
+[data-theme-resolved="dark"] .sys-req-val {
   color: #FFF7ED !important;
 }
-[data-theme="dark"] .bento-card-description,
-[data-theme="dark"] p.m3-body-large,
-[data-theme="dark"] p.m3-body-medium,
-[data-theme="dark"] p.m3-body-small {
-  color: #F5E8D5 !important;
+
+[data-theme="dark"] .sys-req-label,
+[data-theme-resolved="dark"] .sys-req-label {
+  color: #D4B896 !important;
 }
+
+[data-theme="dark"] .sys-req-icon,
+[data-theme-resolved="dark"] .sys-req-icon {
+  background-color: #392B18 !important;
+  color: #D4B896 !important;
+}
+
+
 
 [data-theme="dark"] footer,
 [data-theme="dark"] footer p,

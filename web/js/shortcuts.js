@@ -94,7 +94,7 @@ export const SHORTCUTS_DATA = [
   {
     category: 'Selection & Smart Objects',
     action: 'Delete Selected Objects',
-    keys: ['Delete'],
+    keys: ['Delete', 'Backspace'],
     description: 'Removes all currently highlighted lasso selections from the screen.',
     actionId: 'delete-selected'
   },

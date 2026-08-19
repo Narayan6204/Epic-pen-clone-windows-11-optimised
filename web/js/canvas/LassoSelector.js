@@ -337,7 +337,7 @@ export class LassoSelector {
       }
     });
 
-    this.initialOBB = JSON.parse(JSON.stringify(this.obb));
+    this.initialOBB = typeof structuredClone === 'function' ? structuredClone(this.obb) : JSON.parse(JSON.stringify(this.obb));
   }
 
   updateTransform(pt) {

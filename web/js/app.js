@@ -190,74 +190,44 @@ class App {
     dragHandle.addEventListener('pointerup', onPointerUp);
     dragHandle.addEventListener('pointercancel', onPointerUp);
 
-    // ── Monkey Button & Cursor Flyout Handler (1:1 with main.py) ──
+    // ── Monkey Button & Cursor Flyout Handler ──
     const monkeyBtn = document.getElementById('tb-btn-monkey');
     const monkeyFlyout = document.getElementById('tb-monkey-flyout');
     const monkeyIcon = document.getElementById('tb-monkey-icon');
 
-    const updateMonkeyMenu = () => {
-      if (!monkeyFlyout) return;
-      if (this.monkeyState === 'cursor') {
-        monkeyFlyout.innerHTML = `
-          <button class="toolbar-tool-btn" data-monkey="active" title="Active Ink Mode" aria-label="Active Ink">
-            <span>🐵</span>
-          </button>
-          <button class="toolbar-tool-btn" data-monkey="hidden" title="Hide Canvas (Ctrl+5)" aria-label="Hide Canvas">
-            <span>🙈</span>
-          </button>
-        `;
-      } else {
-        monkeyFlyout.innerHTML = `
-          <button class="toolbar-tool-btn" data-monkey="cursor" title="Cursor Mode (Click-through)" aria-label="Cursor Mode">
-            <span>🐒</span>
-          </button>
-          <button class="toolbar-tool-btn" data-monkey="hidden" title="Hide Canvas (Ctrl+5)" aria-label="Hide Canvas">
-            <span>🙈</span>
-          </button>
-        `;
-      }
-
-      monkeyFlyout.querySelectorAll('[data-monkey]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const action = btn.getAttribute('data-monkey');
-          this._closeAllPopovers();
-
-          if (action === 'active') {
-            this.setCanvasVisibility(true);
-            this.selectTool('pen');
-          } else if (action === 'cursor') {
-            this.setCanvasVisibility(true);
-            this.selectTool('cursor');
-          } else if (action === 'hidden') {
-            this.setCanvasVisibility(false);
-          }
-        });
-      });
-    };
-
     if (monkeyBtn && monkeyFlyout) {
       monkeyBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (!this.isCanvasVisible || toolbar.classList.contains('collapsed')) {
+        if (!this.isCanvasVisible && toolbar.classList.contains('collapsed')) {
           this.setCanvasVisibility(true);
           this.selectTool('pen');
           return;
         }
 
-        const isCurrentlyOpen = monkeyFlyout.classList.contains('active');
+        const isOpen = monkeyFlyout.style.display === 'flex';
         this._closeAllPopovers();
+        monkeyFlyout.style.display = isOpen ? 'none' : 'flex';
+      });
 
-        if (!isCurrentlyOpen) {
-          updateMonkeyMenu();
-          monkeyFlyout.style.display = '';
-          monkeyFlyout.style.transition = '';
-          monkeyFlyout.style.opacity = '';
-          monkeyFlyout.style.transform = '';
-          monkeyFlyout.style.pointerEvents = '';
-          void monkeyFlyout.offsetWidth;
-          monkeyFlyout.classList.add('active');
-        }
+      monkeyFlyout.querySelectorAll('[data-monkey]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this._closeAllPopovers();
+          const action = btn.getAttribute('data-monkey');
+          
+          if (action === 'active') {
+            this.setCanvasVisibility(true);
+            this.selectTool('pen');
+            monkeyIcon.textContent = '🐵';
+          } else if (action === 'cursor') {
+            this.setCanvasVisibility(true);
+            this.selectTool('cursor');
+            monkeyIcon.textContent = '🐒';
+          } else if (action === 'hidden') {
+            this.setCanvasVisibility(false);
+            monkeyIcon.textContent = '🙈';
+          }
+        });
       });
     }
 
@@ -265,6 +235,10 @@ class App {
     toolbar.querySelectorAll('[data-tool]').forEach(btn => {
       btn.addEventListener('click', () => {
         const tool = btn.dataset.tool;
+        if (tool === 'select') {
+          this.showRestrictedToast();
+          return;
+        }
         this.selectTool(tool);
       });
     });
@@ -275,26 +249,12 @@ class App {
     if (shapesBtn && shapesFlyout) {
       shapesBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const isCurrentlyOpen = shapesFlyout.classList.contains('active');
-        this._closeAllPopovers();
-
-        if (!isCurrentlyOpen) {
-          shapesFlyout.style.display = 'flex';
-          shapesFlyout.style.transition = '';
-          shapesFlyout.style.opacity = '';
-          shapesFlyout.style.transform = '';
-          shapesFlyout.style.pointerEvents = '';
-          void shapesFlyout.offsetWidth; // Force reflow
-          shapesFlyout.classList.add('active');
-        }
+        this.showRestrictedToast();
       });
 
       shapesFlyout.querySelectorAll('[data-shape]').forEach(shapeItem => {
-        shapeItem.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const shape = shapeItem.dataset.shape;
-          this.selectTool(shape);
-          this._closeAllPopovers();
+        shapeItem.addEventListener('click', () => {
+          this.showRestrictedToast();
         });
       });
     }
@@ -312,6 +272,10 @@ class App {
 
       palettePopover.querySelectorAll('.palette-color-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+          if (btn.dataset.locked === 'true') {
+            this.showRestrictedToast();
+            return;
+          }
           const hex = btn.dataset.hex;
           this.selectColor(hex);
           this.showToast(`Color: ${btn.title || hex}`, 'palette');
@@ -341,8 +305,7 @@ class App {
     const backdropBtn = document.getElementById('tb-btn-bg');
     if (backdropBtn) {
       backdropBtn.addEventListener('click', () => {
-        const mode = this.cycleBackdrop();
-        this.showToast(`Background: ${mode}`, 'wallpaper');
+        this.showRestrictedToast();
       });
     }
 
@@ -356,26 +319,7 @@ class App {
 
   _closeAllPopovers() {
     const popovers = document.querySelectorAll('.toolbar-palette-popover, .toolbar-shape-flyout, .toolbar-monkey-flyout');
-    popovers.forEach(p => {
-      if (p.style.display !== 'none' || p.classList.contains('active')) {
-        p.classList.remove('active');
-        p.style.display = 'flex';
-        p.style.transition = 'opacity 150ms ease, transform 150ms ease';
-        p.style.opacity = '0';
-        p.style.transform = 'translateY(4px) scale(0.97)';
-        p.style.pointerEvents = 'none';
-        
-        setTimeout(() => {
-          if (!p.classList.contains('active')) {
-            p.style.display = 'none';
-            p.style.transition = '';
-            p.style.opacity = '';
-            p.style.transform = '';
-            p.style.pointerEvents = '';
-          }
-        }, 150);
-      }
-    });
+    popovers.forEach(p => p.style.display = 'none');
   }
 
   selectTool(toolName) {
@@ -401,18 +345,21 @@ class App {
 
     // Update Monkey Button State
     const monkeyBtn = document.getElementById('tb-btn-monkey');
-    const monkeyIcon = document.getElementById('tb-monkey-icon') || (monkeyBtn ? monkeyBtn.querySelector('span') : null);
     if (toolName === 'select' || toolName === 'cursor') {
       this.monkeyState = 'cursor';
-      if (monkeyIcon) monkeyIcon.textContent = '🐒';
-      if (monkeyBtn) monkeyBtn.title = 'Cursor Mode Active (Click to switch to Pen)';
+      if (monkeyBtn) {
+        monkeyBtn.querySelector('span').textContent = '🐒';
+        monkeyBtn.title = 'Cursor Mode Active (Click to switch to Pen)';
+      }
       if (canvasContainer) {
         canvasContainer.style.pointerEvents = 'none';
       }
     } else {
       this.monkeyState = 'active';
-      if (monkeyIcon) monkeyIcon.textContent = '🐵';
-      if (monkeyBtn) monkeyBtn.title = 'Active Ink Mode (Click to switch to Cursor)';
+      if (monkeyBtn) {
+        monkeyBtn.querySelector('span').textContent = '🐵';
+        monkeyBtn.title = 'Active Ink Mode (Click to switch to Cursor)';
+      }
       if (canvasContainer) {
         canvasContainer.style.pointerEvents = 'auto';
       }
@@ -437,19 +384,14 @@ class App {
       }
     }
 
-    // Update canvas cursor matching main.py
+    // Update canvas cursor
     const stage = document.getElementById('canvas-stage-wrapper');
     if (stage) {
-      stage.classList.remove('cursor-pen', 'cursor-highlighter', 'cursor-eraser', 'cursor-pointer');
-      if (toolName === 'pen') {
-        stage.classList.add('cursor-pen');
-      } else if (toolName === 'highlighter') {
-        stage.classList.add('cursor-highlighter');
-      } else if (toolName === 'eraser') {
-        stage.classList.add('cursor-eraser');
-      } else {
-        stage.classList.add('cursor-pointer');
-      }
+      stage.className = stage.className.replace(/\bcursor-\S+/g, '');
+      if (toolName === 'pen') stage.classList.add('cursor-pen');
+      else if (toolName === 'highlighter') stage.classList.add('cursor-highlighter');
+      else if (toolName === 'eraser') stage.classList.add('cursor-eraser');
+      else stage.classList.add('cursor-pointer');
     }
   }
 
@@ -478,26 +420,26 @@ class App {
     this.isCanvasVisible = visible;
     const toolbar = document.getElementById('pen-live-toolbar');
     const monkeyBtn = document.getElementById('tb-btn-monkey');
-    const monkeyIcon = document.getElementById('tb-monkey-icon') || (monkeyBtn ? monkeyBtn.querySelector('span') : null);
     const canvasContainer = document.getElementById('pen-hero-canvas-container');
-    const stage = document.getElementById('canvas-stage-wrapper');
 
     if (visible) {
       if (toolbar) toolbar.classList.remove('collapsed');
       if (canvasContainer) canvasContainer.style.display = 'block';
-      if (stage) stage.classList.remove('canvas-hidden');
       this.monkeyState = 'active';
-      if (monkeyIcon) monkeyIcon.textContent = '🐵';
-      if (monkeyBtn) monkeyBtn.title = 'Active Ink Mode (Click to switch to Cursor)';
+      if (monkeyBtn) {
+        monkeyBtn.querySelector('span').textContent = '🐵';
+        monkeyBtn.title = 'Active Ink Mode (Click to switch to Cursor)';
+      }
       this.showToast('Canvas Visible (Ctrl+5)', 'visibility');
     } else {
       if (toolbar) toolbar.classList.add('collapsed');
       if (canvasContainer) canvasContainer.style.display = 'none';
-      if (stage) stage.classList.add('canvas-hidden');
       this._closeAllPopovers();
       this.monkeyState = 'hidden';
-      if (monkeyIcon) monkeyIcon.textContent = '🙈';
-      if (monkeyBtn) monkeyBtn.title = 'Canvas Hidden (Click to unhide)';
+      if (monkeyBtn) {
+        monkeyBtn.querySelector('span').textContent = '🙈';
+        monkeyBtn.title = 'Canvas Hidden (Click to unhide)';
+      }
       this.showToast('Canvas Hidden & Toolbar Collapsed (Ctrl+5)', 'visibility_off');
     }
   }
@@ -509,20 +451,10 @@ class App {
   togglePalette() {
     const popover = document.getElementById('tb-palette-popover');
     if (popover) {
-      const isOpen = popover.style.display === 'flex' && popover.style.opacity !== '0';
+      const isOpen = popover.style.display === 'flex';
       this._closeAllPopovers();
-      if (!isOpen) {
-        popover.style.display = 'flex';
-        popover.style.transition = '';
-        popover.style.opacity = '';
-        popover.style.transform = '';
-        popover.style.pointerEvents = '';
-        void popover.offsetWidth; // Force reflow
-        popover.classList.add('active');
-        this.showToast('Color Palette Opened', 'palette');
-      } else {
-        this.showToast('Color Palette Closed', 'palette');
-      }
+      popover.style.display = isOpen ? 'none' : 'flex';
+      this.showToast(isOpen ? 'Color Palette Closed' : 'Color Palette Opened', 'palette');
     }
   }
 
