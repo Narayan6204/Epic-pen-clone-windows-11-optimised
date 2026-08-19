@@ -819,6 +819,57 @@ kbd:active, .m3-kbd:active {
 }
 
 /* ==========================================================================
+   Material Design 3 Segmented Theme Mode Switcher
+   ========================================================================== */
+.m3-theme-mode-segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background-color: var(--md-sys-color-surface-container, #EDE0C8);
+  border: 1px solid var(--md-sys-color-outline-variant, #D6C4A6);
+  border-radius: var(--md-sys-shape-corner-full, 9999px);
+  padding: 3px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.m3-theme-mode-segmented .m3-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--md-sys-color-on-surface-variant, #6B553D);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  position: relative;
+}
+
+.m3-theme-mode-segmented .m3-icon-btn span {
+  font-size: 18px;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.m3-theme-mode-segmented .m3-icon-btn:hover {
+  color: var(--md-sys-color-on-surface, #1A0F00);
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+.m3-theme-mode-segmented .m3-icon-btn.active {
+  background-color: var(--md-sys-color-primary, #8C4E00) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 6px rgba(140, 78, 0, 0.3);
+  transform: scale(1.05);
+}
+
+.m3-theme-mode-segmented .m3-icon-btn.active span {
+  font-weight: 700;
+  transform: scale(1.08);
+}
+
+/* ==========================================================================
    Material Design 3 Download Preference Popup Modal
    ========================================================================== */
 .m3-modal-backdrop {
