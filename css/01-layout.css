@@ -154,6 +154,13 @@ button, input, select, textarea {
   font-weight: 700;
   font-size: 1.25rem;
   color: var(--md-sys-color-on-surface);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.m3-top-app-bar-brand span {
+  white-space: nowrap;
+  display: inline-block;
 }
 
 .m3-top-app-bar-brand img,
@@ -161,6 +168,7 @@ button, input, select, textarea {
   width: 32px;
   height: 32px;
   border-radius: var(--md-sys-shape-corner-small);
+  flex-shrink: 0;
 }
 
 .m3-top-app-bar-nav {
