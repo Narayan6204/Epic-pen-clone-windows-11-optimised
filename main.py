@@ -931,8 +931,6 @@ class OverlayWindow(QMainWindow):
                 self.update()
                 return
 
-            if self.mode not in (ToolMode.ERASER, ToolMode.SHAPE):
-                self.setCursor(Qt.CursorShape.BlankCursor)
             self.shape_detected = False
             
             # Disable GC during active drawing to prevent micro-stutters
