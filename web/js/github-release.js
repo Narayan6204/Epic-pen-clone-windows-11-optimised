@@ -7,20 +7,20 @@
 const REPO_OWNER = 'Narayan6204';
 const REPO_NAME = 'Pen-11';
 const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest`;
-const CACHE_KEY = 'pen11_github_release_cache';
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+const CACHE_KEY = 'pen11_github_release_cache_v2';
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
 // Tier 4: Hardcoded Resilience Fallback (Guarantees UI never breaks offline or during rate-limits)
 const STATIC_FALLBACK = {
-  tagName: 'v2.4.0',
-  version: '2.4.0',
-  name: 'Pen 11 v2.4.0 (Windows 11 Direct3D Update)',
-  publishedAt: '2026-08-14T00:00:00Z',
+  tagName: 'v2.0.0',
+  version: '2.0.0',
+  name: 'Pen 11 v2.0.0 (Direct3D 11 Hardware Inking Update)',
+  publishedAt: '2026-08-19T00:00:00Z',
   downloadUrl: `https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/latest`,
-  directDownloadUrl: `https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/latest/download/main.exe`,
-  assetName: 'main.exe',
-  assetSize: 19398656, // ~18.5 MB
-  sizeFormatted: '18.5 MB',
+  directDownloadUrl: `https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/v2.0.0/Pen.11.exe`,
+  assetName: 'Pen.11.exe',
+  assetSize: 38649432, // 38.6 MB
+  sizeFormatted: '38.6 MB',
   body: 'High-performance screen annotation with Direct3D 11 hardware acceleration, Smart Objects, and Circle-to-Select Lasso.',
   source: 'static_fallback'
 };
