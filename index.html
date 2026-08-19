@@ -29,12 +29,48 @@
   <link rel="apple-touch-icon" href="assets/logo.svg">
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/00-tokens.css?v=4.6.0">
-  <link rel="stylesheet" href="css/01-layout.css?v=4.6.0">
-  <link rel="stylesheet" href="css/02-components.css?v=4.6.0">
-  <link rel="stylesheet" href="css/03-motion.css?v=4.6.0">
-  <link rel="stylesheet" href="css/04-canvas.css?v=4.6.0">
-  <link rel="stylesheet" href="css/05-warm-theme.css?v=4.6.0">
+  <link rel="stylesheet" href="css/00-tokens.css?v=4.7.0">
+  <link rel="stylesheet" href="css/01-layout.css?v=4.7.0">
+  <link rel="stylesheet" href="css/02-components.css?v=4.7.0">
+  <link rel="stylesheet" href="css/03-motion.css?v=4.7.0">
+  <link rel="stylesheet" href="css/04-canvas.css?v=4.7.0">
+  <link rel="stylesheet" href="css/05-warm-theme.css?v=4.7.0">
+
+  <!-- Instant Theme Initializer (Pre-render execution) -->
+  <script>
+    (function() {
+      try {
+        var mode = localStorage.getItem('pen11_theme_mode') || 'light';
+        var isDark = mode === 'dark' || (mode === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', mode);
+        document.documentElement.setAttribute('data-theme-resolved', isDark ? 'dark' : 'light');
+      } catch(e) {}
+    })();
+
+    window.setPen11ThemeMode = function(mode) {
+      try {
+        if (window.themeEngine) {
+          window.themeEngine.setMode(mode);
+        } else {
+          localStorage.setItem('pen11_theme_mode', mode);
+          var isDark = mode === 'dark' || (mode === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.setAttribute('data-theme', mode);
+          document.documentElement.setAttribute('data-theme-resolved', isDark ? 'dark' : 'light');
+        }
+        document.querySelectorAll('[data-theme-mode]').forEach(function(b) {
+          if (b.getAttribute('data-theme-mode') === mode) {
+            b.classList.add('active');
+            b.setAttribute('aria-pressed', 'true');
+          } else {
+            b.classList.remove('active');
+            b.setAttribute('aria-pressed', 'false');
+          }
+        });
+      } catch(e) {
+        console.error('Theme switch error:', e);
+      }
+    };
+  </script>
 
   <!-- Schema.org JSON-LD Structured Data -->
   <script type="application/ld+json">
@@ -88,13 +124,13 @@
         <div class="m3-top-app-bar-actions">
           <!-- Theme Mode Switcher -->
           <div class="m3-flex-row m3-gap-xs" role="group" aria-label="Theme mode switcher">
-            <button class="m3-icon-btn active" data-theme-mode="light" title="Light Mode" aria-label="Switch to light mode">
+            <button class="m3-icon-btn active" data-theme-mode="light" onclick="setPen11ThemeMode('light')" title="Light Mode" aria-label="Switch to light mode">
               <span class="material-symbols-rounded">light_mode</span>
             </button>
-            <button class="m3-icon-btn" data-theme-mode="dark" title="Dark Mode" aria-label="Switch to dark mode">
+            <button class="m3-icon-btn" data-theme-mode="dark" onclick="setPen11ThemeMode('dark')" title="Dark Mode" aria-label="Switch to dark mode">
               <span class="material-symbols-rounded">dark_mode</span>
             </button>
-            <button class="m3-icon-btn" data-theme-mode="system" title="System Preference" aria-label="Switch to system theme">
+            <button class="m3-icon-btn" data-theme-mode="system" onclick="setPen11ThemeMode('system')" title="System Preference" aria-label="Switch to system theme">
               <span class="material-symbols-rounded">desktop_windows</span>
             </button>
           </div>
@@ -969,6 +1005,6 @@ python -m PyInstaller main.spec --noconfirm</code></pre>
   </script>
 
   <!-- Application Entry Point ES Module -->
-  <script type="module" src="js/app.js?v=4.6.0"></script>
+  <script type="module" src="js/app.js?v=4.7.0"></script>
 </body>
 </html>

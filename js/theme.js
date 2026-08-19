@@ -253,14 +253,9 @@ export class ThemeEngine {
     const root = document.documentElement;
     const isDarkMode = this.isDark;
 
-    // 1. Set HTML data-theme attribute
-    if (this.currentMode === 'system') {
-      root.removeAttribute('data-theme');
-      root.setAttribute('data-theme-resolved', isDarkMode ? 'dark' : 'light');
-    } else {
-      root.setAttribute('data-theme', this.currentMode);
-      root.setAttribute('data-theme-resolved', this.currentMode);
-    }
+    // 1. Set HTML data-theme and data-theme-resolved attributes
+    root.setAttribute('data-theme', this.currentMode);
+    root.setAttribute('data-theme-resolved', isDarkMode ? 'dark' : 'light');
 
     // 2. Compute dynamic HCT palettes
     const seed = THEME_SEEDS[this.currentSeedKey] || {
@@ -344,3 +339,6 @@ export class ThemeEngine {
 
 // Global Singleton
 export const themeEngine = new ThemeEngine();
+if (typeof window !== 'undefined') {
+  window.themeEngine = themeEngine;
+}

@@ -244,20 +244,16 @@ footer strong {
 
 /* Dark mode surface color */
 [data-theme="dark"] body,
+[data-theme-resolved="dark"] body,
 [data-theme="dark"] .m3-section,
-[data-theme="dark"] .bento-card,
-[data-theme="dark"] .m3-table-container {
+[data-theme-resolved="dark"] .m3-section {
   background-color: #1E150A !important;
 }
 [data-theme="dark"] .bento-card,
-[data-theme="dark"] .m3-table-container {
+[data-theme-resolved="dark"] .bento-card,
+[data-theme="dark"] .m3-table-container,
+[data-theme-resolved="dark"] .m3-table-container {
   background-color: #261B0F !important;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) body,
-  :root:not([data-theme="light"]) .m3-section {
-    background-color: #1E150A !important;
-  }
 }
 
 @media (min-width: 840px) {
@@ -481,36 +477,30 @@ footer {
   --md-sys-color-on-secondary-container: #F0DFC0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --md-sys-color-background: #1E150A;
-    --md-sys-color-on-background: #FFF7ED;
-    --md-sys-color-surface: #261B0F;
-    --md-sys-color-on-surface: #FFF7ED;
-    --md-sys-color-surface-container-lowest: #1A1108;
-    --md-sys-color-surface-container-low: #261B0F;
-    --md-sys-color-surface-container: #2E2212;
-    --md-sys-color-surface-container-high: #392B18;
-    --md-sys-color-surface-container-highest: #44341F;
-    --md-sys-color-surface-variant: #3D2D1A;
-    --md-sys-color-on-surface-variant: #F5E8D5;
-    --md-sys-color-outline: #7C6040;
-    --md-sys-color-outline-variant: #4A3520;
-    --md-sys-color-primary: #D4B896;
-    --md-sys-color-on-primary: #2C1F0E;
-    --md-sys-color-primary-container: #5A3E1E;
-    --md-sys-color-on-primary-container: #F0DFC0;
-  }
+[data-theme="dark"],
+[data-theme-resolved="dark"] {
+  --md-sys-color-background: #1E150A;
+  --md-sys-color-on-background: #FFF7ED;
+  --md-sys-color-surface: #261B0F;
+  --md-sys-color-on-surface: #FFF7ED;
+  --md-sys-color-surface-container-lowest: #1A1108;
+  --md-sys-color-surface-container-low: #261B0F;
+  --md-sys-color-surface-container: #2E2212;
+  --md-sys-color-surface-container-high: #392B18;
+  --md-sys-color-surface-container-highest: #44341F;
+  --md-sys-color-surface-variant: #3D2D1A;
+  --md-sys-color-on-surface-variant: #F5E8D5;
+  --md-sys-color-outline: #7C6040;
+  --md-sys-color-outline-variant: #4A3520;
+  --md-sys-color-primary: #D4B896;
+  --md-sys-color-on-primary: #2C1F0E;
+  --md-sys-color-primary-container: #5A3E1E;
+  --md-sys-color-on-primary-container: #F0DFC0;
 }
 
-[data-theme="dark"] body {
+[data-theme="dark"] body,
+[data-theme-resolved="dark"] body {
   background-color: #1E150A;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) body {
-    background-color: #1E150A;
-  }
 }
 
 [data-theme="dark"] .bento-card {
