@@ -789,8 +789,8 @@ class App {
   }
 }
 
-// Instantiate and Boot App on DOM Ready
-document.addEventListener('DOMContentLoaded', async () => {
+// Instantiate and Boot App on DOM Ready or Immediately if Parsed
+const bootApp = async () => {
   try {
     const app = new App();
     await app.init();
@@ -798,4 +798,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (err) {
     console.error('[Pen 11] App initialization error:', err);
   }
-});
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootApp);
+} else {
+  bootApp();
+}
