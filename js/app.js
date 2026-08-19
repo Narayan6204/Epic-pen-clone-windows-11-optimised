@@ -126,10 +126,33 @@ class App {
         : 'rgba(0, 97, 164, 0.12)';
       this.canvasEngine.invalidate();
     });
+
+    // Advisory Toast on first click/interaction in Sandbox on each page load
+    let demoAlertFired = false;
+    const triggerDemoAlert = () => {
+      if (demoAlertFired) return;
+      demoAlertFired = true;
+      this.showToast(
+        'This is just a demo, not exactly similar to Real application',
+        'info',
+        '<a href="https://github.com/Narayan6204/Pen-11/releases/latest" class="m3-btn m3-btn-filled" style="height: 32px; font-size: 12px; padding: 0 10px; text-decoration: none; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">Download</a>'
+      );
+    };
+
+    const stageWrapper = document.getElementById('canvas-stage-wrapper');
+    if (stageWrapper) {
+      stageWrapper.addEventListener('pointerdown', triggerDemoAlert, { capture: true });
+      stageWrapper.addEventListener('mousedown', triggerDemoAlert, { capture: true });
+      stageWrapper.addEventListener('touchstart', triggerDemoAlert, { capture: true });
+    }
+
+    if (this.canvasEngine) {
+      this.canvasEngine.on('pointerdown', triggerDemoAlert);
+    }
   }
 
   // ==========================================================================
-  // 2. Draggable Warm Sand Toolbar Setup
+  // 2. Draggable Warm Sand Toolbar Setup & Detachable Sub-Toolbars
   // ==========================================================================
   _initDraggableToolbar() {
     const toolbar = document.getElementById('pen-live-toolbar');
@@ -137,68 +160,74 @@ class App {
     const stageWrapper = document.getElementById('canvas-stage-wrapper');
     if (!toolbar || !dragHandle || !stageWrapper) return;
 
-    let isDragging = false;
-    let startX = 0, startY = 0;
-    let initialLeft = 0, initialTop = 0;
+    // 1. Enable Dragging on Main Toolbar by Pill Handle with Boundary Constraints
+    this._makeDraggableByPill(toolbar, dragHandle, stageWrapper);
 
-    const onPointerDown = (e) => {
-      if (e.button !== 0 && e.pointerType === 'mouse') return;
-      isDragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
+    // 2. Enable Dragging on Color Palette Submenu by Pill Handle with Boundary Constraints
+    const palettePopover = document.getElementById('tb-palette-popover');
+    const paletteDrag = document.getElementById('tb-palette-drag');
+    if (palettePopover && paletteDrag) {
+      this._makeDraggableByPill(palettePopover, paletteDrag, stageWrapper);
+    }
 
-      const rect = toolbar.getBoundingClientRect();
-      const parentRect = stageWrapper.getBoundingClientRect();
-      initialLeft = rect.left - parentRect.left;
-      initialTop = rect.top - parentRect.top;
+    // 3. Enable Dragging on Shapes Submenu by Pill Handle with Boundary Constraints
+    const shapesFlyout = document.getElementById('tb-shapes-flyout');
+    const shapesDrag = document.getElementById('tb-shapes-drag');
+    if (shapesFlyout && shapesDrag) {
+      this._makeDraggableByPill(shapesFlyout, shapesDrag, stageWrapper);
+    }
 
-      toolbar.style.transition = 'none';
-      toolbar.style.right = 'auto';
-      toolbar.style.bottom = 'auto';
-      dragHandle.setPointerCapture(e.pointerId);
-    };
-
-    const onPointerMove = (e) => {
-      if (!isDragging) return;
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
-
-      const parentRect = stageWrapper.getBoundingClientRect();
-      const toolbarRect = toolbar.getBoundingClientRect();
-
-      const minLeft = 8;
-      const maxLeft = Math.max(minLeft, parentRect.width - 40);
-      const minTop = 8;
-      const maxTop = Math.max(minTop, parentRect.height - 40);
-
-      let newLeft = Math.max(minLeft, Math.min(maxLeft, initialLeft + dx));
-      let newTop = Math.max(minTop, Math.min(maxTop, initialTop + dy));
-
-      toolbar.style.left = `${newLeft}px`;
-      toolbar.style.top = `${newTop}px`;
-      toolbar.style.transform = 'none';
-    };
-
-    const onPointerUp = (e) => {
-      if (!isDragging) return;
-      isDragging = false;
-      toolbar.style.transition = '';
-      try {
-        dragHandle.releasePointerCapture(e.pointerId);
-      } catch (err) {}
-    };
-
-    dragHandle.addEventListener('pointerdown', onPointerDown);
-    dragHandle.addEventListener('pointermove', onPointerMove);
-    dragHandle.addEventListener('pointerup', onPointerUp);
-    dragHandle.addEventListener('pointercancel', onPointerUp);
-
-    // ── Monkey Button & Cursor Flyout Handler ──
+    // ── Monkey / Cursor Flyout Handler (Horizontal 2-Button Submenu) ──
     const monkeyBtn = document.getElementById('tb-btn-monkey');
     const monkeyFlyout = document.getElementById('tb-monkey-flyout');
     const monkeyIcon = document.getElementById('tb-monkey-icon');
 
+    const updateMonkeyFlyoutButtons = () => {
+      if (!monkeyFlyout) return;
+      if (this.monkeyState === 'cursor') {
+        monkeyFlyout.innerHTML = `
+          <button class="toolbar-tool-btn" data-monkey="active" title="Active Ink Mode" aria-label="Active Ink Mode">
+            <span>🐵</span>
+          </button>
+          <button class="toolbar-tool-btn" data-monkey="hidden" title="Disable Canvas (Collapse Toolbar)" aria-label="Disable Canvas">
+            <span>🙈</span>
+          </button>
+        `;
+      } else {
+        monkeyFlyout.innerHTML = `
+          <button class="toolbar-tool-btn" data-monkey="cursor" title="Cursor Mode (Desktop Feature)" aria-label="Cursor Mode">
+            <span>🐒</span>
+          </button>
+          <button class="toolbar-tool-btn" data-monkey="hidden" title="Disable Canvas (Collapse Toolbar)" aria-label="Disable Canvas">
+            <span>🙈</span>
+          </button>
+        `;
+      }
+      
+      monkeyFlyout.querySelectorAll('[data-monkey]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this._closeAllPopovers();
+          const action = btn.getAttribute('data-monkey');
+          
+          if (action === 'active') {
+            this.setCanvasVisibility(true);
+            this.selectTool('pen');
+            if (monkeyIcon) monkeyIcon.textContent = '🐵';
+          } else if (action === 'cursor') {
+            // Restrict cursor click-through mode in web preview
+            this.showRestrictedToast();
+          } else if (action === 'hidden') {
+            this.setCanvasVisibility(false);
+            if (monkeyIcon) monkeyIcon.textContent = '🙈';
+          }
+        });
+      });
+    };
+
     if (monkeyBtn && monkeyFlyout) {
+      updateMonkeyFlyoutButtons();
+
       monkeyBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         if (!this.isCanvasVisible && toolbar.classList.contains('collapsed')) {
@@ -209,28 +238,12 @@ class App {
 
         const isOpen = monkeyFlyout.style.display === 'flex';
         this._closeAllPopovers();
-        monkeyFlyout.style.display = isOpen ? 'none' : 'flex';
-      });
-
-      monkeyFlyout.querySelectorAll('[data-monkey]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this._closeAllPopovers();
-          const action = btn.getAttribute('data-monkey');
-          
-          if (action === 'active') {
-            this.setCanvasVisibility(true);
-            this.selectTool('pen');
-            monkeyIcon.textContent = '🐵';
-          } else if (action === 'cursor') {
-            this.setCanvasVisibility(true);
-            this.selectTool('cursor');
-            monkeyIcon.textContent = '🐒';
-          } else if (action === 'hidden') {
-            this.setCanvasVisibility(false);
-            monkeyIcon.textContent = '🙈';
-          }
-        });
+        if (!isOpen) {
+          updateMonkeyFlyoutButtons();
+          monkeyFlyout.style.display = 'flex';
+        } else {
+          monkeyFlyout.style.display = 'none';
+        }
       });
     }
 
@@ -248,11 +261,12 @@ class App {
 
     // ── Bind Shapes Flyout ──
     const shapesBtn = document.getElementById('tb-btn-shapes');
-    const shapesFlyout = document.getElementById('tb-shapes-flyout');
     if (shapesBtn && shapesFlyout) {
       shapesBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.showRestrictedToast();
+        const isOpen = shapesFlyout.style.display === 'flex';
+        this._closeAllPopovers();
+        shapesFlyout.style.display = isOpen ? 'none' : 'flex';
       });
 
       shapesFlyout.querySelectorAll('[data-shape]').forEach(shapeItem => {
@@ -264,7 +278,6 @@ class App {
 
     // ── Bind Floating 12-Color Palette ──
     const paletteBtn = document.getElementById('tb-btn-palette');
-    const palettePopover = document.getElementById('tb-palette-popover');
     if (paletteBtn && palettePopover) {
       paletteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -318,6 +331,88 @@ class App {
         this._closeAllPopovers();
       }
     });
+  }
+
+  /**
+   * Enables smooth dragging of toolbars/submenus via their pill handles,
+   * with boundary constraints applied strictly to the pill handle itself.
+   */
+  _makeDraggableByPill(element, dragHandle, container) {
+    if (!element || !dragHandle || !container) return;
+
+    let isDragging = false;
+    let startX = 0, startY = 0;
+    let initialLeft = 0, initialTop = 0;
+    let parentOffsetX = 0, parentOffsetY = 0;
+
+    const onPointerDown = (e) => {
+      if (e.button !== 0 && e.pointerType === 'mouse') return;
+      e.stopPropagation();
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+
+      const rect = element.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const offsetParent = element.offsetParent || container;
+      const parentRect = offsetParent.getBoundingClientRect();
+
+      parentOffsetX = parentRect.left - containerRect.left;
+      parentOffsetY = parentRect.top - containerRect.top;
+
+      initialLeft = rect.left - parentRect.left;
+      initialTop = rect.top - parentRect.top;
+
+      element.style.transition = 'none';
+      element.style.left = `${initialLeft}px`;
+      element.style.top = `${initialTop}px`;
+      element.style.right = 'auto';
+      element.style.bottom = 'auto';
+      element.style.transform = 'none';
+      try {
+        dragHandle.setPointerCapture(e.pointerId);
+      } catch (err) {}
+    };
+
+    const onPointerMove = (e) => {
+      if (!isDragging) return;
+      e.stopPropagation();
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      const containerRect = container.getBoundingClientRect();
+      const handleOffsetLeft = dragHandle.offsetLeft || 0;
+      const handleOffsetTop = dragHandle.offsetTop || 0;
+      const handleWidth = dragHandle.offsetWidth || 40;
+      const handleHeight = dragHandle.offsetHeight || 14;
+
+      // Bound constraints apply strictly to keeping the pill handle inside the sandbox container
+      const minLeft = 8 - parentOffsetX - handleOffsetLeft;
+      const maxLeft = containerRect.width - handleWidth - 8 - parentOffsetX - handleOffsetLeft;
+      const minTop = 8 - parentOffsetY - handleOffsetTop;
+      const maxTop = containerRect.height - handleHeight - 8 - parentOffsetY - handleOffsetTop;
+
+      let newLeft = Math.max(minLeft, Math.min(maxLeft, initialLeft + dx));
+      let newTop = Math.max(minTop, Math.min(maxTop, initialTop + dy));
+
+      element.style.left = `${newLeft}px`;
+      element.style.top = `${newTop}px`;
+      element.style.transform = 'none';
+    };
+
+    const onPointerUp = (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      element.style.transition = '';
+      try {
+        dragHandle.releasePointerCapture(e.pointerId);
+      } catch (err) {}
+    };
+
+    dragHandle.addEventListener('pointerdown', onPointerDown);
+    dragHandle.addEventListener('pointermove', onPointerMove);
+    dragHandle.addEventListener('pointerup', onPointerUp);
+    dragHandle.addEventListener('pointercancel', onPointerUp);
   }
 
   _closeAllPopovers() {
@@ -501,6 +596,11 @@ class App {
 
     this._updateThemeModeUI(themeEngine.currentMode);
     this._updateThemeSeedUI(themeEngine.currentSeedKey);
+
+    // Subscribe to external theme mode updates
+    themeEngine.onModeChange((mode) => {
+      this._updateThemeModeUI(mode);
+    });
   }
 
   _updateThemeModeUI(mode) {
@@ -640,13 +740,14 @@ class App {
   // ==========================================
   showRestrictedToast() {
     this.showToast(
-      '🔒 Download Pen 11 to use all features',
+      'Download Pen 11 to use all features',
       'lock',
-      '<a href="https://github.com/Narayan6204/Pen-11/releases/latest" class="m3-btn m3-btn-filled" style="height: 32px; font-size: 13px; padding: 0 12px; text-decoration: none; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">Download</a>'
+      '<a href="https://github.com/Narayan6204/Pen-11/releases/latest" class="m3-btn m3-btn-filled" style="height: 32px; font-size: 13px; padding: 0 12px; text-decoration: none; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">Download</a>',
+      2000
     );
   }
 
-  showToast(message, icon = 'info', actionHtml = '') {
+  showToast(message, icon = 'info', actionHtml = '', durationMs = null) {
     let snackbar = document.getElementById('m3-global-snackbar');
     if (!snackbar) {
       snackbar = document.createElement('aside');
@@ -682,15 +783,17 @@ class App {
 
     snackbar.classList.add('active');
 
+    const timeout = durationMs || (actionHtml ? 2400 : 1800);
+
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => {
       snackbar.classList.remove('active');
-    }, actionHtml ? 5000 : 3200);
+    }, timeout);
   }
 }
 
-// Instantiate and Boot App on DOM Ready
-document.addEventListener('DOMContentLoaded', async () => {
+// Instantiate and Boot App on DOM Ready or Immediately if Parsed
+const bootApp = async () => {
   try {
     const app = new App();
     await app.init();
@@ -698,4 +801,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (err) {
     console.error('[Pen 11] App initialization error:', err);
   }
-});
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootApp);
+} else {
+  bootApp();
+}

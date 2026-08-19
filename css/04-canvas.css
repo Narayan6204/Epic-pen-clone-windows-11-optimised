@@ -88,7 +88,8 @@
   transition: background-color 150ms ease;
 }
 
-[data-theme="dark"] .toolbar-drag-pill {
+[data-theme="dark"] .toolbar-drag-pill,
+[data-theme-resolved="dark"] .toolbar-drag-pill {
   background-color: #5a4f40;
 }
 
@@ -108,7 +109,8 @@
   border-radius: 1px;
 }
 
-[data-theme="dark"] .toolbar-divider {
+[data-theme="dark"] .toolbar-divider,
+[data-theme-resolved="dark"] .toolbar-divider {
   background-color: #5a4f40;
 }
 
@@ -122,19 +124,39 @@
   border: none;
   background-color: #E6D5B8;
   color: #333333;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif !important;
   font-size: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   position: relative;
+  line-height: normal;
+  text-decoration: none;
+  font-style: normal;
+  overflow: visible;
   transition: background-color 120ms ease,
               transform 120ms ease,
               border 120ms ease,
               box-shadow 120ms ease;
 }
 
-[data-theme="dark"] .toolbar-tool-btn {
+.toolbar-tool-btn span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: normal;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif !important;
+  font-size: 18px;
+  text-decoration: none;
+  font-style: normal;
+  overflow: visible;
+  user-select: none;
+  pointer-events: none;
+}
+
+[data-theme="dark"] .toolbar-tool-btn,
+[data-theme-resolved="dark"] .toolbar-tool-btn {
   background-color: #3e372e;
   color: #f0e6d6;
 }
@@ -144,7 +166,8 @@
   transform: scale(1.06);
 }
 
-[data-theme="dark"] .toolbar-tool-btn:hover {
+[data-theme="dark"] .toolbar-tool-btn:hover,
+[data-theme-resolved="dark"] .toolbar-tool-btn:hover {
   background-color: #52493d;
 }
 
@@ -153,7 +176,8 @@
   transform: scale(0.96);
 }
 
-[data-theme="dark"] .toolbar-tool-btn:active {
+[data-theme="dark"] .toolbar-tool-btn:active,
+[data-theme-resolved="dark"] .toolbar-tool-btn:active {
   background-color: #655b4c;
 }
 
@@ -163,7 +187,8 @@
   box-sizing: border-box;
 }
 
-[data-theme="dark"] .toolbar-tool-btn.active {
+[data-theme="dark"] .toolbar-tool-btn.active,
+[data-theme-resolved="dark"] .toolbar-tool-btn.active {
   background-color: #7d6e59;
   border: 2px solid #d6c3a1;
 }
@@ -183,24 +208,27 @@
    2. Floating Popovers & Flyouts (Shape Menu & 12-Color Floating Palette)
    -------------------------------------------------------------------------- */
 
-/* Monkey Flyout */
+/* Monkey / Cursor Submenu Flyout (Horizontal 2-Button Row matching Desktop App) */
 .toolbar-monkey-flyout {
   position: absolute;
-  top: -10px;
+  top: 0;
   right: calc(100% + 14px);
   background: #F5E8D5;
   border: 1px solid #D6C3A1;
-  border-radius: 20px;
-  padding: 12px 14px 14px 14px;
+  border-radius: 24px;
+  padding: 6px 8px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   gap: 8px;
-  z-index: 550;
+  z-index: 600;
+  animation: flyoutFadeIn 180ms cubic-bezier(0.2, 0, 0, 1);
+  white-space: nowrap;
 }
 
-[data-theme="dark"] .toolbar-monkey-flyout {
+[data-theme="dark"] .toolbar-monkey-flyout,
+[data-theme-resolved="dark"] .toolbar-monkey-flyout {
   background: #2a2620;
   border: 1px solid #5a4f40;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 2px 10px rgba(0, 0, 0, 0.3);
@@ -224,7 +252,8 @@
   animation: flyoutFadeIn 180ms cubic-bezier(0.2, 0, 0, 1);
 }
 
-[data-theme="dark"] .toolbar-shape-flyout {
+[data-theme="dark"] .toolbar-shape-flyout,
+[data-theme-resolved="dark"] .toolbar-shape-flyout {
   background: #2a2620;
   border: 1px solid #5a4f40;
 }
@@ -236,7 +265,8 @@
   margin-bottom: 2px;
 }
 
-[data-theme="dark"] .shape-flyout-title {
+[data-theme="dark"] .shape-flyout-title,
+[data-theme-resolved="dark"] .shape-flyout-title {
   color: #f0e6d6;
 }
 
@@ -264,7 +294,8 @@
   animation: flyoutFadeIn 180ms cubic-bezier(0.2, 0, 0, 1);
 }
 
-[data-theme="dark"] .toolbar-palette-popover {
+[data-theme="dark"] .toolbar-palette-popover,
+[data-theme-resolved="dark"] .toolbar-palette-popover {
   background: #2a2620;
   border: 1px solid #5a4f40;
 }
@@ -276,7 +307,8 @@
   margin-bottom: 6px;
 }
 
-[data-theme="dark"] .palette-title {
+[data-theme="dark"] .palette-title,
+[data-theme-resolved="dark"] .palette-title {
   color: #f0e6d6;
 }
 
@@ -300,7 +332,8 @@
   box-sizing: border-box;
 }
 
-[data-theme="dark"] .palette-color-btn {
+[data-theme="dark"] .palette-color-btn,
+[data-theme-resolved="dark"] .palette-color-btn {
   border: 1px solid #5a4f40;
 }
 
@@ -341,9 +374,11 @@
 .canvas-stage-wrapper {
   position: relative;
   width: 100%;
-  height: 540px;
+  min-height: 720px;
+  height: clamp(680px, 80vh, 850px);
   border-radius: var(--md-sys-shape-corner-extra-large);
   overflow: hidden;
+  isolation: isolate;
   border: 1px solid var(--md-sys-color-outline-variant);
   box-shadow: var(--md-sys-elevation-level2);
   display: flex;
@@ -389,22 +424,74 @@
 }
 
 /* --------------------------------------------------------------------------
-   4. Custom Hardware Cursors & Overlay HUD
+   4. Custom Hardware Cursors, Inking Hide & Menu Reset
    -------------------------------------------------------------------------- */
-.cursor-pen {
-  cursor: crosshair;
+/* Pen Tool - Exact Desktop App Inking Cursor from main.py (Hotspot at center dot 32 32) */
+.cursor-pen,
+.cursor-pen canvas {
+  cursor: url('../assets/cursor_pen.png') 32 32, crosshair;
 }
 
-.cursor-highlighter {
-  cursor: cell;
+/* Highlighter Tool - Exact Desktop App Inking Cursor from main.py (Hotspot at center box 32 32) */
+.cursor-highlighter,
+.cursor-highlighter canvas {
+  cursor: url('../assets/cursor_highlighter.png') 32 32, cell;
 }
 
-.cursor-eraser {
-  cursor: not-allowed;
+/* Eraser Tool - Exact Desktop App Dual-Ring Cursor from main.py (Hotspot at center 32 32) */
+.cursor-eraser,
+.cursor-eraser canvas {
+  cursor: url('../assets/cursor_eraser.png') 32 32, not-allowed;
 }
 
-.cursor-pointer {
+.cursor-pointer,
+.cursor-pointer canvas {
   cursor: default;
+}
+
+/* Hide cursor icon while actively drawing / inking on canvas */
+.canvas-stage-wrapper.is-drawing,
+.canvas-stage-wrapper.is-drawing canvas,
+.pen-canvas-container.is-drawing,
+.pen-canvas-container.is-drawing canvas {
+  cursor: none !important;
+}
+
+/* Reset to standard UI cursors whenever hovering over main toolbar or sub-menu flyouts */
+.pen-toolbar-container,
+.toolbar-palette-popover,
+.toolbar-shape-flyout,
+.toolbar-monkey-flyout,
+.canvas-hud-top-right,
+.canvas-hud-bottom-left,
+.pen-toolbar-container *,
+.toolbar-palette-popover *,
+.toolbar-shape-flyout *,
+.toolbar-monkey-flyout *,
+.canvas-hud-top-right *,
+.canvas-hud-bottom-left * {
+  cursor: default;
+}
+
+.toolbar-tool-btn,
+.palette-color-btn,
+.toolbar-flyout-item,
+.hud-pill,
+.toolbar-tool-btn *,
+.palette-color-btn *,
+.toolbar-flyout-item * {
+  cursor: pointer !important;
+}
+
+.toolbar-drag-handle,
+.toolbar-drag-pill,
+.toolbar-drag-handle * {
+  cursor: grab !important;
+}
+
+.toolbar-drag-handle:active,
+.toolbar-drag-pill:active {
+  cursor: grabbing !important;
 }
 
 /* HUD Overlay Controls */

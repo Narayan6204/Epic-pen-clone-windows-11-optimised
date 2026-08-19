@@ -201,12 +201,25 @@ export class CanvasEngine {
       };
     };
 
+    const setDrawingState = (drawing) => {
+      if (drawing) {
+        this.container.classList.add('is-drawing');
+        const stage = document.getElementById('canvas-stage-wrapper');
+        if (stage) stage.classList.add('is-drawing');
+      } else {
+        this.container.classList.remove('is-drawing');
+        const stage = document.getElementById('canvas-stage-wrapper');
+        if (stage) stage.classList.remove('is-drawing');
+      }
+    };
+
     overlay.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       try {
         overlay.setPointerCapture(e.pointerId);
       } catch (_) {}
 
+      setDrawingState(true);
       const pt = normalizePointer(e);
       this.emit('pointerdown', pt);
     });
@@ -223,6 +236,7 @@ export class CanvasEngine {
         overlay.releasePointerCapture(e.pointerId);
       } catch (_) {}
 
+      setDrawingState(false);
       const pt = normalizePointer(e);
       this.emit('pointerup', pt);
     });
@@ -233,9 +247,13 @@ export class CanvasEngine {
         overlay.releasePointerCapture(e.pointerId);
       } catch (_) {}
 
+      setDrawingState(false);
       const pt = normalizePointer(e);
       this.emit('pointercancel', pt);
     });
+
+    window.addEventListener('pointerup', () => setDrawingState(false));
+    window.addEventListener('pointercancel', () => setDrawingState(false));
 
     // Prevent context menu on touch / drawing
     overlay.addEventListener('contextmenu', (e) => e.preventDefault());

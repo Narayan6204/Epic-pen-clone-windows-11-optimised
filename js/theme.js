@@ -169,20 +169,27 @@ export function generateTonalPalette(hue, chroma) {
 
 export class ThemeEngine {
   constructor() {
-    this.currentMode = 'light'; // Default to light warm parchment
+    this.currentMode = 'system'; // Default to system preference
     this.currentSeedKey = 'warm-parchment';
     this.canvasRetintListeners = new Set();
+    this.modeListeners = new Set();
 
     this._mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     this._mediaQueryListener = (e) => {
       if (this.currentMode === 'system') {
         this._applyTheme();
+        this.modeListeners.forEach(cb => {
+          try { cb('system', this.isDark); } catch (err) { console.error(err); }
+        });
       }
     };
     this._mediaQuery.addEventListener('change', this._mediaQueryListener);
 
     this._loadSettings();
     this._applyTheme();
+
+    // Global reference for immediate inline handlers
+    window.pen11ThemeEngine = this;
   }
 
   _loadSettings() {
@@ -190,6 +197,8 @@ export class ThemeEngine {
       const savedMode = localStorage.getItem('pen11_theme_mode');
       if (savedMode && ['light', 'dark', 'system'].includes(savedMode)) {
         this.currentMode = savedMode;
+      } else {
+        this.currentMode = 'system';
       }
       const savedSeed = localStorage.getItem('pen11_theme_seed');
       if (savedSeed && THEME_SEEDS[savedSeed] && savedSeed !== 'win11-blue') {
@@ -226,6 +235,18 @@ export class ThemeEngine {
     this.currentMode = mode;
     this._saveSettings();
     this._applyTheme();
+    this.modeListeners.forEach(cb => {
+      try { cb(this.currentMode, this.isDark); } catch (err) { console.error(err); }
+    });
+  }
+
+  /**
+   * Registers a callback triggered when theme mode changes
+   * @param {Function} callback 
+   */
+  onModeChange(callback) {
+    this.modeListeners.add(callback);
+    return () => this.modeListeners.delete(callback);
   }
 
   /**

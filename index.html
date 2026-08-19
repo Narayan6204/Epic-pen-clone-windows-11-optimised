@@ -28,13 +28,35 @@
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="apple-touch-icon" href="assets/logo.svg">
 
+  <!-- Google Fonts & Material Symbols Preconnect & Stylesheet (Fast Parallel Loading) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Roboto+Flex:opsz,wght,GRAD,slnt@8..144,100..1000,-200..150,-10..0&family=Roboto+Mono:wght@400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/00-tokens.css?v=4.4.0">
-  <link rel="stylesheet" href="css/01-layout.css?v=4.4.0">
-  <link rel="stylesheet" href="css/02-components.css?v=4.4.0">
-  <link rel="stylesheet" href="css/03-motion.css?v=4.4.0">
-  <link rel="stylesheet" href="css/04-canvas.css?v=4.4.0">
-  <link rel="stylesheet" href="css/05-warm-theme.css?v=4.4.0">
+  <link rel="stylesheet" href="css/00-tokens.css?v=4.4.2">
+  <link rel="stylesheet" href="css/01-layout.css?v=4.4.2">
+  <link rel="stylesheet" href="css/02-components.css?v=4.4.2">
+  <link rel="stylesheet" href="css/03-motion.css?v=4.4.2">
+  <link rel="stylesheet" href="css/04-canvas.css?v=4.4.2">
+  <link rel="stylesheet" href="css/05-warm-theme.css?v=4.4.2">
+
+  <!-- Immediate Theme Resolver to Prevent FOUT and Desync -->
+  <script>
+  (function() {
+    try {
+      var savedMode = localStorage.getItem('pen11_theme_mode') || 'system';
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var isDark = savedMode === 'dark' || (savedMode === 'system' && prefersDark);
+      if (savedMode === 'system') {
+        document.documentElement.removeAttribute('data-theme');
+      } else {
+        document.documentElement.setAttribute('data-theme', savedMode);
+      }
+      document.documentElement.setAttribute('data-theme-resolved', isDark ? 'dark' : 'light');
+    } catch (e) {}
+  })();
+  </script>
 
   <!-- Schema.org JSON-LD Structured Data -->
   <script type="application/ld+json">
@@ -86,15 +108,15 @@
 
         <!-- Right App Bar Actions -->
         <div class="m3-top-app-bar-actions">
-          <!-- Theme Mode Switcher -->
-          <div class="m3-flex-row m3-gap-xs" role="group" aria-label="Theme mode switcher">
+          <!-- Theme Mode Switcher (Segmented Toggle) -->
+          <div class="m3-theme-segmented-group" id="theme-mode-switcher" role="group" aria-label="Theme mode switcher">
             <button class="m3-icon-btn" data-theme-mode="light" title="Light Mode" aria-label="Switch to light mode">
               <span class="material-symbols-rounded">light_mode</span>
             </button>
             <button class="m3-icon-btn" data-theme-mode="dark" title="Dark Mode" aria-label="Switch to dark mode">
               <span class="material-symbols-rounded">dark_mode</span>
             </button>
-            <button class="m3-icon-btn active" data-theme-mode="system" title="System Preference" aria-label="Switch to system theme">
+            <button class="m3-icon-btn" data-theme-mode="system" title="System Preference" aria-label="Switch to system theme">
               <span class="material-symbols-rounded">desktop_windows</span>
             </button>
           </div>
@@ -112,6 +134,55 @@
           </button>
         </div>
       </header>
+
+      <!-- Instant Fast-Binding Script for Theme Switcher UI Sync -->
+      <script>
+      (function() {
+        function syncThemeSwitcher(mode) {
+          var btns = document.querySelectorAll('[data-theme-mode]');
+          btns.forEach(function(btn) {
+            if (btn.getAttribute('data-theme-mode') === mode) {
+              btn.classList.add('active');
+              btn.setAttribute('aria-pressed', 'true');
+            } else {
+              btn.classList.remove('active');
+              btn.setAttribute('aria-pressed', 'false');
+            }
+          });
+        }
+
+        var savedMode = 'system';
+        try { savedMode = localStorage.getItem('pen11_theme_mode') || 'system'; } catch(e) {}
+        syncThemeSwitcher(savedMode);
+
+        document.querySelectorAll('[data-theme-mode]').forEach(function(btn) {
+          btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var mode = btn.getAttribute('data-theme-mode');
+            if (!mode) return;
+
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var isDark = mode === 'dark' || (mode === 'system' && prefersDark);
+
+            try { localStorage.setItem('pen11_theme_mode', mode); } catch(err) {}
+
+            if (mode === 'system') {
+              document.documentElement.removeAttribute('data-theme');
+            } else {
+              document.documentElement.setAttribute('data-theme', mode);
+            }
+            document.documentElement.setAttribute('data-theme-resolved', isDark ? 'dark' : 'light');
+
+            syncThemeSwitcher(mode);
+
+            if (window.pen11ThemeEngine) {
+              window.pen11ThemeEngine.setMode(mode);
+            }
+          });
+        });
+      })();
+      </script>
 
       <!-- 2. Hero Section with Live Interactive Canvas Sandbox -->
       <section id="hero" class="m3-section" style="padding-top: 32px;" aria-labelledby="hero-title">
@@ -209,19 +280,16 @@
 
               <!-- 2. Monkey Icon State Button (🐵 Active Ink / 🐒 Cursor Click-Through / 🙈 Hidden Canvas) -->
               <div style="position: relative; display: flex; justify-content: center;">
-                <button id="tb-btn-monkey" class="toolbar-tool-btn" title="Monkey Menu" aria-label="Monkey State Button">
+                <button id="tb-btn-monkey" class="toolbar-tool-btn" title="Cursor & Canvas Options" aria-label="Cursor State Button">
                   <span id="tb-monkey-icon">🐵</span>
                 </button>
                 
-                <!-- Monkey Flyout -->
+                <!-- Horizontal 2-Button Cursor Submenu Flyout -->
                 <div id="tb-monkey-flyout" class="toolbar-monkey-flyout" style="display: none;">
-                  <button class="toolbar-tool-btn active" data-monkey="active" title="Active Ink Mode" aria-label="Active Ink">
-                    <span>🐵</span>
-                  </button>
-                  <button class="toolbar-tool-btn" data-monkey="cursor" title="Cursor Mode (Click-through)" aria-label="Cursor Mode">
+                  <button class="toolbar-tool-btn" data-monkey="cursor" title="Cursor Click-Through Mode" aria-label="Cursor Mode">
                     <span>🐒</span>
                   </button>
-                  <button class="toolbar-tool-btn" data-monkey="hidden" title="Hide Canvas" aria-label="Hide Canvas">
+                  <button class="toolbar-tool-btn" data-monkey="hidden" title="Disable Canvas (Collapse Toolbar)" aria-label="Disable Canvas">
                     <span>🙈</span>
                   </button>
                 </div>
@@ -252,6 +320,9 @@
 
                 <!-- Shapes Popover Grid (6 Shapes) -->
                 <div id="tb-shapes-flyout" class="toolbar-shape-flyout" style="display: none;">
+                  <div id="tb-shapes-drag" class="toolbar-drag-handle" title="Drag Shapes Menu" aria-label="Drag shapes menu" style="width: 100%; display: flex; justify-content: center; cursor: grab; padding: 2px 0 6px;">
+                    <div class="toolbar-drag-pill"></div>
+                  </div>
                   <div class="shape-flyout-title">Shapes</div>
                   <div class="shape-flyout-grid">
                     <button class="toolbar-tool-btn" data-shape="line" title="Line (Shift for 45°)" aria-label="Line shape">
@@ -291,7 +362,9 @@
 
                 <!-- 12-Color Grid Popover -->
                 <div id="tb-palette-popover" class="toolbar-palette-popover" style="display: none;">
-                  <div class="toolbar-drag-pill" style="margin-bottom: 4px;"></div>
+                  <div id="tb-palette-drag" class="toolbar-drag-handle" title="Drag Color Palette" aria-label="Drag color palette" style="width: 100%; display: flex; justify-content: center; cursor: grab; padding: 2px 0 6px;">
+                    <div class="toolbar-drag-pill"></div>
+                  </div>
                   <div class="palette-title">Colors</div>
                   <div class="palette-grid">
                     <button class="palette-color-btn active" data-hex="#000000" style="background-color: #000000; color: #000000;" title="Black" aria-label="Black"></button>
@@ -534,7 +607,7 @@
       </section>
 
       <!-- 4. Hardware Benchmarks & Performance Metrics -->
-      <section id="benchmarks" class="m3-section" style="background-color: #EDE0C8;" aria-labelledby="benchmarks-title">
+      <section id="benchmarks" class="m3-section" aria-labelledby="benchmarks-title">
         <div class="m3-container">
           
           <div style="text-align: center; max-width: 720px; margin: 0 auto 48px;">
@@ -751,14 +824,14 @@ python -m PyInstaller main.spec --noconfirm</code></pre>
             <!-- Story Text Card -->
             <div class="bento-card bento-col-7">
               <span class="m3-badge-pill" style="margin-bottom: 12px; align-self: flex-start;">BEHIND THE CODE</span>
-              <h2 id="story-title" class="m3-headline-large" style="color: #2C1F0E; font-weight: 800; margin-bottom: 16px;">
+              <h2 id="story-title" class="m3-headline-large" style="font-weight: 800; margin-bottom: 16px;">
                 The Pen 11 Story
               </h2>
-              <blockquote style="border-left: 3px solid #7C5C35; padding-left: 16px; margin: 0 0 20px; font-style: italic; color: #3A2810; line-height: 1.75;">
+              <blockquote style="border-left: 3px solid var(--pen-brand-primary); padding-left: 16px; margin: 0 0 20px; font-style: italic; line-height: 1.75;">
                 "While taking my NIELIT 'O Level' course, I found myself in need of a good screen annotation tool. However, I quickly realized that most existing options were either locked behind paywalls, bloated with unnecessary features, or suffered from laggy, outdated user interfaces.<br><br>
                 Frustrated by these limitations, I decided to build my own solution using AI. The result is <strong>Pen 11</strong>—a blazing-fast, highly responsive, and meticulously optimized screen marker that respects your system's resources."
               </blockquote>
-              <p class="m3-label-large" style="color: #7C5C35; font-weight: 700;">
+              <p class="m3-label-large" style="font-weight: 700;">
                 — Narayan Dev (Creator & Maintainer)
               </p>
             </div>
@@ -930,43 +1003,6 @@ python -m PyInstaller main.spec --noconfirm</code></pre>
 
     </div>
   </div>
-
-  <!-- Fallback: Populate shortcuts table only if ES module fails to load -->
-  <script>
-  (function() {
-    var SHORTCUTS = [
-      { action: 'Select Pen Tool', keys: ['Ctrl', '1'], desc: 'Activates smooth, pressure-sensitive vector pen nib for writing and sketching.' },
-      { action: 'Select Highlighter', keys: ['Ctrl', '2'], desc: 'Switches to semi-transparent chisel marker with multiply blend mode.' },
-      { action: 'Select Eraser', keys: ['Ctrl', '3'], desc: 'Erases strokes point-by-point or smart objects by proximity.' },
-      { action: 'Select / Cursor Mode', keys: ['Ctrl', '4'], desc: 'Enables cursor click-through, lasso circle-to-select, and OBB transformation.' },
-      { action: 'Toggle Canvas Visibility', keys: ['Ctrl', '5'], desc: 'Collapses toolbar to minimal pill (🙈) and temporarily hides ink without clearing.' },
-      { action: 'Undo Last Action', keys: ['Ctrl', 'Z'], desc: 'Steps backward in the 5,000-step memory-safe undo stack.' },
-      { action: 'Clear Screen', keys: ['Ctrl', 'Shift', 'C'], desc: 'Instantly wipes all drawings and strokes from the screen.' },
-      { action: 'Toggle Color Palette', keys: ['Ctrl', 'P'], desc: 'Opens or closes the floating 12-color curated swatch toolbox.' },
-      { action: 'Toggle Background Mode', keys: ['Ctrl', 'B'], desc: 'Cycles between Transparent Desktop, Whiteboard, and Blackboard.' },
-      { action: 'Increase Nib Size', keys: ['Ctrl', ']'], desc: 'Increments active stroke nib thickness by +2px.' },
-      { action: 'Decrease Nib Size', keys: ['Ctrl', '['], desc: 'Decrements active stroke nib thickness by -2px.' },
-      { action: 'Exit Application', keys: ['Ctrl', 'Q'], desc: 'Instantly closes and exits the Pen 11 application.' },
-      { action: 'Delete Selected Objects', keys: ['Delete', 'Backspace'], desc: 'Removes all currently highlighted lasso selections from the screen.' },
-      { action: 'Constrain Shapes & Angles', keys: ['Shift', 'Drag'], desc: 'Snaps angles to 45°, rectangle/ellipse to 1:1, triangle to 90° right angle.' }
-    ];
-
-    function populateFallback() {
-      if (window.__PEN11_APP_LOADED__) return;
-      var tbody = document.getElementById('hotkey-table-body');
-      if (!tbody || tbody.children.length > 0) return;
-      tbody.innerHTML = SHORTCUTS.map(function(s) {
-        var kbds = s.keys.map(function(k) {
-          return '<kbd>' + k + '</kbd>';
-        }).join(' <span style="color: var(--md-sys-color-outline); margin: 0 2px;">+</span> ');
-        return '<tr><td class="shortcut-col-action" style="font-weight:700; color: #1A0F00;">' + s.action + '</td><td><div class="m3-kbd-group">' + kbds + '</div></td><td class="shortcut-col-desc" style="color: #3A2810; font-weight: 500;">' + s.desc + '</td></tr>';
-      }).join('');
-    }
-
-    // Attempt fallback population only if ES module hasn't loaded after 1.5s
-    setTimeout(populateFallback, 1500);
-  })();
-  </script>
 
   <!-- Application Entry Point ES Module -->
   <script type="module" src="js/app.js?v=4.4.0"></script>
