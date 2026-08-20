@@ -6,7 +6,7 @@
  * Shape Menu, and Toast HUD.
  */
 
-import { CanvasEngine, ToolManager, HistoryManager, LassoSelector, VectorStroke, VectorShape } from './canvas/index.js';
+import { CanvasEngine, ToolManager, HistoryManager, LassoSelector } from './canvas/index.js';
 import { themeEngine, THEME_SEEDS } from './theme.js';
 import { rippleEngine } from './ripple.js';
 import { shortcutsManager } from './shortcuts.js';
@@ -577,57 +577,28 @@ class App {
   }
 
   // ==========================================
-  // 3. Theme Controls & Dynamic Seeds
+  // 3. Theme Controls
   // ==========================================
   _initThemeControls() {
     document.querySelectorAll('[data-theme-mode]').forEach(btn => {
       btn.addEventListener('click', () => {
         const mode = btn.dataset.themeMode;
+        if (!mode) return;
         themeEngine.setMode(mode);
         this._updateThemeModeUI(mode);
-        this.showToast(`Theme Mode: ${mode.toUpperCase()}`, 'palette');
-      });
-    });
-
-    document.querySelectorAll('[data-theme-seed]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const seedKey = btn.dataset.themeSeed;
-        themeEngine.setSeed(seedKey);
-        this._updateThemeSeedUI(seedKey);
-        this.showToast(`Theme Color: ${THEME_SEEDS[seedKey]?.name || 'Custom'}`, 'palette');
+        this.showToast(`Theme: ${mode.toUpperCase()}`, 'palette');
       });
     });
 
     this._updateThemeModeUI(themeEngine.currentMode);
-    this._updateThemeSeedUI(themeEngine.currentSeedKey);
-
-    // Subscribe to external theme mode updates
-    themeEngine.onModeChange((mode) => {
-      this._updateThemeModeUI(mode);
-    });
+    themeEngine.onModeChange((mode) => this._updateThemeModeUI(mode));
   }
 
   _updateThemeModeUI(mode) {
     document.querySelectorAll('[data-theme-mode]').forEach(btn => {
-      if (btn.dataset.themeMode === mode) {
-        btn.classList.add('active');
-        btn.setAttribute('aria-pressed', 'true');
-      } else {
-        btn.classList.remove('active');
-        btn.setAttribute('aria-pressed', 'false');
-      }
-    });
-  }
-
-  _updateThemeSeedUI(seedKey) {
-    document.querySelectorAll('[data-theme-seed]').forEach(btn => {
-      if (btn.dataset.themeSeed === seedKey) {
-        btn.classList.add('active');
-        btn.setAttribute('aria-checked', 'true');
-      } else {
-        btn.classList.remove('active');
-        btn.setAttribute('aria-checked', 'false');
-      }
+      const isActive = btn.dataset.themeMode === mode;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
     });
   }
 

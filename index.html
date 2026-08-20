@@ -47,12 +47,12 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Roboto+Flex:opsz,wght,GRAD,slnt@8..144,100..1000,-200..150,-10..0&family=Roboto+Mono:wght@400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/00-tokens.css?v=4.5.4">
-  <link rel="stylesheet" href="css/01-layout.css?v=4.5.4">
-  <link rel="stylesheet" href="css/02-components.css?v=4.5.4">
-  <link rel="stylesheet" href="css/03-motion.css?v=4.5.4">
-  <link rel="stylesheet" href="css/04-canvas.css?v=4.5.4">
-  <link rel="stylesheet" href="css/05-warm-theme.css?v=4.5.4">
+  <link rel="stylesheet" href="css/00-tokens.css?v=4.5.5">
+  <link rel="stylesheet" href="css/01-layout.css?v=4.5.5">
+  <link rel="stylesheet" href="css/02-components.css?v=4.5.5">
+  <link rel="stylesheet" href="css/03-motion.css?v=4.5.5">
+  <link rel="stylesheet" href="css/04-canvas.css?v=4.5.5">
+  <link rel="stylesheet" href="css/05-warm-theme.css?v=4.5.5">
 
   <!-- Immediate Theme Resolver to Prevent FOUT and Desync -->
   <script>
@@ -225,55 +225,6 @@
           </button>
         </div>
       </header>
-
-      <!-- Instant Fast-Binding Script for Theme Switcher UI Sync -->
-      <script>
-      (function() {
-        function syncThemeSwitcher(mode) {
-          var btns = document.querySelectorAll('[data-theme-mode]');
-          btns.forEach(function(btn) {
-            if (btn.getAttribute('data-theme-mode') === mode) {
-              btn.classList.add('active');
-              btn.setAttribute('aria-pressed', 'true');
-            } else {
-              btn.classList.remove('active');
-              btn.setAttribute('aria-pressed', 'false');
-            }
-          });
-        }
-
-        var savedMode = 'system';
-        try { savedMode = localStorage.getItem('pen11_theme_mode') || 'system'; } catch(e) {}
-        syncThemeSwitcher(savedMode);
-
-        document.querySelectorAll('[data-theme-mode]').forEach(function(btn) {
-          btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            var mode = btn.getAttribute('data-theme-mode');
-            if (!mode) return;
-
-            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            var isDark = mode === 'dark' || (mode === 'system' && prefersDark);
-
-            try { localStorage.setItem('pen11_theme_mode', mode); } catch(err) {}
-
-            if (mode === 'system') {
-              document.documentElement.removeAttribute('data-theme');
-            } else {
-              document.documentElement.setAttribute('data-theme', mode);
-            }
-            document.documentElement.setAttribute('data-theme-resolved', isDark ? 'dark' : 'light');
-
-            syncThemeSwitcher(mode);
-
-            if (window.pen11ThemeEngine) {
-              window.pen11ThemeEngine.setMode(mode);
-            }
-          });
-        });
-      })();
-      </script>
 
       <!-- 2. Hero Section with Live Interactive Canvas Sandbox -->
       <section id="hero" class="m3-section" style="padding-top: 32px;" aria-labelledby="hero-title">
@@ -1167,6 +1118,6 @@ python -m PyInstaller main.spec --noconfirm</code></pre>
   </div>
 
   <!-- Application Entry Point ES Module -->
-  <script type="module" src="js/app.js?v=4.5.4"></script>
+  <script type="module" src="js/app.js?v=4.5.5"></script>
 </body>
 </html>
