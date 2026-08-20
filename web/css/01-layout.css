@@ -53,19 +53,11 @@ button, input, select, textarea {
 /* --- Ambient Topographic Silky Waves Background Layer --- */
 .m3-ambient-waves-bg {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100vw;
   height: 100vh;
   z-index: 0;
   pointer-events: none;
-  background-image: url('../assets/bg_warm_waves.jpg');
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
-  opacity: 0.85;
-  transition: opacity var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-standard),
-              filter var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-standard);
 }
 
 .m3-layout-root {
