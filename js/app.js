@@ -133,11 +133,15 @@ class App {
     const triggerDemoAlert = () => {
       if (demoAlertFired) return;
       demoAlertFired = true;
+      const isMobile = window.innerWidth < 600;
+      const msg = isMobile 
+        ? 'Web Sandbox Demo • Full Direct3D 11 Performance on Desktop'
+        : 'Interactive Web Sandbox (Demo) • Download Desktop App for Full Direct3D 11 Performance';
       this.showToast(
-        'Interactive Web Sandbox (Demo) • Download Desktop App for Full Direct3D 11 Performance',
+        msg,
         'info',
         '<a href="https://github.com/Narayan6204/Pen-11/releases/latest" class="m3-btn m3-btn-filled" style="height: 32px; font-size: 12px; padding: 0 12px; text-decoration: none; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); white-space: nowrap; flex-shrink: 0;">Download</a>',
-        3500
+        4000
       );
     };
 
@@ -743,7 +747,7 @@ class App {
       'This feature is exclusive to the Windows Desktop App',
       'lock',
       '<a href="https://github.com/Narayan6204/Pen-11/releases/latest" class="m3-btn m3-btn-filled" style="height: 32px; font-size: 12px; padding: 0 12px; text-decoration: none; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); white-space: nowrap; flex-shrink: 0;">Download</a>',
-      3000
+      4000
     );
   }
 
