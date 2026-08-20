@@ -603,8 +603,8 @@ class OverlayWindow(QMainWindow):
     def set_mode(self, new_mode):
         while QApplication.overrideCursor() is not None:
             QApplication.restoreOverrideCursor()
-        # Rule 5: Only PEN and HIGHLIGHTER shortcuts can activate a hidden canvas
-        if not self.ink_visible and new_mode in (ToolMode.PEN, ToolMode.HIGHLIGHTER):
+        # Rule: Only PEN can activate a hidden canvas (removed for highlighter and eraser)
+        if not self.ink_visible and new_mode == ToolMode.PEN:
             self.toggle_visibility()
             
         # Rule 2: Block cursor mode when canvas is hidden
@@ -1843,7 +1843,7 @@ def setup_global_shortcuts(coordinator):
             
     hotkeys = {
         'ctrl+1': signals.switch_pen.emit,
-        'ctrl+2': signals.switch_highlighter.emit,
+        'ctrl+2': execute_if_visible(signals.switch_highlighter.emit),
         'ctrl+3': execute_if_visible(signals.switch_eraser.emit),
         'ctrl+4': execute_if_visible(signals.switch_cursor.emit),
         'ctrl+5': signals.toggle_visibility.emit,

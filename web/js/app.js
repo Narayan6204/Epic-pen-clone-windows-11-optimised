@@ -433,8 +433,8 @@ class App {
       this.toolManager.setSize(this.eraserSize);
     }
 
-    // If canvas was hidden, restore it
-    if (!this.isCanvasVisible) {
+    // Only Pen activates / unhides a hidden canvas
+    if (!this.isCanvasVisible && toolName === 'pen') {
       this.setCanvasVisibility(true);
     }
 

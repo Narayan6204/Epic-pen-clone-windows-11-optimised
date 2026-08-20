@@ -217,7 +217,9 @@ export class ShortcutsManager {
   }
 
   triggerTool(toolName, feedbackMessage) {
-    if (this.context.toolManager) {
+    if (this.context.selectTool) {
+      this.context.selectTool(toolName);
+    } else if (this.context.toolManager) {
       this.context.toolManager.setTool(toolName);
       if (this.context.updateToolbarUI) {
         this.context.updateToolbarUI(toolName);

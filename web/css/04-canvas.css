@@ -487,12 +487,27 @@
   cursor: default;
 }
 
-/* Hide cursor icon while actively drawing / inking on canvas */
-.canvas-stage-wrapper.is-drawing,
-.canvas-stage-wrapper.is-drawing canvas,
-.pen-canvas-container.is-drawing,
-.pen-canvas-container.is-drawing canvas {
+/* Hide cursor icon while actively drawing / inking on canvas ONLY for Pen tool */
+.canvas-stage-wrapper.cursor-pen.is-drawing,
+.canvas-stage-wrapper.cursor-pen.is-drawing canvas,
+.pen-canvas-container.cursor-pen.is-drawing,
+.pen-canvas-container.cursor-pen.is-drawing canvas {
   cursor: none !important;
+}
+
+/* Ensure Eraser and Highlighter cursors remain 100% visible while actively drawing/erasing */
+.canvas-stage-wrapper.cursor-eraser.is-drawing,
+.canvas-stage-wrapper.cursor-eraser.is-drawing canvas,
+.pen-canvas-container.cursor-eraser.is-drawing,
+.pen-canvas-container.cursor-eraser.is-drawing canvas {
+  cursor: url('../assets/cursor_eraser.png') 32 32, not-allowed !important;
+}
+
+.canvas-stage-wrapper.cursor-highlighter.is-drawing,
+.canvas-stage-wrapper.cursor-highlighter.is-drawing canvas,
+.pen-canvas-container.cursor-highlighter.is-drawing,
+.pen-canvas-container.cursor-highlighter.is-drawing canvas {
+  cursor: url('../assets/cursor_highlighter.png') 32 32, cell !important;
 }
 
 /* Reset to standard UI cursors whenever hovering over main toolbar or sub-menu flyouts */
