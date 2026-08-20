@@ -124,8 +124,6 @@
   border: none;
   background-color: #E6D5B8;
   color: #333333;
-  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif !important;
-  font-size: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -135,10 +133,36 @@
   text-decoration: none;
   font-style: normal;
   overflow: visible;
+  padding: 0;
+  box-sizing: border-box;
   transition: background-color 120ms ease,
               transform 120ms ease,
               border 120ms ease,
               box-shadow 120ms ease;
+}
+
+.toolbar-tool-btn .material-symbols-rounded {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  user-select: none;
+  line-height: 1;
+}
+
+.toolbar-tool-btn svg,
+.tb-svg-icon {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  display: block;
+  pointer-events: none;
+  flex-shrink: 0;
+  user-select: none;
 }
 
 .toolbar-tool-btn span {
@@ -146,8 +170,6 @@
   align-items: center;
   justify-content: center;
   line-height: normal;
-  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif !important;
-  font-size: 18px;
   text-decoration: none;
   font-style: normal;
   overflow: visible;
@@ -375,7 +397,7 @@
   position: relative;
   width: 100%;
   min-height: 420px;
-  height: 440px;
+  height: clamp(420px, 58vh, 500px);
   border-radius: var(--md-sys-shape-corner-extra-large);
   overflow: hidden;
   isolation: isolate;
@@ -384,6 +406,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  touch-action: none !important;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 @media (min-width: 600px) {
@@ -395,8 +420,8 @@
 
 @media (min-width: 840px) {
   .canvas-stage-wrapper {
-    min-height: 720px;
-    height: clamp(680px, 80vh, 850px);
+    min-height: 700px;
+    height: clamp(680px, 75vh, 850px);
   }
 }
 
@@ -556,57 +581,112 @@
    -------------------------------------------------------------------------- */
 @media (max-width: 599px) {
   .pen-toolbar-container {
-    top: 12px !important;
-    right: 12px !important;
-    padding: 6px 6px 10px 6px;
-    gap: 6px;
+    top: 8px !important;
+    right: 8px !important;
+    padding: 6px 5px 8px 5px;
+    gap: 4px;
     border-radius: 16px;
-    transform: scale(0.88);
-    transform-origin: top right;
+    max-height: calc(100% - 16px);
+  }
+
+  .toolbar-drag-handle {
+    width: 32px;
+    height: 10px;
+    margin-bottom: 0;
+  }
+
+  .toolbar-drag-pill {
+    width: 22px;
+    height: 4px;
+  }
+
+  .toolbar-divider {
+    width: 20px;
+    height: 2px;
+    margin: 1px 0;
   }
 
   .toolbar-tool-btn {
     width: 32px;
     height: 32px;
-    border-radius: 10px;
-    font-size: 16px;
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: 16px;
+  }
+
+  .toolbar-tool-btn .material-symbols-rounded {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .toolbar-tool-btn svg {
+    width: 18px;
+    height: 18px;
   }
 
   .toolbar-palette-popover {
     top: 0 !important;
-    right: calc(100% + 8px) !important;
-    padding: 10px 10px 12px 10px;
-    max-width: calc(100vw - 70px);
+    right: calc(100% + 6px) !important;
+    padding: 8px 10px 10px 10px;
+    max-width: calc(100vw - 72px);
     border-radius: 16px;
   }
 
+  .palette-title {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
   .palette-grid {
-    grid-template-columns: repeat(4, 24px);
-    grid-template-rows: repeat(3, 24px);
-    gap: 6px;
+    grid-template-columns: repeat(4, 22px);
+    grid-template-rows: repeat(3, 22px);
+    gap: 5px;
   }
 
   .palette-color-btn {
-    width: 24px;
-    height: 24px;
-    border-radius: 12px;
+    width: 22px;
+    height: 22px;
+    border-radius: 11px;
   }
 
   .toolbar-shape-flyout {
     top: 0 !important;
-    right: calc(100% + 8px) !important;
-    padding: 10px 10px 12px 10px;
+    right: calc(100% + 6px) !important;
+    padding: 8px 10px 10px 10px;
     border-radius: 16px;
   }
 
+  .shape-flyout-title {
+    font-size: 12px;
+    margin-bottom: 2px;
+  }
+
   .shape-flyout-grid {
-    grid-template-columns: repeat(2, 30px);
-    gap: 6px;
+    grid-template-columns: repeat(2, 28px);
+    gap: 5px;
   }
 
   .shape-flyout-grid .toolbar-tool-btn {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  .toolbar-monkey-flyout {
+    top: 0 !important;
+    right: calc(100% + 6px) !important;
+    padding: 4px 6px;
+    gap: 4px;
+    border-radius: 20px;
+  }
+
+  .toolbar-monkey-flyout .toolbar-tool-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
   }
 
   .canvas-hud-top-right {
@@ -614,12 +694,12 @@
   }
 
   .canvas-hud-bottom-left {
-    bottom: 10px;
-    left: 10px;
+    bottom: 8px;
+    left: 8px;
   }
 
   .canvas-hud-bottom-left .hud-pill {
     font-size: 10px;
-    padding: 4px 10px;
+    padding: 3px 8px;
   }
 }
