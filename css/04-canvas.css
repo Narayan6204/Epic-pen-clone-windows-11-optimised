@@ -166,15 +166,14 @@
 }
 
 .toolbar-tool-btn span {
+  font-size: 18px;
+  line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  line-height: normal;
-  text-decoration: none;
-  font-style: normal;
-  overflow: visible;
   user-select: none;
   pointer-events: none;
+  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
 }
 
 [data-theme="dark"] .toolbar-tool-btn,

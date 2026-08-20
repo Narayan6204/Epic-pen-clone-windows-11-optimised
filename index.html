@@ -47,12 +47,12 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Roboto+Flex:opsz,wght,GRAD,slnt@8..144,100..1000,-200..150,-10..0&family=Roboto+Mono:wght@400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/00-tokens.css?v=4.4.2">
-  <link rel="stylesheet" href="css/01-layout.css?v=4.4.2">
-  <link rel="stylesheet" href="css/02-components.css?v=4.4.2">
-  <link rel="stylesheet" href="css/03-motion.css?v=4.4.2">
-  <link rel="stylesheet" href="css/04-canvas.css?v=4.4.2">
-  <link rel="stylesheet" href="css/05-warm-theme.css?v=4.4.2">
+  <link rel="stylesheet" href="css/00-tokens.css?v=4.5.0">
+  <link rel="stylesheet" href="css/01-layout.css?v=4.5.0">
+  <link rel="stylesheet" href="css/02-components.css?v=4.5.0">
+  <link rel="stylesheet" href="css/03-motion.css?v=4.5.0">
+  <link rel="stylesheet" href="css/04-canvas.css?v=4.5.0">
+  <link rel="stylesheet" href="css/05-warm-theme.css?v=4.5.0">
 
   <!-- Immediate Theme Resolver to Prevent FOUT and Desync -->
   <script>
@@ -369,60 +369,44 @@
                 <div class="toolbar-drag-pill"></div>
               </div>
 
-              <!-- 2. Monkey Icon State Button (Draw / Cursor / Hidden) -->
+              <!-- 2. Monkey Icon State Button (🐵 Active Ink / 🐒 Cursor Click-Through / 🙈 Hidden Canvas) -->
               <div style="position: relative; display: flex; justify-content: center;">
                 <button id="tb-btn-monkey" class="toolbar-tool-btn" title="Cursor & Canvas Options" aria-label="Cursor State Button">
-                  <span id="tb-monkey-icon" style="display: inline-flex; align-items: center; justify-content: center;">
-                    <svg class="tb-svg-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
-                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                    </svg>
-                  </span>
+                  <span id="tb-monkey-icon">🐵</span>
                 </button>
                 
                 <!-- Horizontal 2-Button Cursor Submenu Flyout -->
                 <div id="tb-monkey-flyout" class="toolbar-monkey-flyout" style="display: none;">
-                  <button class="toolbar-tool-btn" data-monkey="cursor" title="Cursor Mode (Desktop Feature)" aria-label="Cursor Mode">
-                    <svg class="tb-svg-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
-                      <path d="M18.5 10c-.83 0-1.5.67-1.5 1.5v1.5h-1V7.5C16 6.67 15.33 6 14.5 6S13 6.67 13 7.5v5.5h-1V5.5C12 4.67 11.33 4 10.5 4S9 4.67 9 5.5v7.5h-1V7.5C8 6.67 7.33 6 6.5 6S5 6.67 5 7.5v9c0 3.59 2.91 6.5 6.5 6.5s6.5-2.91 6.5-6.5v-5c0-.83-.67-1.5-1.5-1.5z"/>
-                    </svg>
+                  <button class="toolbar-tool-btn" data-monkey="cursor" title="Cursor Click-Through Mode" aria-label="Cursor Mode">
+                    <span>🐒</span>
                   </button>
                   <button class="toolbar-tool-btn" data-monkey="hidden" title="Disable Canvas (Collapse Toolbar)" aria-label="Disable Canvas">
-                    <svg class="tb-svg-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
-                      <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
-                    </svg>
+                    <span>🙈</span>
                   </button>
                 </div>
               </div>
 
               <div class="toolbar-divider toolbar-collapsible"></div>
 
-              <!-- 3. Select / Transform Tool -->
+              <!-- 3. Select / Transform Tool (↖️) -->
               <button class="toolbar-tool-btn toolbar-collapsible" data-tool="select" title="Select / Transform (Ctrl+4)" aria-label="Selection tool">
-                <svg class="tb-svg-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
-                  <path d="M18.5 10c-.83 0-1.5.67-1.5 1.5v1.5h-1V7.5C16 6.67 15.33 6 14.5 6S13 6.67 13 7.5v5.5h-1V5.5C12 4.67 11.33 4 10.5 4S9 4.67 9 5.5v7.5h-1V7.5C8 6.67 7.33 6 6.5 6S5 6.67 5 7.5v9c0 3.59 2.91 6.5 6.5 6.5s6.5-2.91 6.5-6.5v-5c0-.83-.67-1.5-1.5-1.5z"/>
-                </svg>
+                <span>↖️</span>
               </button>
 
-              <!-- 4. Pen Tool -->
+              <!-- 4. Pen Tool (🖊️) -->
               <button class="toolbar-tool-btn active toolbar-collapsible" data-tool="pen" title="Pen (Ctrl+1)" aria-label="Pen tool">
-                <svg class="tb-svg-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
-                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                </svg>
+                <span>🖊️</span>
               </button>
 
-              <!-- 5. Highlighter Tool -->
+              <!-- 5. Highlighter Tool (🖍️) -->
               <button class="toolbar-tool-btn toolbar-collapsible" data-tool="highlighter" title="Highlighter (Ctrl+2)" aria-label="Highlighter tool">
-                <svg class="tb-svg-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
-                  <path d="M20.7 5.7L18.3 3.3c-.4-.4-1-.4-1.4 0L14 6.2l3.8 3.8 2.9-2.9c.4-.4.4-1 0-1.4zM3 17.2V21h3.8L16.4 11.4 12.6 7.6 3 17.2z M17 19h5v2h-5z"/>
-                </svg>
+                <span>🖍️</span>
               </button>
 
-              <!-- 6. Shape Menu Button & Flyout -->
+              <!-- 6. Shape Menu Button (📐) & Flyout -->
               <div class="toolbar-collapsible" style="position: relative;">
                 <button id="tb-btn-shapes" class="toolbar-tool-btn" title="Shapes (Line, Arrow, Rect, RoundRect, Circle, Triangle)" aria-label="Shapes selection">
-                  <svg class="tb-svg-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
-                    <path d="M12 2l-5.5 9h11zM17.5 13c-2.49 0-4.5 2.01-4.5 4.5s2.01 4.5 4.5 4.5 4.5-2.01 4.5-4.5-2.01-4.5-4.5-4.5zM3 13.5h8v8H3z"/>
-                  </svg>
+                  <span>📐</span>
                 </button>
 
                 <!-- Shapes Popover Grid (6 Shapes) -->
@@ -433,42 +417,38 @@
                   <div class="shape-flyout-title">Shapes</div>
                   <div class="shape-flyout-grid">
                     <button class="toolbar-tool-btn" data-shape="line" title="Line (Shift for 45°)" aria-label="Line shape">
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"></line></svg>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"></line></svg>
                     </button>
                     <button class="toolbar-tool-btn" data-shape="arrow" title="Arrow (Shift for 45°)" aria-label="Arrow shape">
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"></line><polyline points="10 5 19 5 19 14"></polyline></svg>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"></line><polyline points="10 5 19 5 19 14"></polyline></svg>
                     </button>
                     <button class="toolbar-tool-btn" data-shape="rectangle" title="Rectangle (Shift for 1:1 Square)" aria-label="Rectangle shape">
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="0"></rect></svg>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="0"></rect></svg>
                     </button>
                     <button class="toolbar-tool-btn" data-shape="rounded_rectangle" title="Rounded Rectangle (Shift for 1:1 Square)" aria-label="Rounded rectangle shape">
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="3.5"></rect></svg>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="3.5"></rect></svg>
                     </button>
                     <button class="toolbar-tool-btn" data-shape="circle" title="Circle (Shift for 1:1 Circle)" aria-label="Circle shape">
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle></svg>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle></svg>
                     </button>
                     <button class="toolbar-tool-btn" data-shape="triangle" title="Triangle (Shift for 90° Right Angle)" aria-label="Triangle shape">
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 L21 19 L3 19 Z"></path></svg>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 L21 19 L3 19 Z"></path></svg>
                     </button>
                   </div>
                 </div>
               </div>
 
-              <!-- 7. Eraser Tool -->
+              <!-- 7. Eraser Tool (🧽) -->
               <button class="toolbar-tool-btn toolbar-collapsible" data-tool="eraser" title="Eraser (Ctrl+3)" aria-label="Eraser tool">
-                <svg class="tb-svg-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
-                  <path d="M15.14 3c-.51 0-1.02.2-1.41.59L2.59 14.73c-.78.78-.78 2.05 0 2.83L5.03 20h7.66l8.72-8.72c.78-.78.78-2.05 0-2.83l-4.86-4.86c-.39-.39-.9-.59-1.41-.59zm-1.41 3.41L17.59 10 13 14.59 9.41 11l4.32-4.59zM8 12.41L11.59 16H6.83l-2.83-2.83L8 12.41z"/>
-                </svg>
+                <span>🧽</span>
               </button>
 
               <div class="toolbar-divider toolbar-collapsible"></div>
 
-              <!-- 8. Floating Color Palette Button & Popover (12 Curated Colors) -->
+              <!-- 8. Floating Color Palette Button (🎨) & Popover (12 Curated Colors) -->
               <div class="toolbar-collapsible" style="position: relative;">
                 <button id="tb-btn-palette" class="toolbar-tool-btn" title="Color Palette (Ctrl+P)" aria-label="Color Palette">
-                  <svg class="tb-svg-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
-                    <path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19c-.39.78.18 1.7 1.06 1.7h7.09c4.97 0 9-4.03 9-9 0-4.97-4.03-9-9-9zm-4.5 9c-.83 0-1.5-.67-1.5-1.5S6.67 9 7.5 9s1.5.67 1.5 1.5S8.33 12 7.5 12zm3-4C9.67 8 9 7.33 9 6.5S9.67 5 10.5 5s1.5.67 1.5 1.5S11.33 8 10.5 8zm3 0c-.83 0-1.5-.67-1.5-1.5S12.67 5 13.5 5s1.5.67 1.5 1.5S14.33 8 13.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-                  </svg>
+                  <span>🎨</span>
                 </button>
 
                 <!-- 12-Color Grid Popover -->
@@ -496,25 +476,19 @@
 
               <div class="toolbar-divider toolbar-collapsible"></div>
 
-              <!-- 9. Undo Action -->
+              <!-- 9. Undo Action (↩️) -->
               <button id="tb-btn-undo" class="toolbar-tool-btn toolbar-collapsible" title="Undo (Ctrl+Z)" aria-label="Undo stroke" disabled>
-                <svg class="tb-svg-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
-                  <path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/>
-                </svg>
+                <span>↩️</span>
               </button>
 
-              <!-- 10. Board Toggle -->
+              <!-- 10. Board Toggle (⬜) -->
               <button id="tb-btn-bg" class="toolbar-tool-btn toolbar-collapsible" title="Toggle Whiteboard/Blackboard (Ctrl+B)" aria-label="Toggle canvas backdrop">
-                <svg class="tb-svg-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zm0 4v10h16V8H4zm4 2h8v6H8v-6z"/>
-                </svg>
+                <span>⬜</span>
               </button>
 
-              <!-- 11. Clear Screen Action -->
+              <!-- 11. Clear Screen Action (🗑️) -->
               <button id="tb-btn-clear" class="toolbar-tool-btn toolbar-collapsible" title="Clear Screen (Ctrl+Shift+C)" aria-label="Clear screen">
-                <svg class="tb-svg-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
-                  <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                </svg>
+                <span>🗑️</span>
               </button>
             </aside>
 
@@ -1193,6 +1167,6 @@ python -m PyInstaller main.spec --noconfirm</code></pre>
   </div>
 
   <!-- Application Entry Point ES Module -->
-  <script type="module" src="js/app.js?v=4.4.2"></script>
+  <script type="module" src="js/app.js?v=4.5.0"></script>
 </body>
 </html>
