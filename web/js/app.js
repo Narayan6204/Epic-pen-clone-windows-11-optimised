@@ -12,30 +12,6 @@ import { rippleEngine } from './ripple.js';
 import { shortcutsManager } from './shortcuts.js';
 import { gitHubReleaseManager } from './github-release.js';
 
-export const PEN_COLORS = [
-  { hex: '#000000', name: 'Black' },
-  { hex: '#FFFFFF', name: 'White' },
-  { hex: '#717171', name: 'Gray' },
-  { hex: '#FF3B30', name: 'Red' },
-  { hex: '#FF9500', name: 'Orange' },
-  { hex: '#FFCC00', name: 'Yellow' },
-  { hex: '#4CD964', name: 'Green' },
-  { hex: '#5AC8FA', name: 'Light Blue' },
-  { hex: '#007AFF', name: 'Blue' },
-  { hex: '#5856D6', name: 'Purple' },
-  { hex: '#FF2D55', name: 'Pink' },
-  { hex: '#A2845E', name: 'Brown' }
-];
-
-export const PEN_SHAPES = [
-  { id: 'line', icon: '<svg width="24" height="24" viewBox="0 0 32 32"><line x1="6" y1="26" x2="26" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>', name: 'Line' },
-  { id: 'arrow', icon: '<svg width="24" height="24" viewBox="0 0 32 32"><line x1="6" y1="26" x2="24" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="14,8 24,8 24,18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>', name: 'Arrow' },
-  { id: 'rectangle', icon: '<svg width="24" height="24" viewBox="0 0 32 32"><rect x="6" y="8" width="20" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>', name: 'Rectangle' },
-  { id: 'rounded_rectangle', icon: '<svg width="24" height="24" viewBox="0 0 32 32"><rect x="6" y="8" width="20" height="16" rx="4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>', name: 'Rounded Rectangle' },
-  { id: 'circle', icon: '<svg width="24" height="24" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="none" stroke="currentColor" stroke-width="2"/></svg>', name: 'Circle' },
-  { id: 'triangle', icon: '<svg width="24" height="24" viewBox="0 0 32 32"><polygon points="16,6 28,26 4,26" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>', name: 'Triangle' }
-];
-
 class App {
   constructor() {
     this.canvasEngine = null;
@@ -698,7 +674,15 @@ class App {
       toolManager: this.toolManager,
       historyManager: this.historyManager,
       lassoSelector: this.lassoSelector,
+      selectTool: (tool) => {
+        if (tool === 'select') {
+          this.showRestrictedToast();
+          return;
+        }
+        this.selectTool(tool);
+      },
       updateToolbarUI: (tool) => this.selectTool(tool),
+      showRestrictedToast: () => this.showRestrictedToast(),
       toggleCanvasVisibility: () => this.toggleCanvasVisibility(),
       togglePalette: () => this.togglePalette(),
       cycleBackdrop: () => this.cycleBackdrop(),

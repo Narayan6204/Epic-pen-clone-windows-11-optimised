@@ -110,29 +110,6 @@
   --md-ref-palette-error95: #ffedea;
   --md-ref-palette-error100: #ffffff;
 
-  /* --- Light Theme System Colors --- */
-  /* Primary overridden to warm amber-brown below in the parchment block */
-  --md-sys-color-primary: #7C5C35;
-  --md-sys-color-on-primary: #FFFFFF;
-  --md-sys-color-primary-container: #F0DFC0;
-  --md-sys-color-on-primary-container: #2C1F0E;
-  --md-sys-color-inverse-primary: #D4B896;
-
-  --md-sys-color-secondary: #8C7055;
-  --md-sys-color-on-secondary: #FFFFFF;
-  --md-sys-color-secondary-container: #EAD9C0;
-  --md-sys-color-on-secondary-container: #2C1F0E;
-
-  --md-sys-color-tertiary: #5A7A4A;
-  --md-sys-color-on-tertiary: #FFFFFF;
-  --md-sys-color-tertiary-container: #D4EDCA;
-  --md-sys-color-on-tertiary-container: #1A2E14;
-
-  --md-sys-color-error: var(--md-ref-palette-error40);
-  --md-sys-color-on-error: var(--md-ref-palette-error100);
-  --md-sys-color-error-container: var(--md-ref-palette-error90);
-  --md-sys-color-on-error-container: var(--md-ref-palette-error10);
-
   /* ==========================================================================
      PEN 11 WARM PARCHMENT PALETTE — Light Theme Override
      Background Seed: #E6D5B8 (User specified warm parchment)
@@ -158,6 +135,11 @@
   --md-sys-color-on-tertiary: #FFFFFF;
   --md-sys-color-tertiary-container: #D4EDCA;
   --md-sys-color-on-tertiary-container: #1A2E14;
+
+  --md-sys-color-error: var(--md-ref-palette-error40);
+  --md-sys-color-on-error: var(--md-ref-palette-error100);
+  --md-sys-color-error-container: var(--md-ref-palette-error90);
+  --md-sys-color-on-error-container: var(--md-ref-palette-error10);
 
   --md-sys-color-background: #F6EFE3;
   --md-sys-color-on-background: #4A2E14;
