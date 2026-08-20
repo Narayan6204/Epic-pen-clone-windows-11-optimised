@@ -183,31 +183,24 @@ class App {
     const monkeyFlyout = document.getElementById('tb-monkey-flyout');
     const monkeyIcon = document.getElementById('tb-monkey-icon');
 
-    const SVG_ICONS = {
-      draw: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>`,
-      cursor: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7 18 3-7 7-3L3 3z"></path></svg>`,
-      hidden: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`
-    };
-    this.SVG_ICONS = SVG_ICONS;
-
     const updateMonkeyFlyoutButtons = () => {
       if (!monkeyFlyout) return;
       if (this.monkeyState === 'cursor') {
         monkeyFlyout.innerHTML = `
           <button class="toolbar-tool-btn" data-monkey="active" title="Active Ink Mode" aria-label="Active Ink Mode">
-            ${SVG_ICONS.draw}
+            <span>🐵</span>
           </button>
           <button class="toolbar-tool-btn" data-monkey="hidden" title="Disable Canvas (Collapse Toolbar)" aria-label="Disable Canvas">
-            ${SVG_ICONS.hidden}
+            <span>🙈</span>
           </button>
         `;
       } else {
         monkeyFlyout.innerHTML = `
           <button class="toolbar-tool-btn" data-monkey="cursor" title="Cursor Mode (Desktop Feature)" aria-label="Cursor Mode">
-            ${SVG_ICONS.cursor}
+            <span>🐒</span>
           </button>
           <button class="toolbar-tool-btn" data-monkey="hidden" title="Disable Canvas (Collapse Toolbar)" aria-label="Disable Canvas">
-            ${SVG_ICONS.hidden}
+            <span>🙈</span>
           </button>
         `;
       }
@@ -221,13 +214,13 @@ class App {
           if (action === 'active') {
             this.setCanvasVisibility(true);
             this.selectTool('pen');
-            if (monkeyIcon) monkeyIcon.innerHTML = SVG_ICONS.draw;
+            if (monkeyIcon) monkeyIcon.textContent = '🐵';
           } else if (action === 'cursor') {
             // Restrict cursor click-through mode in web preview
             this.showRestrictedToast();
           } else if (action === 'hidden') {
             this.setCanvasVisibility(false);
-            if (monkeyIcon) monkeyIcon.innerHTML = SVG_ICONS.hidden;
+            if (monkeyIcon) monkeyIcon.textContent = '🙈';
           }
         });
       });
@@ -255,30 +248,29 @@ class App {
       });
     }
 
-    // ── Bind Tool Buttons ──
+    // ── Bind Tool Buttons (with desktop restriction on select) ──
     toolbar.querySelectorAll('[data-tool]').forEach(btn => {
       btn.addEventListener('click', () => {
         const tool = btn.dataset.tool;
+        if (tool === 'select') {
+          this.showRestrictedToast();
+          return;
+        }
         this.selectTool(tool);
       });
     });
 
-    // ── Bind Shapes Flyout ──
+    // ── Bind Shapes Flyout (Restricted in web sandbox) ──
     const shapesBtn = document.getElementById('tb-btn-shapes');
     if (shapesBtn && shapesFlyout) {
       shapesBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const isOpen = shapesFlyout.style.display === 'flex';
-        this._closeAllPopovers();
-        shapesFlyout.style.display = isOpen ? 'none' : 'flex';
+        this.showRestrictedToast();
       });
 
       shapesFlyout.querySelectorAll('[data-shape]').forEach(shapeItem => {
         shapeItem.addEventListener('click', () => {
-          const shape = shapeItem.dataset.shape;
-          this.selectTool(shape);
-          this._closeAllPopovers();
-          this.showToast(`Shape: ${shapeItem.title || shape}`, 'shapes');
+          this.showRestrictedToast();
         });
       });
     }
@@ -320,12 +312,11 @@ class App {
       });
     }
 
-    // ── Bind Backdrop Switcher ──
+    // ── Bind Backdrop Switcher (Restricted in web sandbox) ──
     const backdropBtn = document.getElementById('tb-btn-bg');
     if (backdropBtn) {
       backdropBtn.addEventListener('click', () => {
-        const mode = this.cycleBackdrop();
-        this.showToast(`Canvas Backdrop: ${mode.toUpperCase()}`, 'palette');
+        this.showRestrictedToast();
       });
     }
 
@@ -451,23 +442,18 @@ class App {
 
     // Update Monkey Button State
     const monkeyBtn = document.getElementById('tb-btn-monkey');
+    const monkeyIcon = document.getElementById('tb-monkey-icon') || (monkeyBtn ? monkeyBtn.querySelector('span') : null);
     if (toolName === 'select' || toolName === 'cursor') {
       this.monkeyState = 'cursor';
-      if (monkeyBtn) {
-        const span = monkeyBtn.querySelector('span');
-        if (span && this.SVG_ICONS) span.innerHTML = this.SVG_ICONS.cursor;
-        monkeyBtn.title = 'Cursor Mode Active (Click to switch to Pen)';
-      }
+      if (monkeyIcon) monkeyIcon.textContent = '🐒';
+      if (monkeyBtn) monkeyBtn.title = 'Cursor Mode Active (Click to switch to Pen)';
       if (canvasContainer) {
         canvasContainer.style.pointerEvents = 'none';
       }
     } else {
       this.monkeyState = 'active';
-      if (monkeyBtn) {
-        const span = monkeyBtn.querySelector('span');
-        if (span && this.SVG_ICONS) span.innerHTML = this.SVG_ICONS.draw;
-        monkeyBtn.title = 'Active Ink Mode (Click to switch to Cursor)';
-      }
+      if (monkeyIcon) monkeyIcon.textContent = '🐵';
+      if (monkeyBtn) monkeyBtn.title = 'Active Ink Mode (Click to switch to Cursor)';
       if (canvasContainer) {
         canvasContainer.style.pointerEvents = 'auto';
       }
@@ -528,28 +514,23 @@ class App {
     this.isCanvasVisible = visible;
     const toolbar = document.getElementById('pen-live-toolbar');
     const monkeyBtn = document.getElementById('tb-btn-monkey');
+    const monkeyIcon = document.getElementById('tb-monkey-icon') || (monkeyBtn ? monkeyBtn.querySelector('span') : null);
     const canvasContainer = document.getElementById('pen-hero-canvas-container');
 
     if (visible) {
       if (toolbar) toolbar.classList.remove('collapsed');
       if (canvasContainer) canvasContainer.style.display = 'block';
       this.monkeyState = 'active';
-      if (monkeyBtn) {
-        const span = monkeyBtn.querySelector('span');
-        if (span && this.SVG_ICONS) span.innerHTML = this.SVG_ICONS.draw;
-        monkeyBtn.title = 'Active Ink Mode (Click to switch to Cursor)';
-      }
+      if (monkeyIcon) monkeyIcon.textContent = '🐵';
+      if (monkeyBtn) monkeyBtn.title = 'Active Ink Mode (Click to switch to Cursor)';
       this.showToast('Canvas Visible (Ctrl+5)', 'visibility');
     } else {
       if (toolbar) toolbar.classList.add('collapsed');
       if (canvasContainer) canvasContainer.style.display = 'none';
       this._closeAllPopovers();
       this.monkeyState = 'hidden';
-      if (monkeyBtn) {
-        const span = monkeyBtn.querySelector('span');
-        if (span && this.SVG_ICONS) span.innerHTML = this.SVG_ICONS.hidden;
-        monkeyBtn.title = 'Canvas Hidden (Click to unhide)';
-      }
+      if (monkeyIcon) monkeyIcon.textContent = '🙈';
+      if (monkeyBtn) monkeyBtn.title = 'Canvas Hidden (Click to unhide)';
       this.showToast('Canvas Hidden & Toolbar Collapsed (Ctrl+5)', 'visibility_off');
     }
   }
