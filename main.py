@@ -943,6 +943,7 @@ class OverlayWindow(QMainWindow):
             gc.disable()
             
             if self.mode == ToolMode.ERASER:
+                self.last_erase_pos = event.position()
                 self._erase_at(event.position())
             elif self.mode == ToolMode.SHAPE:
                 self.drawing = True
@@ -1017,7 +1018,10 @@ class OverlayWindow(QMainWindow):
                 return
 
             if self.mode == ToolMode.ERASER:
-                self._erase_at(event.position())
+                cur_pos = event.position()
+                last_pos = getattr(self, 'last_erase_pos', cur_pos)
+                self._erase_between(last_pos, cur_pos)
+                self.last_erase_pos = cur_pos
             elif self.drawing and self.mode == ToolMode.SHAPE:
                 old_rect = self.current_path.boundingRect() if self.current_path else QRectF(self.shape_start, self.shape_start)
                 
@@ -1075,6 +1079,9 @@ class OverlayWindow(QMainWindow):
                 self.selection_action = None
                 return
 
+            if self.mode == ToolMode.ERASER:
+                self.last_erase_pos = None
+
             self.shape_timer.stop()
             while QApplication.overrideCursor() is not None:
                 QApplication.restoreOverrideCursor()
@@ -1101,15 +1108,44 @@ class OverlayWindow(QMainWindow):
     # ── Eraser ──
 
     def _erase_at(self, pos):
+        self._erase_between(pos, pos)
+
+    def _erase_between(self, p1, p2):
         radius = float(self.eraser_size) / 2.0
-        rect = QRectF(pos.x() - radius, pos.y() - radius, radius * 2, radius * 2)
+        min_x = min(p1.x(), p2.x()) - radius
+        min_y = min(p1.y(), p2.y()) - radius
+        max_x = max(p1.x(), p2.x()) + radius
+        max_y = max(p1.y(), p2.y()) + radius
+        sweep_rect = QRectF(min_x, min_y, max_x - min_x, max_y - min_y)
+
+        sweep_path = QPainterPath()
+        sweep_path.moveTo(p1)
+        sweep_path.lineTo(p2)
+        stroker = QPainterPathStroker()
+        stroker.setWidth(max(2.0, radius * 2.0))
+        stroker.setCapStyle(Qt.PenCapStyle.RoundCap)
+        stroked_sweep = stroker.createStroke(sweep_path)
+
         removed = False
         for i in range(len(self.paths) - 1, -1, -1):
-            p = self.paths[i]['path']
-            if p.boundingRect().intersects(rect) and p.intersects(rect):
+            item = self.paths[i]
+            p = item['path']
+            pen_w = item.get('pen', QPen()).widthF()
+            margin = radius + pen_w / 2.0 + 4.0
+
+            p_bound = p.boundingRect().adjusted(-margin, -margin, margin, margin)
+            if not p_bound.intersects(sweep_rect):
+                continue
+
+            p_stroker = QPainterPathStroker()
+            p_stroker.setWidth(max(4.0, pen_w))
+            p_stroker.setCapStyle(Qt.PenCapStyle.RoundCap)
+            p_stroked = p_stroker.createStroke(p)
+
+            if p_stroked.intersects(stroked_sweep) or p.intersects(stroked_sweep) or p_stroked.intersects(sweep_path) or p.intersects(sweep_rect):
                 self.paths.pop(i)
                 removed = True
-        
+
         if removed:
             self.undo_stack_size = min(self.undo_stack_size, len(self.paths))
             self.update()
