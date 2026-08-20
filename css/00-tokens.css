@@ -591,7 +591,7 @@
 
 /* Material Symbols Rounded Standard Styling */
 .material-symbols-rounded {
-  font-family: 'Material Symbols Rounded', sans-serif;
+  font-family: 'Material Symbols Rounded', sans-serif !important;
   font-weight: normal;
   font-style: normal;
   font-size: 24px;
@@ -605,6 +605,8 @@
   font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  overflow: hidden;
+  text-overflow: clip;
 }
 
 .material-symbols-rounded.fill {
