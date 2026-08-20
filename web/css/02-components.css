@@ -498,6 +498,7 @@
   padding: 16px;
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
   transition: opacity var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized),
               visibility var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized);
 }
@@ -505,6 +506,7 @@
 .m3-dialog-scrim.active {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 
 .m3-dialog {
@@ -567,14 +569,19 @@
   gap: 12px;
   z-index: 1100;
   opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
   box-sizing: border-box;
   transition: transform var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate),
-              opacity var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate);
+              opacity var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate),
+              visibility var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate);
 }
 
 .m3-snackbar.active {
   transform: translateX(-50%) translateY(0);
   opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .m3-snackbar-content {
@@ -900,12 +907,14 @@ kbd:active, .m3-kbd:active {
   padding: 20px;
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
   transition: opacity 0.25s cubic-bezier(0.2, 0, 0, 1), visibility 0.25s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .m3-modal-backdrop.active {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 
 .m3-download-dialog {

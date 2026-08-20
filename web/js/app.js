@@ -632,7 +632,7 @@ class App {
   }
 
   // ==========================================
-  // 4. Navigation & App Bar Elevation
+  // 4. Navigation, App Bar Elevation & Active Tab Scroll Spy
   // ==========================================
   _initNavigation() {
     const topAppBar = document.querySelector('.m3-top-app-bar');
@@ -646,17 +646,76 @@ class App {
       }, { passive: true });
     }
 
+    const navItems = document.querySelectorAll('.m3-nav-bar .m3-nav-item, .m3-top-app-bar-nav a');
+    const sections = document.querySelectorAll('section[id]');
+
+    // Function to synchronize active tab across mobile bottom nav & top app bar
+    const setActiveNav = (sectionId) => {
+      if (!sectionId) return;
+      navItems.forEach(item => {
+        const href = item.getAttribute('href');
+        if (href === `#${sectionId}`) {
+          item.classList.add('active');
+          if (item.classList.contains('m3-nav-item')) {
+            item.setAttribute('aria-current', 'page');
+          }
+        } else if (href && href.startsWith('#') && !item.classList.contains('btn-download-popup-trigger')) {
+          item.classList.remove('active');
+          item.removeAttribute('aria-current');
+        }
+      });
+    };
+
+    // Smooth Anchor Navigation (Excluding Modal Triggers)
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', (e) => {
         const href = anchor.getAttribute('href');
-        if (href === '#' || href === '') return;
+        if (!href || href === '#') return;
+
+        // Skip modal popup triggers (handled by _initDownloadModal)
+        if (anchor.classList.contains('btn-download-popup-trigger') || href === '#download-preference-modal') {
+          return;
+        }
+
         const target = document.querySelector(href);
         if (target) {
           e.preventDefault();
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const targetId = target.id || (target.closest('section') ? target.closest('section').id : '');
+          if (targetId) setActiveNav(targetId);
+
+          const headerOffset = window.innerWidth <= 600 ? 56 : 68;
+          const elementPosition = target.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+          window.scrollTo({
+            top: Math.max(0, offsetPosition),
+            behavior: 'smooth'
+          });
+
+          if (history.pushState) {
+            history.pushState(null, null, href);
+          }
         }
       });
     });
+
+    // High-Performance Scroll Spy using IntersectionObserver
+    if ('IntersectionObserver' in window && sections.length > 0) {
+      const observer = new IntersectionObserver((entries) => {
+        const visibleEntries = entries.filter(e => e.isIntersecting);
+        if (visibleEntries.length > 0) {
+          visibleEntries.sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+          setActiveNav(visibleEntries[0].target.id);
+        } else if (window.scrollY < 80) {
+          setActiveNav('hero');
+        }
+      }, {
+        rootMargin: '-15% 0px -55% 0px',
+        threshold: [0, 0.25, 0.5, 0.75, 1.0]
+      });
+
+      sections.forEach(sec => observer.observe(sec));
+    }
   }
 
   // ==========================================
