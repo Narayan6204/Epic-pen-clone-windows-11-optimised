@@ -49,14 +49,30 @@ button, input, select, textarea {
   color: inherit;
 }
 
-/* --------------------------------------------------------------------------
-   2. Page Structure & Adaptive Grid System
-   -------------------------------------------------------------------------- */
+/* --- Ambient Topographic Silky Waves Background Layer --- */
+.m3-ambient-waves-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url('../assets/bg_warm_waves.jpg');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  opacity: 0.85;
+  transition: opacity var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-standard),
+              filter var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-standard);
+}
+
 .m3-layout-root {
   display: flex;
   min-height: 100vh;
   width: 100%;
   position: relative;
+  z-index: 1;
 }
 
 .m3-main-content {
@@ -65,7 +81,7 @@ button, input, select, textarea {
   flex-direction: column;
   min-width: 0;
   width: 100%;
-  padding-bottom: 96px; /* Space for mobile nav bar on compact */
+  padding-bottom: 84px; /* Space for mobile & tablet bottom navigation bar */
 }
 
 @media (max-width: 599px) {
@@ -74,12 +90,12 @@ button, input, select, textarea {
     line-height: 1.22 !important;
   }
   .m3-headline-large {
-    font-size: 1.5rem !important;
+    font-size: 1.45rem !important;
     line-height: 1.25 !important;
   }
 }
 
-@media (min-width: 600px) {
+@media (min-width: 840px) {
   .m3-main-content {
     padding-bottom: 0;
   }
@@ -218,23 +234,25 @@ button, input, select, textarea {
   }
 }
 
-/* --- B. NAVIGATION BAR (Mobile Bottom Nav - Compact <600px) --- */
+/* --- B. NAVIGATION BAR (Mobile & Tablet Bottom Nav - <840px) --- */
 .m3-nav-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: calc(72px + env(safe-area-inset-bottom, 0px));
-  z-index: 90;
+  height: calc(68px + env(safe-area-inset-bottom, 0px));
+  z-index: 900;
   background-color: var(--md-sys-color-surface-container);
   border-top: 1px solid var(--md-sys-color-outline-variant);
   display: flex;
   justify-content: space-around;
   align-items: center;
   padding: 0 8px env(safe-area-inset-bottom, 0px) 8px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
-@media (min-width: 600px) {
+@media (min-width: 840px) {
   .m3-nav-bar {
     display: none;
   }
@@ -423,7 +441,10 @@ button, input, select, textarea {
 .bento-col-4  { grid-column: span 12; }
 .bento-col-3  { grid-column: span 12; }
 
-@media (min-width: 600px) {
+@media (min-width: 600px) and (max-width: 839px) {
+  .bento-col-4 { grid-column: span 6; }
+  .bento-col-3 { grid-column: span 6; }
+  .bento-col-6 { grid-column: span 6; }
   .bento-col-md-6 { grid-column: span 6; }
   .bento-col-md-12 { grid-column: span 12; }
 }
