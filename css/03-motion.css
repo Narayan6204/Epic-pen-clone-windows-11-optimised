@@ -156,10 +156,10 @@
 /* Float Glow Animation for Hero / Benchmark Highlights */
 @keyframes m3-glow-pulse {
   0%, 100% {
-    box-shadow: 0 0 20px -5px rgba(var(--md-ref-palette-primary40), 0.3);
+    box-shadow: 0 0 20px -5px color-mix(in srgb, var(--md-sys-color-primary) 30%, transparent);
   }
   50% {
-    box-shadow: 0 0 35px 0px rgba(var(--md-ref-palette-primary40), 0.55);
+    box-shadow: 0 0 35px 0px color-mix(in srgb, var(--md-sys-color-primary) 55%, transparent);
   }
 }
 
