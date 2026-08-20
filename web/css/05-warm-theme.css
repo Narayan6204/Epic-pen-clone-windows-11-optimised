@@ -130,15 +130,34 @@
 }
 
 /* --------------------------------------------------------------------------
-   2. Body & Global Reset
+   2. Body & Ambient Topographic Silk Waves Background Layer
    -------------------------------------------------------------------------- */
 body {
   background-color: var(--pen-bg);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 300px 300px;
   color: var(--pen-text-secondary);
   transition: background-color 300ms ease, color 300ms ease;
+  position: relative;
+  min-height: 100vh;
+}
+
+.m3-ambient-waves-bg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  background-image: 
+    radial-gradient(ellipse at 50% 15%, rgba(246, 239, 227, 0.25) 0%, rgba(246, 239, 227, 0.7) 60%, var(--pen-bg) 100%),
+    url('../assets/bg_warm_waves.jpg');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  opacity: 0.9;
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  transition: opacity 300ms ease, filter 300ms ease;
 }
 
 [data-theme="dark"] body,
@@ -147,10 +166,29 @@ body {
   color: #F5E8D5 !important;
 }
 
+[data-theme="dark"] .m3-ambient-waves-bg,
+[data-theme-resolved="dark"] .m3-ambient-waves-bg {
+  opacity: 0.28;
+  background-image: 
+    radial-gradient(ellipse at 50% 20%, rgba(30, 21, 10, 0.3) 0%, rgba(30, 21, 10, 0.8) 70%, #1E150A 100%),
+    url('../assets/bg_warm_waves.jpg');
+  filter: invert(0.92) hue-rotate(185deg) brightness(0.65) contrast(1.25);
+  mix-blend-mode: luminosity;
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) body {
     background-color: #1E150A !important;
     color: #F5E8D5 !important;
+  }
+
+  :root:not([data-theme="light"]) .m3-ambient-waves-bg {
+    opacity: 0.28;
+    background-image: 
+      radial-gradient(ellipse at 50% 20%, rgba(30, 21, 10, 0.3) 0%, rgba(30, 21, 10, 0.8) 70%, #1E150A 100%),
+      url('../assets/bg_warm_waves.jpg');
+    filter: invert(0.92) hue-rotate(185deg) brightness(0.65) contrast(1.25);
+    mix-blend-mode: luminosity;
   }
 }
 
@@ -267,15 +305,15 @@ p {
   position: sticky;
   top: 0;
   z-index: 1000 !important;
-  background-color: var(--pen-surface-dim);
+  background-color: rgba(235, 221, 191, 0.82);
   border-bottom: 1px solid var(--pen-border);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   transition: background-color 300ms ease, border-color 300ms ease;
 }
 
 .m3-top-app-bar.scrolled {
-  background-color: rgba(235, 221, 191, 0.96);
+  background-color: rgba(235, 221, 191, 0.94);
   box-shadow: 0 2px 16px rgba(74, 46, 20, 0.12);
 }
 
@@ -295,8 +333,10 @@ p {
 
 [data-theme="dark"] .m3-top-app-bar,
 [data-theme-resolved="dark"] .m3-top-app-bar {
-  background-color: #1E150A !important;
+  background-color: rgba(30, 21, 10, 0.85) !important;
   border-bottom: 1px solid #392B18 !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 [data-theme="dark"] .m3-top-app-bar.scrolled,
@@ -471,32 +511,37 @@ p {
 }
 
 /* --------------------------------------------------------------------------
-   6. Sections Backgrounds (Alternating Warm Parchment / Dark Walnut)
+   6. Sections Backgrounds (Layered over Silky Topographic Waves Texture)
    -------------------------------------------------------------------------- */
 .m3-section {
-  background-color: #E6D5B8;
+  background-color: transparent;
   transition: background-color 300ms ease;
 }
 
-#hero       { background-color: #E6D5B8; }
-#gallery    { background-color: #FAF2E3; border-top: 1px solid #D6C4A6; border-bottom: 1px solid #D6C4A6; }
-#features   { background-color: #EDE0C8; }
-#benchmarks { background-color: #E6D5B8; }
-#hotkeys    { background-color: #EDE0C8; }
-#developers { background-color: #DDD0B5; }
-#story      { background-color: #E6D5B8; }
+#hero       { background-color: transparent; }
+#gallery    { background-color: rgba(250, 242, 227, 0.72); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-top: 1px solid #D6C4A6; border-bottom: 1px solid #D6C4A6; }
+#features   { background-color: rgba(237, 224, 200, 0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+#benchmarks { background-color: rgba(230, 213, 184, 0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+#hotkeys    { background-color: rgba(237, 224, 200, 0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+#developers { background-color: rgba(221, 208, 181, 0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+#story      { background-color: rgba(230, 213, 184, 0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 
 [data-theme="dark"] .m3-section,
 [data-theme-resolved="dark"] .m3-section,
 [data-theme="dark"] #hero,
-[data-theme-resolved="dark"] #hero,
+[data-theme-resolved="dark"] #hero {
+  background-color: transparent !important;
+}
+
 [data-theme="dark"] #gallery,
 [data-theme-resolved="dark"] #gallery,
 [data-theme="dark"] #benchmarks,
 [data-theme-resolved="dark"] #benchmarks,
 [data-theme="dark"] #story,
 [data-theme-resolved="dark"] #story {
-  background-color: #1E150A !important;
+  background-color: rgba(30, 21, 10, 0.85) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-color: #392B18 !important;
 }
 
@@ -504,31 +549,44 @@ p {
 [data-theme-resolved="dark"] #features,
 [data-theme="dark"] #hotkeys,
 [data-theme-resolved="dark"] #hotkeys {
-  background-color: #261B0F !important;
+  background-color: rgba(38, 27, 15, 0.85) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 [data-theme="dark"] #developers,
 [data-theme-resolved="dark"] #developers {
-  background-color: #2E2212 !important;
+  background-color: rgba(46, 34, 18, 0.85) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .m3-section,
-  :root:not([data-theme="light"]) #hero,
+  :root:not([data-theme="light"]) #hero {
+    background-color: transparent !important;
+  }
+
   :root:not([data-theme="light"]) #gallery,
   :root:not([data-theme="light"]) #benchmarks,
   :root:not([data-theme="light"]) #story {
-    background-color: #1E150A !important;
+    background-color: rgba(30, 21, 10, 0.85) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-color: #392B18 !important;
   }
 
   :root:not([data-theme="light"]) #features,
   :root:not([data-theme="light"]) #hotkeys {
-    background-color: #261B0F !important;
+    background-color: rgba(38, 27, 15, 0.85) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   :root:not([data-theme="light"]) #developers {
-    background-color: #2E2212 !important;
+    background-color: rgba(46, 34, 18, 0.85) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 }
 
@@ -764,11 +822,13 @@ p {
   background-color: #F0E5D0;
   border: 1px solid #C9B08A;
   border-radius: var(--md-sys-shape-corner-large);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .m3-table {
   width: 100%;
+  min-width: 520px;
   border-collapse: collapse;
   text-align: left;
 }
@@ -1491,11 +1551,6 @@ footer .m3-btn {
 }
 
 .canvas-stage-wrapper {
-  position: relative;
-  min-height: 720px;
-  height: clamp(680px, 80vh, 850px);
-  overflow: hidden;
-  isolation: isolate;
   border-color: #C9B08A;
   box-shadow: 0 4px 20px rgba(100, 70, 30, 0.15), 0 1px 4px rgba(100, 70, 30, 0.08);
 }
