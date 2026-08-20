@@ -556,6 +556,7 @@
   align-items: center;
   gap: 8px;
   z-index: 400;
+  pointer-events: none;
 }
 
 .canvas-hud-bottom-left {
@@ -566,9 +567,11 @@
   align-items: center;
   gap: 8px;
   z-index: 400;
+  pointer-events: none;
 }
 
 .hud-pill {
+  pointer-events: auto;
   padding: 6px 14px;
   border-radius: var(--md-sys-shape-corner-full);
   background: rgba(30, 30, 30, 0.75);
