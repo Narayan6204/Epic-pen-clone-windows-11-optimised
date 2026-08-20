@@ -933,7 +933,7 @@ class OverlayWindow(QMainWindow):
                 self.update()
                 return
 
-            if self.mode in (ToolMode.PEN, ToolMode.HIGHLIGHTER, ToolMode.ERASER):
+            if self.mode == ToolMode.PEN:
                 if QApplication.overrideCursor() is None:
                     QApplication.setOverrideCursor(QCursor(Qt.CursorShape.BlankCursor))
 
