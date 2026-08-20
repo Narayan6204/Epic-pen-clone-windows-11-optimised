@@ -134,9 +134,10 @@ class App {
       if (demoAlertFired) return;
       demoAlertFired = true;
       this.showToast(
-        'This is just a demo, not exactly similar to Real application',
+        'Interactive Web Sandbox (Demo) • Download Desktop App for Full Direct3D 11 Performance',
         'info',
-        '<a href="https://github.com/Narayan6204/Pen-11/releases/latest" class="m3-btn m3-btn-filled" style="height: 32px; font-size: 12px; padding: 0 10px; text-decoration: none; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">Download</a>'
+        '<a href="https://github.com/Narayan6204/Pen-11/releases/latest" class="m3-btn m3-btn-filled" style="height: 32px; font-size: 12px; padding: 0 12px; text-decoration: none; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); white-space: nowrap; flex-shrink: 0;">Download</a>',
+        3500
       );
     };
 
@@ -739,10 +740,10 @@ class App {
   // ==========================================
   showRestrictedToast() {
     this.showToast(
-      'Download Pen 11 to use all features',
+      'This feature is exclusive to the Windows Desktop App',
       'lock',
-      '<a href="https://github.com/Narayan6204/Pen-11/releases/latest" class="m3-btn m3-btn-filled" style="height: 32px; font-size: 13px; padding: 0 12px; text-decoration: none; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">Download</a>',
-      2000
+      '<a href="https://github.com/Narayan6204/Pen-11/releases/latest" class="m3-btn m3-btn-filled" style="height: 32px; font-size: 12px; padding: 0 12px; text-decoration: none; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); white-space: nowrap; flex-shrink: 0;">Download</a>',
+      3000
     );
   }
 
@@ -755,12 +756,14 @@ class App {
       snackbar.setAttribute('role', 'status');
       snackbar.setAttribute('aria-live', 'polite');
       snackbar.innerHTML = `
-        <span class="m3-flex-row m3-align-center m3-gap-sm">
-          <span class="material-symbols-rounded" id="m3-snackbar-icon" style="font-size: 20px;">info</span>
-          <span id="m3-snackbar-text">Notification</span>
-        </span>
-        <div id="m3-snackbar-action" class="m3-flex-row m3-align-center" style="margin-left: auto;"></div>
-        <button class="m3-btn m3-btn-text" id="m3-snackbar-dismiss" style="color: var(--md-sys-color-inverse-primary); padding: 0 8px; height: 32px; margin-left: 8px;">DISMISS</button>
+        <div class="m3-snackbar-content">
+          <span class="material-symbols-rounded" id="m3-snackbar-icon" style="font-size: 20px; flex-shrink: 0;">info</span>
+          <span id="m3-snackbar-text" class="m3-snackbar-text">Notification</span>
+        </div>
+        <div class="m3-snackbar-actions">
+          <div id="m3-snackbar-action" style="display: flex; align-items: center;"></div>
+          <button class="m3-btn m3-btn-text" id="m3-snackbar-dismiss" style="color: var(--md-sys-color-inverse-primary); padding: 0 8px; height: 32px; flex-shrink: 0;">DISMISS</button>
+        </div>
       `;
       document.body.appendChild(snackbar);
 
@@ -782,7 +785,7 @@ class App {
 
     snackbar.classList.add('active');
 
-    const timeout = durationMs || (actionHtml ? 2400 : 1800);
+    const timeout = durationMs || (actionHtml ? 3500 : 2000);
 
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => {
