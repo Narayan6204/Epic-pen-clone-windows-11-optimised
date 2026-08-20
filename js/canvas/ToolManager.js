@@ -54,6 +54,12 @@ export class VectorStroke {
     }
 
     const tolSq = (tolerance + this.baseWidth / 2) ** 2;
+    if (this.points.length === 1) {
+      const p = this.points[0];
+      const distSq = (x - p.x) ** 2 + (y - p.y) ** 2;
+      return distSq <= tolSq;
+    }
+
     for (let i = 0; i < this.points.length - 1; i++) {
       const p1 = this.points[i];
       const p2 = this.points[i + 1];
@@ -442,6 +448,7 @@ export class ToolManager {
         opacity: this.opacity
       });
     } else if (this.currentTool === 'eraser') {
+      this.lastEraserPt = { x: pt.x, y: pt.y };
       this.handleEraserAt(pt.x, pt.y);
     }
 
@@ -493,13 +500,25 @@ export class ToolManager {
       this.draftShape.y2 = curY;
       this.engine.invalidateOverlay();
     } else if (this.currentTool === 'eraser') {
-      this.handleEraserAt(pt.x, pt.y);
+      const lastPt = this.lastEraserPt || pt;
+      const dx = pt.x - lastPt.x;
+      const dy = pt.y - lastPt.y;
+      const dist = Math.hypot(dx, dy);
+      const step = Math.max(6, this.size / 2);
+      const numSteps = Math.max(1, Math.ceil(dist / step));
+      for (let i = 1; i <= numSteps; i++) {
+        const sx = lastPt.x + (dx * i) / numSteps;
+        const sy = lastPt.y + (dy * i) / numSteps;
+        this.handleEraserAt(sx, sy);
+      }
+      this.lastEraserPt = { x: pt.x, y: pt.y };
     }
   }
 
   onPointerUp(pt) {
     if (!this.isDrawing) return;
     this.isDrawing = false;
+    this.lastEraserPt = null;
 
     if (this.isStrokeTool(this.currentTool) && this.currentPoints.length > 0) {
       const isHighlighter = this.currentTool === 'highlighter';
