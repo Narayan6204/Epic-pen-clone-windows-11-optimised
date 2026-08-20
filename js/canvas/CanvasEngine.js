@@ -265,6 +265,14 @@ export class CanvasEngine {
     window.addEventListener('pointerup', () => setDrawingState(false));
     window.addEventListener('pointercancel', () => setDrawingState(false));
 
+    // Prevent default touch gestures (scrolling/pinch) on canvas for mobile browsers
+    const preventTouchDefault = (e) => {
+      if (e.cancelable) e.preventDefault();
+    };
+    overlay.addEventListener('touchstart', preventTouchDefault, { passive: false });
+    overlay.addEventListener('touchmove', preventTouchDefault, { passive: false });
+    overlay.addEventListener('touchend', preventTouchDefault, { passive: false });
+
     // Prevent context menu on touch / drawing
     overlay.addEventListener('contextmenu', (e) => e.preventDefault());
   }

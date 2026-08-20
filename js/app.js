@@ -188,19 +188,19 @@ class App {
       if (this.monkeyState === 'cursor') {
         monkeyFlyout.innerHTML = `
           <button class="toolbar-tool-btn" data-monkey="active" title="Active Ink Mode" aria-label="Active Ink Mode">
-            <span>🐵</span>
+            <span class="material-symbols-rounded">draw</span>
           </button>
           <button class="toolbar-tool-btn" data-monkey="hidden" title="Disable Canvas (Collapse Toolbar)" aria-label="Disable Canvas">
-            <span>🙈</span>
+            <span class="material-symbols-rounded">visibility_off</span>
           </button>
         `;
       } else {
         monkeyFlyout.innerHTML = `
           <button class="toolbar-tool-btn" data-monkey="cursor" title="Cursor Mode (Desktop Feature)" aria-label="Cursor Mode">
-            <span>🐒</span>
+            <span class="material-symbols-rounded">near_me</span>
           </button>
           <button class="toolbar-tool-btn" data-monkey="hidden" title="Disable Canvas (Collapse Toolbar)" aria-label="Disable Canvas">
-            <span>🙈</span>
+            <span class="material-symbols-rounded">visibility_off</span>
           </button>
         `;
       }
@@ -214,13 +214,13 @@ class App {
           if (action === 'active') {
             this.setCanvasVisibility(true);
             this.selectTool('pen');
-            if (monkeyIcon) monkeyIcon.textContent = '🐵';
+            if (monkeyIcon) monkeyIcon.textContent = 'draw';
           } else if (action === 'cursor') {
             // Restrict cursor click-through mode in web preview
             this.showRestrictedToast();
           } else if (action === 'hidden') {
             this.setCanvasVisibility(false);
-            if (monkeyIcon) monkeyIcon.textContent = '🙈';
+            if (monkeyIcon) monkeyIcon.textContent = 'visibility_off';
           }
         });
       });
@@ -345,9 +345,10 @@ class App {
     const onPointerDown = (e) => {
       if (e.button !== 0 && e.pointerType === 'mouse') return;
       e.stopPropagation();
+      if (e.cancelable) e.preventDefault();
       isDragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
+      startX = e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? 0;
+      startY = e.clientY ?? (e.touches && e.touches[0]?.clientY) ?? 0;
 
       const rect = element.getBoundingClientRect();
       const containerRect = container.getBoundingClientRect();
@@ -374,8 +375,11 @@ class App {
     const onPointerMove = (e) => {
       if (!isDragging) return;
       e.stopPropagation();
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
+      if (e.cancelable) e.preventDefault();
+      const currentX = e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? 0;
+      const currentY = e.clientY ?? (e.touches && e.touches[0]?.clientY) ?? 0;
+      const dx = currentX - startX;
+      const dy = currentY - startY;
 
       const containerRect = container.getBoundingClientRect();
       const handleOffsetLeft = dragHandle.offsetLeft || 0;
@@ -443,7 +447,7 @@ class App {
     if (toolName === 'select' || toolName === 'cursor') {
       this.monkeyState = 'cursor';
       if (monkeyBtn) {
-        monkeyBtn.querySelector('span').textContent = '🐒';
+        monkeyBtn.querySelector('span').textContent = 'near_me';
         monkeyBtn.title = 'Cursor Mode Active (Click to switch to Pen)';
       }
       if (canvasContainer) {
@@ -452,7 +456,7 @@ class App {
     } else {
       this.monkeyState = 'active';
       if (monkeyBtn) {
-        monkeyBtn.querySelector('span').textContent = '🐵';
+        monkeyBtn.querySelector('span').textContent = 'draw';
         monkeyBtn.title = 'Active Ink Mode (Click to switch to Cursor)';
       }
       if (canvasContainer) {
@@ -522,7 +526,7 @@ class App {
       if (canvasContainer) canvasContainer.style.display = 'block';
       this.monkeyState = 'active';
       if (monkeyBtn) {
-        monkeyBtn.querySelector('span').textContent = '🐵';
+        monkeyBtn.querySelector('span').textContent = 'draw';
         monkeyBtn.title = 'Active Ink Mode (Click to switch to Cursor)';
       }
       this.showToast('Canvas Visible (Ctrl+5)', 'visibility');
@@ -532,7 +536,7 @@ class App {
       this._closeAllPopovers();
       this.monkeyState = 'hidden';
       if (monkeyBtn) {
-        monkeyBtn.querySelector('span').textContent = '🙈';
+        monkeyBtn.querySelector('span').textContent = 'visibility_off';
         monkeyBtn.title = 'Canvas Hidden (Click to unhide)';
       }
       this.showToast('Canvas Hidden & Toolbar Collapsed (Ctrl+5)', 'visibility_off');

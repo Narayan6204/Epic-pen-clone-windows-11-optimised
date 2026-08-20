@@ -204,7 +204,7 @@ button, input, select, textarea {
   gap: 8px;
 }
 
-@media (min-width: 840px) {
+@media (min-width: 1080px) {
   .m3-top-app-bar-nav {
     display: flex;
   }
@@ -234,7 +234,20 @@ button, input, select, textarea {
   }
 }
 
-/* --- B. NAVIGATION BAR (Mobile & Tablet Bottom Nav - <840px) --- */
+@media (max-width: 360px) {
+  .m3-top-app-bar {
+    padding: 0 8px;
+  }
+  .m3-top-app-bar-brand {
+    gap: 6px;
+    font-size: 1.05rem;
+  }
+  .m3-top-app-bar-actions a[aria-label="GitHub Repository"] {
+    display: none !important;
+  }
+}
+
+/* --- B. NAVIGATION BAR (Mobile & Tablet Bottom Nav - <1080px) --- */
 .m3-nav-bar {
   position: fixed;
   bottom: 0;
@@ -252,7 +265,7 @@ button, input, select, textarea {
   -webkit-backdrop-filter: blur(12px);
 }
 
-@media (min-width: 840px) {
+@media (min-width: 1080px) {
   .m3-nav-bar {
     display: none;
   }
@@ -269,6 +282,17 @@ button, input, select, textarea {
   min-width: 64px;
   cursor: pointer;
   user-select: none;
+}
+
+@media (max-width: 360px) {
+  .m3-nav-item {
+    min-width: 0;
+    flex: 1;
+    padding: 4px 2px;
+  }
+  .m3-nav-pill {
+    width: 48px !important;
+  }
 }
 
 .m3-nav-pill {
