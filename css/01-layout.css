@@ -19,6 +19,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  scroll-padding-top: 72px;
 }
 
 body {
@@ -81,7 +82,7 @@ button, input, select, textarea {
   flex-direction: column;
   min-width: 0;
   width: 100%;
-  padding-bottom: 84px; /* Space for mobile & tablet bottom navigation bar */
+  padding-bottom: 84px; /* Space for mobile bottom navigation bar (<600px) */
 }
 
 @media (max-width: 599px) {
@@ -95,7 +96,7 @@ button, input, select, textarea {
   }
 }
 
-@media (min-width: 840px) {
+@media (min-width: 600px) {
   .m3-main-content {
     padding-bottom: 0;
   }
@@ -137,6 +138,7 @@ button, input, select, textarea {
   padding-top: 64px;
   padding-bottom: 64px;
   position: relative;
+  scroll-margin-top: 72px;
 }
 
 @media (min-width: 840px) {
@@ -204,7 +206,7 @@ button, input, select, textarea {
   gap: 8px;
 }
 
-@media (min-width: 1080px) {
+@media (min-width: 840px) {
   .m3-top-app-bar-nav {
     display: flex;
   }
@@ -247,27 +249,28 @@ button, input, select, textarea {
   }
 }
 
-/* --- B. NAVIGATION BAR (Mobile & Tablet Bottom Nav - <1080px) --- */
+/* --- B. NAVIGATION BAR (Mobile & Tablet Bottom Nav - <840px) --- */
 .m3-nav-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   height: calc(68px + env(safe-area-inset-bottom, 0px));
-  z-index: 900;
+  z-index: 1050;
   background-color: var(--md-sys-color-surface-container);
   border-top: 1px solid var(--md-sys-color-outline-variant);
   display: flex;
   justify-content: space-around;
   align-items: center;
   padding: 0 8px env(safe-area-inset-bottom, 0px) 8px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  touch-action: manipulation;
 }
 
-@media (min-width: 1080px) {
+@media (min-width: 840px) {
   .m3-nav-bar {
-    display: none;
+    display: none !important;
   }
 }
 
@@ -278,10 +281,12 @@ button, input, select, textarea {
   gap: 4px;
   text-decoration: none;
   color: var(--md-sys-color-on-surface-variant);
-  padding: 4px 8px;
+  padding: 6px 8px;
   min-width: 64px;
   cursor: pointer;
   user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 @media (max-width: 360px) {
