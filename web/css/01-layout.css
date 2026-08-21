@@ -20,6 +20,7 @@ html {
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
   scroll-padding-top: 72px;
+  overflow-x: hidden; /* prevent any element from causing horizontal page gap */
 }
 
 body {
@@ -53,9 +54,7 @@ button, input, select, textarea {
 /* --- Ambient Topographic Silky Waves Background Layer --- */
 .m3-ambient-waves-bg {
   position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0; /* covers all edges — width/height: 100vw/vh not needed and 100vw causes scrollbar gap */
   z-index: 0;
   pointer-events: none;
 }
@@ -156,6 +155,7 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px; /* explicit gap so flex children don't touch on narrow screens */
   padding: 0 16px;
   background-color: var(--md-sys-color-surface);
   transition: background-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard),
@@ -207,16 +207,22 @@ button, input, select, textarea {
 .m3-top-app-bar-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0; /* actions row must not collapse — but we reduce its contents at breakpoints */
 }
 
+/* ≤599px: hide button text labels, shrink padding */
 @media (max-width: 599px) {
   .m3-top-app-bar {
     padding: 0 12px;
+    gap: 6px;
   }
   .m3-top-app-bar-brand {
     gap: 8px;
     font-size: 1.1rem;
+  }
+  .m3-top-app-bar-actions {
+    gap: 4px;
   }
   .m3-top-app-bar-actions .m3-btn span:not(.material-symbols-rounded) {
     display: none;
@@ -228,16 +234,42 @@ button, input, select, textarea {
   }
 }
 
+/* ≤480px: also hide inactive theme-mode buttons to save space (keep only active + icon-only download) */
+@media (max-width: 480px) {
+  .m3-top-app-bar-actions .m3-btn {
+    padding: 0 8px;
+    min-width: 36px;
+    height: 36px;
+  }
+  /* Compact theme switcher: reduce icon button size */
+  .m3-top-app-bar-actions .m3-icon-btn,
+  .m3-top-app-bar-actions .m3-icon-btn[data-theme-mode] {
+    width: 30px;
+    height: 30px;
+  }
+  /* Tighten segmented group padding */
+  .m3-top-app-bar-actions .m3-theme-segmented-group {
+    padding: 2px;
+    gap: 1px;
+  }
+}
+
+/* ≤360px: hide GitHub button, further compress */
 @media (max-width: 360px) {
   .m3-top-app-bar {
     padding: 0 8px;
+    gap: 4px;
   }
   .m3-top-app-bar-brand {
     gap: 6px;
-    font-size: 1.05rem;
+    font-size: 1rem;
   }
   .m3-top-app-bar-actions a[aria-label="GitHub Repository"] {
     display: none !important;
+  }
+  .m3-top-app-bar-actions .m3-btn {
+    padding: 0 6px;
+    min-width: 32px;
   }
 }
 
