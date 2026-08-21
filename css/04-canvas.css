@@ -395,8 +395,8 @@
 .canvas-stage-wrapper {
   position: relative;
   width: 100%;
-  min-height: 420px;
-  height: clamp(420px, 58vh, 500px);
+  min-height: 320px;
+  height: clamp(320px, 52vh, 480px);
   border-radius: var(--md-sys-shape-corner-extra-large);
   overflow: hidden;
   isolation: isolate;
@@ -410,10 +410,26 @@
   -webkit-user-select: none;
 }
 
+@media (max-width: 479px) {
+  /* Shorter canvas on compact phones so hero content above is reachable */
+  .canvas-stage-wrapper {
+    min-height: 280px;
+    height: clamp(280px, 46vh, 380px);
+    border-radius: 20px;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 599px) {
+  .canvas-stage-wrapper {
+    min-height: 340px;
+    height: clamp(340px, 50vh, 440px);
+  }
+}
+
 @media (min-width: 600px) {
   .canvas-stage-wrapper {
-    min-height: 540px;
-    height: 580px;
+    min-height: 500px;
+    height: 560px;
   }
 }
 
@@ -718,5 +734,51 @@
   .canvas-hud-bottom-left .hud-pill {
     font-size: 10px;
     padding: 3px 8px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. Extra-small phones (≤359px) canvas toolbar safety
+   -------------------------------------------------------------------------- */
+@media (max-width: 359px) {
+  /* Slightly shrink toolbar buttons on very tiny screens */
+  .toolbar-tool-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    border-radius: 14px;
+  }
+
+  .toolbar-tool-btn .material-symbols-rounded {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .toolbar-tool-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Clamp flyout max-width to ensure it never clips off the left edge */
+  .toolbar-palette-popover,
+  .toolbar-shape-flyout,
+  .toolbar-monkey-flyout {
+    max-width: calc(100vw - 56px) !important;
+    box-sizing: border-box;
+  }
+
+  /* Smaller palette grid on tiny phones */
+  .palette-grid {
+    grid-template-columns: repeat(4, 18px);
+    grid-template-rows: repeat(3, 18px);
+    gap: 4px;
+  }
+
+  .palette-color-btn {
+    width: 18px;
+    height: 18px;
+    border-radius: 9px;
   }
 }

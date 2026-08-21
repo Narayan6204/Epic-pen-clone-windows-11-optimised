@@ -142,9 +142,7 @@ body {
 
 .m3-ambient-waves-bg {
   position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0; /* inset: 0 = left/right/top/bottom: 0; no need for width/height */
   z-index: 0;
   pointer-events: none;
   background-image: 
@@ -359,6 +357,41 @@ p {
 [data-theme-resolved="dark"] .m3-top-app-bar-nav .m3-btn-text:hover {
   color: #FFF7ED !important;
   background-color: rgba(212, 184, 150, 0.12) !important;
+}
+
+/* --------------------------------------------------------------------------
+   4b. Hero Section Mobile Responsive Fixes
+   -------------------------------------------------------------------------- */
+
+/* On small phones ≤479px: stack hero CTA buttons vertically so they don't overflow */
+@media (max-width: 479px) {
+  /* Stack the button row (Download + Explore) into a column on narrow phones */
+  #hero .m3-flex-col > .m3-flex-row {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+  #hero .m3-flex-col > .m3-flex-row .m3-btn {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+  /* Reduce hero heading margin to save vertical space */
+  #hero .m3-flex-col.m3-align-center {
+    margin-bottom: 24px !important;
+  }
+  /* Compact sys-req card on tiny screens */
+  .m3-sys-req-card {
+    padding: 12px 14px;
+  }
+}
+
+/* On very small phones ≤359px: tighten further */
+@media (max-width: 359px) {
+  #hero .m3-section,
+  section#hero {
+    padding-top: 20px;
+  }
 }
 
 /* --------------------------------------------------------------------------
